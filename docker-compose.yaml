@@ -1,0 +1,135 @@
+services:
+  mysql8:
+    image: mysql:8.0
+    restart: always
+    command:
+#      - 加入参数，设置 binlog 和主节点
+      - --default_authentication_plugin=mysql_native_password
+      - --binlog-format=ROW
+      - --server-id=1
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      #      设置初始化脚本
+      - ./script/mysql/:/docker-entrypoint-initdb.d/
+    ports:
+      #      注意这里我映射为了 13316 端口
+      - "13316:3306"
+  redis:
+    image: 'bitnami/redis:7.2'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - '6379:6379'
+#     一直用不上，注释掉先
+  etcd:
+    image: 'bitnami/etcd:3.5'
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+    ports:
+#      所以你要用 12379 端口来连接 etcd
+      - 12379:2379
+#  mongo:
+#    image: mongo:6.0
+#    restart: always
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME: root
+#      MONGO_INITDB_ROOT_PASSWORD: example
+#    ports:
+#      - 27017:27017
+  prometheus:
+    image: prom/prometheus:v2.47.2
+    volumes:
+#      - 将本地的 prometheus 文件映射到容器内的配置文件
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+    ports:
+#      - 访问数据的端口
+      - 9090:9090
+    command:
+      - "--web.enable-remote-write-receiver"
+      - "--config.file=/etc/prometheus/prometheus.yml"
+  grafana:
+    image: grafana/grafana-enterprise:10.2.0
+    ports:
+      - 3000:3000
+  zipkin:
+#    用的是不支持 Kafka 之类的简化版本
+    image: openzipkin/zipkin-slim:2.24
+    ports:
+      - '9411:9411'
+
+  kafka:
+    image: 'bitnami/kafka:3.6.0'
+    ports:
+      - '9092:9092'
+      - '9094:9094'
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+#      - 三个分区
+      - KAFKA_CREATE_TOPICS=webook_binlog:3:1
+#      - 允许自动创建 topic，线上不要开启
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://:9093,EXTERNAL://0.0.0.0:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+
+#  nacos:
+#    image: nacos/nacos-server:v2.3.0-slim
+#    container_name: nacos-standalone
+#    environment:
+#      - PREFER_HOST_MODE=hostname
+#      - MODE=standalone
+#      - NACOS_AUTH_IDENTITY_KEY=serverIdentity
+#      - NACOS_AUTH_IDENTITY_VALUE=security
+#      - NACOS_AUTH_TOKEN=SecretKey012345678901234567890123456789012345678901234567890123456789
+##    volumes:
+##      - ./standalone-logs/:/home/nacos/logs
+#    ports:
+#      - "8848:8848"
+#      - "9848:9848"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.13.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "xpack.security.enabled=false"
+      - "ES_JAVA_OPTS=-Xms84m -Xmx512m"
+    ports:
+      - "9200:9200"
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.13.0
+    volumes:
+      - ./config/logstash:/usr/share/logstash/pipeline
+#      - ./logstash-logs:/usr/share/logstash/logs
+#      - ./app.log:/usr/share/logstash/app.log
+    environment:
+      - "xpack.monitoring.elasticsearch.hosts=http://elasticsearch:9200"
+    ports:
+      - 5044:5044
+  kibana:
+#    注意检查你的 ElasticSearch 版本，这边我将 ES 也改到了这个版本
+    image: docker.elastic.co/kibana/kibana:7.13.0
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - i18n.locale=zh-CN
+    ports:
+      - "5601:5601"
+  canal:
+    image: canal/canal-server
+    environment:
+      - CANAL_IP=canal-server
+      - CANAL_PORT=11111
+      - CANAL_DESTINATIONS=example
+    depends_on:
+      - mysql8
+      - kafka
+    ports:
+#      - 暴露了 canal 的端口，但是其实一般比较少直接跟 canal 打交道
+      - 11111:11111
+    volumes:
+      - ./script/canal/webook/instance.properties:/home/admin/canal-server/conf/webook/instance.properties
+      - ./script/canal/canal.properties:/home/admin/canal-server/conf/canal.properties

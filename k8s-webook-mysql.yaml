@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: Service
+metadata:
+#  名字叫做 mysql，你也可以随便换
+  name: webook-mysql
+spec:
+#  方便我们调试
+  type: LoadBalancer
+  ports:
+#    避免冲突，我用了 3308 端口
+    - port: 3308
+      name: mysql
+      protocol: TCP
+      targetPort: 3306
+# 筛选带 app:mysql 的 pod
+  selector:
+    app: webook-mysql
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webook-mysql
+spec:
+# 筛选带 app=mysql 的 pod
+  selector:
+    matchLabels:
+      app: webook-mysql
+#      定义 pod 的模板
+  template:
+    metadata:
+      labels:
+#        归属于 webook 的 mysql
+        app: webook-mysql
+    spec:
+      containers:
+        - name: mysql-8
+          env:
+#            通过环境变量设置 root 的密码
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+          image: mysql:8.0
+          ports:
+#            默认情况下，部署的 mysql 是监听 3306 端口的
+            - containerPort: 3306
+              name: mysql
+#              mysql 的数据怎么存储
+          volumeMounts:
+#           这两个配置的意思是，mysql 的数据存在 mysql-storage 这个持久化卷的 /mysql 目录下
+            - mountPath: /mysql
+              name: mysql-storage
+      volumes:
+        - name: mysql-storage
+          persistentVolumeClaim:
+#            使用 webook-mysql-pv-claim，这个 claim 里面详细描述了 mysql 所需要的卷的特性
+            claimName: webook-mysql-pv-claim
+
+---
+# 开始描述 mysql 的存储结构需要具备什么样的特征
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: webook-mysql-pv-claim
+spec:
+#  这里的 manual 其实是一个我们自己写的，只是用来绑定一下 pv 而已
+  storageClassName: manual
+#  访问模式，这里主要是控制能不能被多个 pod 读写
+  accessModes:
+# 被一个 pod 读写
+    - ReadWriteOnce
+# 究竟需要一些什么资源
+  resources:
+    requests:
+#      需要一个 G 的容量
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: webook-mysql-pv-claim
+#  labels 都是随便打的
+  labels:
+    type: local
+spec:
+#  这边 storageClassName 也设置为 manual 从而和 pvc 绑定在一起
+  storageClassName: manual
+#  各种容量
+  capacity:
+#    存储容量
+    storage: 1Gi
+#   本 PV 支持的访问方式
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+#    本 PV 的根目录
+    path: "/mnt/data"

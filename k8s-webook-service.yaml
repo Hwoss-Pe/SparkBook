@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Service
+metadata:
+#  代表这是我们的 webook 本体
+  name: webook
+#  规格说明，也即是详细说明这个服务是一个怎样的服务
+spec:
+#  你如果想要外部直接访问，就用这个
+#  type: LoadBalancer
+#  如果你想通过 Nginx 来访问，就用这个
+  type: ClusterIP
+  selector:
+    app:  webook
+  ports:
+    # 这个名字你们随意的
+    - name: http
+#      这边因为我本机上启用了很多东西，所以避免端口冲突
+#      你自己就优先用 80
+#      port: 88
+#      在使用 nginx 的时候，我切换到了这个端口
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+---
+# 如何解释这一份配置，或者说怎么处理这一份配置
+apiVersion: apps/v1
+# 声明我这里配置的是 Deployment
+kind: Deployment
+metadata:
+#  也叫做 webook，但这是一个 Deployment
+  name: webook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app:  webook
+  template:
+    metadata:
+      labels:
+        #        因为上面 selector 里面我们找的是这个 label
+        app: webook
+    #        pod 的具体规格说明
+    spec:
+      #      pod 里面运行的 container
+      containers:
+        - name: webook
+          image: flycash/webook:v0.0.1
+          ports:
+            #           在我们的 main 函数里面我写死了 8080，所以这里也要写 8080
+            - containerPort: 8080
