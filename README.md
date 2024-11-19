@@ -45,7 +45,9 @@ OS🪟🐧：[Ubuntu 22.04.3 LTS (WSL2)](https://ubuntu.com/desktop/wsl)
 ### 系统设计
 
 架构：
-![](https://pic.imgdb.cn/item/673c4497d29ded1a8ca18c98.png)
+![image-20241119154948019](https://github.com/Hwoss-Pe/Webook/blob/main/image-20241119154948019.png)
+
+
 
 ### 技术栈
 
