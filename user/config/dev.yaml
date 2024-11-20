@@ -1,0 +1,12 @@
+db:
+  dsn: "root:root@tcp(localhost:13316)/webook_user"
+redis:
+  addr: "localhost:6379"
+etcd:
+  endpoints:
+    - "localhost:12379"
+grpc:
+  server:
+    port: 8091
+#    这里会有一个续约机制
+    etcdTTL: 60

@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package user.v1;
+option go_package = "user/v1;userv1";
+import "google/protobuf/timestamp.proto"; //由于User用的time类型，这里导包调用
+
+service UsersService{
+  rpc Signup (SignupRequest) returns (SignupResponse);
+  rpc FindOrCreate (FindOrCreateRequest) returns (FindOrCreateResponse);
+  rpc Login (LoginRequest) returns (LoginResponse);
+  rpc Profile (ProfileRequest) returns (ProfileResponse);
+  rpc UpdateNonSensitiveInfo (UpdateNonSensitiveInfoRequest) returns (UpdateNonSensitiveInfoResponse);
+  rpc FindOrCreateByWechat (FindOrCreateByWechatRequest) returns (FindOrCreateByWechatResponse);
+}
+
+message User {
+  int64 id = 1;
+  string email = 2;
+  string nickname = 3;
+  string password = 4;
+  string  phone = 5;
+  string aboutMe = 6;
+  google.protobuf.Timestamp ctime = 7;
+  google.protobuf.Timestamp birthday = 8;
+  WechatInfo wechatInfo = 9;
+}
+message WechatInfo {
+  string openId = 1;
+  string unionId = 2;
+}
+message SignupRequest {
+  User user = 1;
+}
+message SignupResponse {
+
+}
+message FindOrCreateRequest {
+  string phone = 1;
+}
+message FindOrCreateResponse {
+  User user = 1;
+}
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+message LoginResponse {
+  User user = 1;
+}
+message ProfileRequest {
+  int64 id = 1;
+}
+message ProfileResponse {
+  User user = 1;
+}
+message UpdateNonSensitiveInfoRequest {
+  User user = 1;
+}
+message UpdateNonSensitiveInfoResponse {
+}
+message FindOrCreateByWechatRequest {
+  WechatInfo info = 1;
+}
+
+message FindOrCreateByWechatResponse {
+  User user = 1;
+}
+
