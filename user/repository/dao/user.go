@@ -71,7 +71,7 @@ func (G *GORMUserDAO) FindById(ctx context.Context, id int64) (User, error) {
 	return u, err
 }
 
-func NewGORMUserDAO(db *gorm.DB) *GORMUserDAO {
+func NewGORMUserDAO(db *gorm.DB) UserDAO {
 	return &GORMUserDAO{db: db}
 
 }
