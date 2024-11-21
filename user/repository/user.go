@@ -13,6 +13,7 @@ import (
 var ErrUserDuplicate = dao.ErrUserDuplicate
 var ErrUserNotFound = dao.ErrDataNotFound
 
+//go:generate mockgen -source=./user.go -package=repomocks -destination=mocks/user.mock.go UserRepository
 type UserRepository interface {
 	Create(ctx context.Context, u domain.User) error
 	// Update 更新数据，只有非 0 值才会更新
