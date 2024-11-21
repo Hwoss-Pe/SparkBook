@@ -5,10 +5,12 @@ import (
 	"Webook/user/repository"
 	repomocks "Webook/user/repository/mocks"
 	"context"
+	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/magiconair/properties/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -111,4 +113,11 @@ func TestPasswordEncrypt(t *testing.T) {
 	println(string(encrypted))
 	err = bcrypt.CompareHashAndPassword(encrypted, pwd)
 	require.NoError(t, err)
+}
+
+func Test(t *testing.T) {
+
+	code := "500"
+	i, _ := strconv.ParseInt(code, 10, 64)
+	fmt.Println(i)
 }
