@@ -1,5 +1,5 @@
 package saramax
 
-type Consume interface {
+type Consumer interface {
 	Start() error
 }

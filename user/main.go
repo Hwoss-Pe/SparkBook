@@ -1,14 +1,17 @@
 package main
 
 import (
-	"fmt"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 func main() {
 	initViperAndWatch()
-	fmt.Println(11)
+	app := Init()
+	err := app.GRPCServer.Serve()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func initViperAndWatch() {

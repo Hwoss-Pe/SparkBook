@@ -52,6 +52,7 @@ func (s *Server) register(ctx context.Context, port string) error {
 	//获取本机当前外网的ip
 	ip := netx.GetOutboundIP()
 	s.etcdKey = ip + ":" + port
+	s.etcdKey = serviceName + "/" + ip
 	addr := ip + ":" + port
 	//开始租约
 	leaseGrantResponse, err := cli.Grant(ctx, s.EtcdTTL)

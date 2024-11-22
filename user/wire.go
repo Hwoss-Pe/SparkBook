@@ -1,7 +1,15 @@
+//go:build wireinject
+
 package main
 
 import (
+	"Webook/pkg/wego"
+	"Webook/user/grpc"
 	"Webook/user/ioc"
+	"Webook/user/repository"
+	"Webook/user/repository/cache"
+	"Webook/user/repository/dao"
+	"Webook/user/service"
 	"github.com/google/wire"
 )
 
@@ -14,16 +22,16 @@ var thirdProvider = wire.NewSet(
 	ioc.InitEtcdClient,
 )
 
-//func Init() *wego.App {
-//	wire.Build(
-//		thirdProvider,
-//		cache.NewRedisUserCache,
-//		dao.NewGORMUserDAO,
-//		repository.NewCachedUserRepository,
-//		service.NewUserService,
-//		grpc.NewUserServiceServer,
-//		//ioc.InitGRPCxServer,
-//		wire.Struct(new(wego.App), "GRPCServer"),
-//	)
-//	return new(wego.App)
-//}
+func Init() *wego.App {
+	wire.Build(
+		thirdProvider,
+		cache.NewRedisUserCache,
+		dao.NewGORMUserDAO,
+		repository.NewCachedUserRepository,
+		service.NewUserService,
+		grpc.NewUserServiceServer,
+		ioc.InitGRPCxServer,
+		wire.Struct(new(wego.App), "GRPCServer"),
+	)
+	return new(wego.App)
+}
