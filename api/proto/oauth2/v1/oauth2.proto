@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package oauth2.v1;
+option go_package = "oauth2/v1;oauth2v1";
+
+
+service Oauth2Service {
+  //  获取url
+  rpc AuthURL(AuthURLRequest) returns (AuthURLResponse);
+//验证是否正确
+  rpc VerifyCode(VerifyCodeRequest) returns (VerifyCodeResponse);
+}
+
+message AuthURLRequest {
+  string state = 1;
+}
+
+message AuthURLResponse {
+  string  url = 1;
+}
+
+message VerifyCodeRequest {
+  string code = 1;
+}
+message VerifyCodeResponse {
+  string openId = 1;
+  string UnionId = 2;
+}

@@ -1,0 +1,17 @@
+grpc:
+  #  启动监听 9000 端口
+  server:
+    addr: ":8093"
+    etcdTTL: 60
+weChatConf:
+  appId: "xxxx"
+  appSecret: "xxxx"
+
+prometheus:
+  nameSpace: "a"
+  subsystem: "b"
+  instanceId: "oauth"
+  name: "d"
+etcd:
+  endpoints:
+    - "localhost:12379"

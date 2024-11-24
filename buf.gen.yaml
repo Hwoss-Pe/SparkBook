@@ -4,6 +4,7 @@ managed:
   go_package_prefix:
     default: ecodepub/pkg/model
 plugins:
+#  根目录执行  buf generate
   # 默认用最新版本
   - plugin: buf.build/protocolbuffers/go
     # 指定版本 buf.build/protocolbuffers/go:v1.28.1
