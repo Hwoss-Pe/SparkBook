@@ -98,3 +98,16 @@ func WrapClaims(fn func(*gin.Context, UserClaims) (Result, error)) gin.HandlerFu
 		ctx.JSON(http.StatusOK, res)
 	}
 }
+
+// Wrap 装饰器模式
+func Wrap(fn func(*gin.Context) (Result, error)) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		result, err := fn(context)
+		if err != nil {
+			log.Error("执行业务逻辑失败",
+				logger.Error(err))
+		}
+		vector.WithLabelValues(strconv.Itoa(result.Code)).Inc()
+		context.JSON(http.StatusOK, result)
+	}
+}
