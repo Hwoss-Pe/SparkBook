@@ -93,17 +93,17 @@ func (v *Validator[T]) dstDiff(ctx context.Context, src T) {
 	dbCtx, cancel := context.WithTimeout(ctx, time.Second)
 	//在目的库里面找对应的id
 	err := v.target.WithContext(dbCtx).
-		Where("id=?", src.Id()).First(&target).Error
+		Where("id=?", src.ID()).First(&target).Error
 	cancel()
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
 		//目的库没有通知修复
-		v.notify(src.Id(), event.InconsistentEventTypeTargetMissing)
+		v.notify(src.ID(), event.InconsistentEventTypeTargetMissing)
 	case err == nil:
 		// 查询到了数据
 		equal := src.CompareTo(target)
 		if !equal {
-			v.notify(src.Id(), event.InconsistentEventTypeNotEqual)
+			v.notify(src.ID(), event.InconsistentEventTypeNotEqual)
 		}
 	default:
 		v.l.Error("src => dst 查询目标表失败", logger.Error(err))
@@ -148,7 +148,7 @@ func (v *Validator[T]) srcMissingRecords(ctx context.Context, ts []T) {
 	//	获取target的id,然后根据id去src里面查一下做一个对比，找出差集进行删除
 	var ids []int64
 	for _, t := range ts {
-		ids = append(ids, t.Id())
+		ids = append(ids, t.ID())
 	}
 	var srcs []T
 	dbCtx, cancel := context.WithTimeout(ctx, time.Second)
@@ -164,7 +164,7 @@ func (v *Validator[T]) srcMissingRecords(ctx context.Context, ts []T) {
 		v.notifySrcMissing(ts)
 	case err == nil:
 		missing := slice.DiffSetFunc(ts, srcs, func(src, dst T) bool {
-			return src.Id() == dst.Id()
+			return src.ID() == dst.ID()
 		})
 		v.notifySrcMissing(missing)
 	default:
@@ -173,6 +173,6 @@ func (v *Validator[T]) srcMissingRecords(ctx context.Context, ts []T) {
 }
 func (v *Validator[T]) notifySrcMissing(ts []T) {
 	for _, t := range ts {
-		v.notify(t.Id(), event.InconsistentEventTypeBaseMissing)
+		v.notify(t.ID(), event.InconsistentEventTypeBaseMissing)
 	}
 }
