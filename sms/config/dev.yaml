@@ -1,0 +1,14 @@
+grpc:
+  #  启动监听 9001 端口
+  server:
+    addr: ":8091"
+    etcdAddr: "localhost:12379"
+    etcdTTL: 60
+
+etcd:
+  endpoints:
+    - "localhost:12379"
+
+tencentSms:
+  secretId: "xxxxxx"
+  secretKey: "oooooo"
