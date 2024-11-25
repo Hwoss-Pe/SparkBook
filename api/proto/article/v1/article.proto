@@ -1,0 +1,92 @@
+syntax = "proto3";
+package article.v1;
+option go_package = "article/v1;articlev1";
+
+
+import"google/protobuf/timestamp.proto";
+
+message Article {
+  int64 id = 1;
+  string title = 2;
+  string content = 3;
+  Author author = 4;
+  int32  status = 5;
+  google.protobuf.Timestamp ctime = 6;
+  google.protobuf.Timestamp utime = 7;
+  string abstract = 8;
+}
+message Author {
+  int64 id = 1;
+  string name = 2;
+}
+
+service ArticleService {
+  rpc Save (SaveRequest) returns (SaveResponse);
+  rpc Publish (PublishRequest) returns (PublishResponse);
+  rpc Withdraw (WithdrawRequest) returns (WithdrawResponse);
+  rpc List (ListRequest) returns (ListResponse);
+  rpc GetById (GetByIdRequest) returns (GetByIdResponse);
+  rpc GetPublishedById (GetPublishedByIdRequest) returns (GetPublishedByIdResponse);
+  rpc ListPub (ListPubRequest) returns (ListPubResponse);
+}
+
+message SaveRequest {
+  Article article = 1;
+}
+message SaveResponse {
+  int64 id = 1;
+}
+message PublishRequest {
+  Article article = 1;
+}
+message PublishResponse {
+  int64 id = 1;
+}
+message WithdrawRequest {
+  int64 uid = 1;
+  int64 id = 2;
+}
+message WithdrawResponse {
+}
+message GetByIdRequest {
+  int64 id = 1;
+}
+
+message GetByIdResponse {
+  Article article = 1;
+}
+message GetPublishedByIdRequest {
+  int64 id = 1;
+  int64 uid = 2;
+}
+
+message GetPublishedByIdResponse {
+  Article article = 1;
+}
+
+message ListPubRequest {
+  google.protobuf.Timestamp start_time = 1;
+  int32 offset = 2;
+  int32 limit = 3;
+}
+
+message ListPubResponse {
+  repeated Article articles = 1;
+}
+message ListRequest {
+  int64 author = 1;
+  int32 offset = 2;
+  int32 limit = 3;
+}
+
+message ListResponse {
+  repeated Article articles = 1;
+}
+
+message PublishV1Request {
+  Article article = 1;
+}
+
+message PublishV1Response {
+  int64 id = 1;
+}

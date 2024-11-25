@@ -1,0 +1,17 @@
+grpc:
+  server:
+    port: 8097
+    etcdAddr: "localhost:12379"
+    etcdTTL: 60
+  client:
+    user:
+      addr: ":8091"
+etcd:
+  endpoints:
+    - "localhost:12379"
+db:
+  dsn: "root:root@tcp(localhost:13316)/webook_article"
+redis:
+  addr: "localhost:6379"
+kafka:
+  addrs: "localhost:9094"

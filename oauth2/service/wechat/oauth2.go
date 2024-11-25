@@ -13,7 +13,8 @@ import (
 
 const authURLPattern = "https://open.weixin.qq.com/connect/qrconnect?appid=%s&redirect_uri=%s&response_type=code&scope=snsapi_login&state=%s#wechat_redire"
 
-var redirectURL = url.PathEscape("https://meoying.com/oauth2/wechat/callback")
+// 微信回调地址
+var redirectURL = url.PathEscape("https://demo.com/oauth2/wechat/callback")
 
 type service struct {
 	appId     string
