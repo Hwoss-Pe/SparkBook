@@ -2,6 +2,9 @@ package service
 
 import (
 	"Webook/article/domain"
+	"Webook/article/events"
+	"Webook/article/repository"
+	"Webook/pkg/logger"
 	"context"
 	"time"
 )
@@ -17,4 +20,15 @@ type ArticleService interface {
 	GetPublishedById(ctx context.Context, id, uid int64) (domain.Article, error)
 	// ListPub 根据更新时间来分页，更新时间必须小于 startTime
 	ListPub(ctx context.Context, startTime time.Time, offset, limit int) ([]domain.Article, error)
+}
+
+type articleService struct {
+	// 1. 在 service 这一层使用两个 repository
+	authorRepo repository.ArticleAuthorRepository
+	readerRepo repository.ArticleReaderRepository
+
+	logger logger.Logger
+
+	// 搞个异步的
+	producer events.Producer
 }
