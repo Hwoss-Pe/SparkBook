@@ -1,4 +1,4 @@
-package grpc
+package grpc2
 
 import (
 	smsv1 "Webook/api/proto/gen/api/proto/sms/v1"

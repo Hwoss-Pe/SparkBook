@@ -3,7 +3,7 @@ package ioc
 import (
 	prometheus2 "Webook/pkg/gormx/callback/prometheus"
 	"Webook/pkg/logger"
-	"Webook/user/repository/dao"
+	"Webook/sms/repository/dao"
 	"fmt"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
@@ -52,7 +52,7 @@ func InitDB(l logger.Logger) *gorm.DB {
 	}
 	prom := prometheus2.Callbacks{
 		Namespace:  "webook",
-		Subsystem:  "user",
+		Subsystem:  "sms",
 		Name:       "gorm",
 		InstanceID: "my-instance-1",
 		Help:       "gorm DB 查询",
@@ -65,7 +65,6 @@ func InitDB(l logger.Logger) *gorm.DB {
 	if err != nil {
 		panic(err)
 	}
-
 	return db
 }
 

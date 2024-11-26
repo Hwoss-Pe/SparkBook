@@ -8,7 +8,8 @@ grpc:
 etcd:
   endpoints:
     - "localhost:12379"
-
+db:
+  dsn: "root:root@tcp(localhost:13316)/webook_sms"
 tencentSms:
   secretId: "xxxxxx"
   secretKey: "oooooo"

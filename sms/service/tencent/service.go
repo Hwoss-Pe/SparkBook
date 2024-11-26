@@ -1,6 +1,7 @@
 package tencent
 
 import (
+	"Webook/sms/service"
 	"context"
 	"fmt"
 	"github.com/ecodeclub/ekit"
@@ -9,13 +10,13 @@ import (
 	"go.uber.org/zap"
 )
 
-type Service struct {
+type TencentService struct {
 	client   *sms.Client
 	appId    *string
 	signName *string
 }
 
-func (s *Service) Send(ctx context.Context, tplId string, args []string, numbers ...string) error {
+func (s *TencentService) Send(ctx context.Context, tplId string, args []string, numbers ...string) error {
 	req := sms.NewSendSmsRequest()
 	req.PhoneNumberSet = toStringPtrSlice(numbers)
 	req.SmsSdkAppId = s.appId
@@ -42,8 +43,8 @@ func (s *Service) Send(ctx context.Context, tplId string, args []string, numbers
 	return nil
 }
 
-func NewService(client *sms.Client, appId string, signName string) *Service {
-	return &Service{client: client, appId: &appId, signName: &signName}
+func NewService(client *sms.Client, appId string, signName string) service.Service {
+	return &TencentService{client: client, appId: &appId, signName: &signName}
 }
 
 func toStringPtrSlice(src []string) []*string {

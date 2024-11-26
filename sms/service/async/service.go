@@ -11,14 +11,14 @@ import (
 	"time"
 )
 
-type Service struct {
+type AsyncService struct {
 	svc  service.Service
 	l    logger.Logger
 	repo repository.AsyncSmsRepository
 }
 
-func NewService(svc service.Service, l logger.Logger, repo repository.AsyncSmsRepository) *Service {
-	res := &Service{svc: svc, l: l, repo: repo}
+func NewAsyncService(svc service.Service, l logger.Logger, repo repository.AsyncSmsRepository) service.Service {
+	res := &AsyncService{svc: svc, l: l, repo: repo}
 	//在创建的时候就直接启动这个异步处理进程，
 	go func() {
 		res.StartAsyncCycle()
@@ -26,12 +26,12 @@ func NewService(svc service.Service, l logger.Logger, repo repository.AsyncSmsRe
 	return res
 }
 
-func (s *Service) StartAsyncCycle() {
+func (s *AsyncService) StartAsyncCycle() {
 	for {
 		s.AsyncSend()
 	}
 }
-func (s *Service) AsyncSend() {
+func (s *AsyncService) AsyncSend() {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second)
 	//这个方法需要保证全实例只有一个能获取不重复的
 	sms, err := s.repo.PreemptWaitingSMS(ctx)
@@ -66,7 +66,7 @@ func (s *Service) AsyncSend() {
 		time.Sleep(time.Second * 3)
 	}
 }
-func (s *Service) Send(ctx context.Context, tplId string, args []string, numbers ...string) error {
+func (s *AsyncService) Send(ctx context.Context, tplId string, args []string, numbers ...string) error {
 	// 先判断是否需要异步
 	if m.asyncMode {
 		// 转储到数据库
@@ -86,7 +86,7 @@ func (s *Service) Send(ctx context.Context, tplId string, args []string, numbers
 	return err
 }
 
-func (s *Service) needAsync() bool {
+func (s *AsyncService) needAsync() bool {
 	// 1.1 使用绝对阈值，比如说直接发送的时候，（连续一段时间，或者连续N个请求）响应时间超过了 500ms，然后后续请求转异步
 	// 1.2 或者send返回的错误率大于某个阈值
 	// 2. 退出异步的方式就是连续请求和错误率都低于了阈值
