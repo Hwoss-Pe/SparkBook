@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package code.v1 ;
+option go_package = "code/v1;codev1";
+
+
+
+service CodeService {
+  rpc Send(CodeSendRequest)returns(CodeSendResponse);
+  rpc Verify(VerifyRequest)returns(VerifyResponse);
+}
+
+
+message CodeSendRequest {
+  string biz = 1;
+  string phone = 2;
+}
+
+message CodeSendResponse{}
+
+message VerifyRequest {
+  string biz = 1;
+  string phone = 2;
+  string inputCode = 3;
+}
+message VerifyResponse {
+  bool answer = 1;
+}
