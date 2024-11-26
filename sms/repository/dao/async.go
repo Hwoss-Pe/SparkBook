@@ -6,6 +6,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var ErrWaitingSMSNotFound = gorm.ErrRecordNotFound
+
 type AsyncSmsDAO interface {
 	Insert(ctx context.Context, s AsyncSms) error
 	GetWaitingSMS(ctx context.Context) (AsyncSms, error)
