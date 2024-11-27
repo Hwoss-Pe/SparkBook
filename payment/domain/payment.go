@@ -20,7 +20,7 @@ func (s PaymentStatus) AsUint8() uint8 {
 
 type PaymentStatus uint8
 
-// 支付成功，失败，退款
+// 预支付,支付成功，失败，退款
 const (
 	PaymentStatusUnknown = iota
 	PaymentStatusInit

@@ -1,10 +1,10 @@
 package ioc
 
 import (
-	grpc2 "gitee.com/geekbang/basic-go/webook/payment/grpc"
-	"gitee.com/geekbang/basic-go/webook/pkg/grpcx"
-	"gitee.com/geekbang/basic-go/webook/pkg/grpcx/interceptors/log"
-	"gitee.com/geekbang/basic-go/webook/pkg/logger"
+	grpc2 "Webook/payment/grpc"
+	"Webook/pkg/grpcx"
+	"Webook/pkg/grpcx/interceptor/log"
+	"Webook/pkg/logger"
 	"github.com/spf13/viper"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
@@ -12,7 +12,7 @@ import (
 
 func InitGRPCServer(wesvc *grpc2.WechatServiceServer,
 	ecli *clientv3.Client,
-	l logger.LoggerV1) *grpcx.Server {
+	l logger.Logger) *grpcx.Server {
 	type Config struct {
 		Port    int   `yaml:"port"`
 		EtcdTTL int64 `yaml:"etcdTTL"`

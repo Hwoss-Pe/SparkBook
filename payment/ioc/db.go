@@ -1,8 +1,8 @@
 package ioc
 
 import (
+	"Webook/payment/repository/dao"
 	"fmt"
-	"gitee.com/geekbang/basic-go/webook/payment/repository/dao"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
