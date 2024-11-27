@@ -1,0 +1,19 @@
+http:
+  addr: ":8070"
+
+db:
+  dsn: "root:root@tcp(localhost:13316)/webook_payment"
+
+kafka:
+  addrs:
+    - "localhost:9094"
+
+etcd:
+  endpoints:
+    - "localhost:12379"
+
+grpc:
+  server:
+    port: 8098
+    etcdAddr: "localhost:12379"
+    etcdTTL: 60

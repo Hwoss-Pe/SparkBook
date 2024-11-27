@@ -14,6 +14,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/golang/mock v1.4.4
 	github.com/google/wire v0.6.0
+	github.com/hashicorp/golang-lru v0.5.4
 	github.com/magiconair/properties v1.8.7
 	github.com/prometheus/client_golang v1.17.0
 	github.com/redis/go-redis/v9 v9.7.0
@@ -23,6 +24,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.1046
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.1046
+	github.com/wechatpay-apiv3/wechatpay-go v0.2.20
 	go.etcd.io/etcd/client/v3 v3.5.9
 	go.opentelemetry.io/otel v1.32.0
 	go.opentelemetry.io/otel/trace v1.32.0
