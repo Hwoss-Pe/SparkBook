@@ -14,6 +14,10 @@ OS🪟🐧：[Ubuntu 22.04.3 LTS (WSL2)](https://ubuntu.com/desktop/wsl)
 
 ### 业务分析
 
+#### BFF服务
+
+
+
 #### 用户服务
 
 安全:
@@ -27,9 +31,63 @@ OS🪟🐧：[Ubuntu 22.04.3 LTS (WSL2)](https://ubuntu.com/desktop/wsl)
 注册操作需要校验是否之前注册过，这里不要用先去查一次库的方式，而是直接插入由于手机号是独立的，去根据mysql的错误重复数据1042进行判断create是否成立的
 这里面还有有个findById的操作，思路是这里采用查数据库后写进缓存，触发降级就不走数据库的快慢路径操作先走缓存，缓存找不到就从数据库找，找完重新set进去，如果redis出现错误，我就不让他流量直接打到数据库，因此直接返回错误
 
-5.微信登录，这个确实进行访问后微信给你一个
+5.微信登录，先去url让前端弄成二维码，然后扫后等待微信回调一个方法等待接受，等待微信回调跳转，然后还有一个验证的流程，然后进行注册或者登录操作，主要是里面的unionid和openid
 
-url，然后扫后等待微信回调一个方法等待接受，然后进行注册或者登录操作，主要是里面的unionid和openid
+![](https://pic.imgdb.cn/item/674359dd88c538a9b5bb7534.png)
+
+![](https://pic.imgdb.cn/item/67435abf88c538a9b5bb753f.png)
+
+#### 短信服务
+
+短信服务其实就是去套用各种模板，并且提取一个顶级抽象，有趣的点在于它的容错怎么处理，提供多种实现，同步转异步，权限验证，超时重试，限流，还有一些固定模板的实现
+
+1.权限：传参数发送的时候，对应的模板id会被jwt加密，在这里需要类似装饰器模式进行一个解决后得到id
+
+2.限流：设置限流后对短信服务进行拦截，也是结合redis和lua的通用
+
+3.failover：这里首先采用的是数组开始遍历，但是发现流量都在第一个，就用求余法进行操作，还配置了最大超时次数就进行切换短信渠道商，这里切换的时候用的cas和一些原子类的操作，没有去加锁
+
+4.同步转异步：
+
+1.1 使用绝对阈值，比如说直接发送的时候，（连续一段时间，或者连续N个请求）响应时间超过了 500ms，然后后续请求转异步
+1.2 或者send返回的错误率大于某个阈值
+2.退出异步的方式就是连续请求和错误率都低于了阈值
+实现的方式都是用的维护两个滑动窗口的方式，这个也可以做成动态可配置
+
+对于发送的接口，先抢占，抢占到后发送，发送后记录数据给数据库，处理并发问题，结合数据库的for update锁，就是一个查完更新的操作，更新的同时计数加一并且只查一分钟前的记录，保证发送的时候不会有并发问题，因为时间已经被该实例更新，不会被其他拿到
+
+#### 验证码服务
+
+它只需要去调用短信服务，然后
+
+在自己维护一个redis，结合lua脚本吧输入和正确在里面确认，不要在代码会带来问题，来验证验证码是否正确，验证码的策略是十分钟有效期，并且超过一分钟就可以重新发送，在redis维护两个key就行，并且用户输入的验证码正确验证次数的标记-1，让他自己过期
+
+然后还有本地缓存的实现方式，验证码这种东西没必要多级缓存，因此在创建的时候可以手动配置
+
+#### 支付服务
+
+这里用的是微信Native的支付方式，主要是讲一下思路和需要的api问题
+
+思路：当业务方创建订单，这边传入对应的bizId和对应的数据，然后会在数据库初始化一条预支付信息，在web端暴露后接受微信方的回调后更新对应的时间，然后把数据发送到kakfa上，方便后面进行数据清洗（未实现），容错思路就是当业务方半小时没有返回，需要主动去微信那边查，这边开了个for去查数据库30分钟前的数据然后发送获取对应的结果，后更新数据。
+
+api：这里用到了微信开源的github.com/wechatpay-apiv3/wechatpay-go可以查看对应的实现，还有需要初始化微信客户端的一些配置，这些放在ioc/wechat.go里面。*notify.Handler可以帮我们在web端解析对应的请求&payments.Transaction{}
+*native.NativeApiService提供一些主动查询的方法
+
+![](https://pic.imgdb.cn/item/674727ccd0e0a243d4d2e8a4.png)
+
+
+
+#### 打赏服务
+
+![](https://pic.imgdb.cn/item/6747265ad0e0a243d4d2dfcd.png)
+
+
+
+
+
+#### 标签服务
+
+#### 搜索服务
 
 #### 文章服务
 
@@ -37,33 +95,22 @@ url，然后扫后等待微信回调一个方法等待接受，然后进行注�
 
 #### 交互服务
 
-#### 支付服务
-
 #### 热榜服务
-
-#### 搜索服务
-
-#### 短信服务
-
-#### 标签服务
-
-#### 打赏服务
-
-#### 权限服务
 
 #### 聊天服务
 
 #### 评论服务
 
-#### 权限服务
+#### Feed流服务
 
-#### 自定义三方扩展pkg
+#### 自定义扩展pkg
 
 **logger**：这个主要是采用zapLogger拓展，在不适用其他日志现成框架的前提下，单纯用接口定义出对应常用的方法，并且采用Field的字段约束，并且用这个给gorm和gin进行拓展打印日志，在其他业务代码中也是采用这个
 
 **saramax**:通过sarama的一些api进行二次封装，主要是对消费者去实现ConsumerGroupHandler就可以就消息的前后和处理的逻辑自己编写，并且引入泛型进行序列化读取操作，主要有批量消费和重试机制
 
 **ginx**：
+
 1.主要使用*gin.HandlerFunc 主要做的是对请求体的绑定到对应结构体和对claim进行校验的流程，也是采用泛型外面传进来，然后进行处理走对应的函数流程，完事后返回统一的result。
 
 2.还有限流插件的操作，在一定时间段限制对应的客户端ip流量通过，主要是按照ip进行建key，然后走lua脚本用zset的数据结构，基本和其他限流操作差不多。
@@ -73,11 +120,13 @@ url，然后扫后等待微信回调一个方法等待接受，然后进行注�
 4.此外还会统计活跃请求书和返回响应时间到Prometheus里面可选
 
 **grpcx**：
+
 1.采用自己设计的平滑的带权重的负载均衡，主要是要注意到balancer.Builder和sbalancer.Picker分别两个结构体去实现这两个接口，以etcd作为注册中心，并且加锁防止不同节点计算，balancer.SubConn作为节点存储，其中要注意注册中心转发数据后整会变浮点的
 
 2.也对进行日志打印的操作，通过判断是否之前panic掉的数据来获取对应的err，然后打对应的一些日志，方法，响应时间，对端应用名和ip等。
 
 **gormx**：
+
 1.利用callback机制增加对sql查询的时间的Prometheus的操作
 
 2.对更换数据库的时候双写方案，双写的一致性保证，使用方法在测试用例里面，拓展手动进行事务的提交和回滚也支持双数据源，主要利用的是gorm.SubConn和sql.Tx，后者可以更加精确的控制不同数据源的提交和回滚
@@ -89,6 +138,7 @@ url，然后扫后等待微信回调一个方法等待接受，然后进行注�
 **ratelimit**：利用redis和lua脚本实现滑动窗口的限流操作
 
 **migrator**：做的是同结构**不停机数据迁移**相关。**数据校验和数据修复**
+
 1.首先不停机迁移的方案首先对于两个数据库会有四个状态，分别src，src首先，dst首先，dst，也就是读写和写的操作，这里需要结合之前的双写策略保证对于两个的数据源的数据一致性
 
 2.数据校验，分为增量校验，增量需要注意offset的并发问题，可以使用utime或者canal进行解决，全量校验，在这个修复的策略用定时任务去处理，并且发送给kafka去异步进行修复，最大程度保证数据一致性。先去查一下对应的目的表，记录对应的列字段。
@@ -115,6 +165,11 @@ url，然后扫后等待微信回调一个方法等待接受，然后进行注�
   - [prometheus](https://hub.docker.com/r/bitnami/prometheus) - The Prometheus monitoring system and time series database
   - *grafana - The open observability platform*
   - *zipkin - A distributed tracing system*
+  - Canal - Alibaba's open-source project to capture database changes (binlog) and synchronize to other systems. It is often used for data replication and real-time streaming.
+  - ELK - A set of tools for logging, searching, and visualizing data:
+    - Elasticsearch: A distributed, RESTful search and analytics engine
+    - Logstash: A server-side data processing pipeline
+    - Kibana: A visualization tool for Elasticsearch data
 - kubernates
   - [Kubernetes cluster architecture](https://kubernetes.io/docs/concepts/architecture/)
   - [kubectl](https://kubernetes.io/docs/tasks/tools/) - The Kubernetes command-line tool
@@ -176,6 +231,3 @@ url，然后扫后等待微信回调一个方法等待接受，然后进行注�
 - 依赖注入提高了代码的可测试性。可以在单元测试中注入由 `gomock` 生成的实例。在集成测试阶段，为了节省公司资源，第三方依赖通常被替换为内存实现或 mock 实现。
 
 - 依赖注入叠加面向接口编程后，装饰器模式效果更佳。在 sms 模块中，有各种装饰器的实现，这些实现都是基于面向接口编程和依赖注入的。这使得装饰器可以自由组合，提升了系统的灵活性和扩展性。
-
-  
-
