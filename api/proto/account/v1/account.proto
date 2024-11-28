@@ -1,0 +1,40 @@
+syntax = "proto3";
+package account.v1;
+option go_package = "account.v1;accountv1";
+
+service AccountService{
+  rpc Credit(CreditRequest) returns (CreditResponse);
+}
+message CreditRequest {
+  //  唯一标识业务的
+  string biz = 1;
+  int64 biz_id = 2;
+  // 后续如果你还有退款，部分退款，平台垫资等需求，在这里加字段
+  // 注意一点，就是账号服务一般来说会和很多服务的数据关联在一起
+  // 后续对账、统计、报表，账号都是一个核心
+  // 不同的账号金额变动,这里可能是一加一减的
+  repeated CreditItem items = 3;
+}
+message CreditItem {
+  // 在一些复杂的系统里面，用户可能有多个账号，还有虚拟账号，退款账号等乱七八糟的划分
+  int64 account = 1;
+  // 账号类型
+  AccountType account_type = 2;
+  // 金额
+  int64 amt = 3;
+  // 货币，正常来说它类似于支付，最开始就尽量把货币的问题纳入考虑范围
+  string currency =4;
+  int64 uid  =5;
+}
+
+message CreditResponse {
+
+}
+enum AccountType {
+  AccountTypeUnknown = 0;
+  // 个人赞赏账号
+  AccountTypeReward = 1;
+  // 平台分成账号
+  AccountTypeSystem = 2;
+}
+
