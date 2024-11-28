@@ -14,6 +14,9 @@ type AccountServiceServer struct {
 	accountv1.UnimplementedAccountServiceServer
 }
 
+func NewAccountServiceServer(svc service.AccountService) *AccountServiceServer {
+	return &AccountServiceServer{service: svc}
+}
 func (a *AccountServiceServer) Register(server *grpc.Server) {
 	accountv1.RegisterAccountServiceServer(server, a)
 }
