@@ -13,5 +13,5 @@ grpc:
   addr: ":8090"
 
 es:
-  urls: "https://localhost:9200"
+  url: "localhost:9200"
   sniff: false

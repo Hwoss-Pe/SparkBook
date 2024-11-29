@@ -1,0 +1,21 @@
+{
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "long"
+      },
+      "title": {
+        "type": "text"
+      },
+      "status": {
+        "type": "integer"
+      },
+      "content": {
+        "type": "text"
+      },
+      "tags": {
+        "type": "keyword"
+      }
+    }
+  }
+}

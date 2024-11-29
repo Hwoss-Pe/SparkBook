@@ -1,0 +1,18 @@
+{
+  "mappings": {
+    "properties": {
+      "tags": {
+        "type": "keyword"
+      },
+      "uid": {
+        "type": "long"
+      },
+      "biz": {
+        "type": "keyword"
+      },
+      "biz_id": {
+        "type": "long"
+      }
+    }
+  }
+}
