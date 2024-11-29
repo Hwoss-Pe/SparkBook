@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package reward.v1;
+option go_package = "reward/v1;rewardv1";
+
+service RewardService {
+    rpc PreReward(PreRewardRequest) returns (PreRewardResponse);
+    rpc GetReward(GetRewardRequest) returns (GetRewardResponse);
+}
+message PreRewardRequest {
+    string biz = 1;
+    int64 biz_id = 2;
+    string biz_name = 3;
+    // 被打赏的人，也就是收钱的那个
+    int64 target_uid = 4;
+    // 打赏的人，也就是付钱的那个
+    int64 uid = 5;
+    // 打赏金额
+    int64 amt = 6;
+}
+
+message PreRewardResponse {
+    //  打赏这个东西，不存在说后面换支付啥的，
+    // 或者说至少现在没有啥必要考虑
+    // 所以直接耦合了微信扫码支付的 code_url 的说法
+    string code_url = 1;
+    //  打赏的 ID
+    int64 rid = 2;
+}
+message GetRewardRequest {
+    //  rid 和 打赏的人
+    int64 rid = 1;
+    int64 uid = 2;
+}
+
+// 正常来说，对于外面的人来说只关心打赏成功了没
+message GetRewardResponse {
+    RewardStatus status =1;
+}
+
+enum RewardStatus {
+    RewardStatusUnknown = 0;
+    RewardStatusInit = 1;
+    RewardStatusPayed = 2;
+    RewardStatusFailed = 3;
+}
