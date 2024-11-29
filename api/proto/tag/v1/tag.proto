@@ -1,0 +1,55 @@
+syntax="proto3";
+package tag.v1;
+option go_package="tag/v1;tagv1";
+
+message Tag {
+  int64 id = 1;
+  string name = 2;
+  int64 uid = 3;
+}
+
+service TagService {
+  rpc CreateTag(CreateTagRequest) returns (CreateTagResponse);
+  // 覆盖式的 API
+  // 也就是直接用新的 tag 全部覆盖掉已有的 tag
+  rpc AttachTags(AttachTagsRequest) returns (AttachTagsResponse);
+  rpc GetTags(GetTagsRequest) returns (GetTagsResponse);
+  rpc GetBizTags(GetBizTagsRequest) returns(GetBizTagsResponse);
+}
+
+message AttachTagsRequest {
+  repeated int64 tids = 1;
+  int64 uid = 2;
+  string biz = 3;
+  int64 biz_id = 4;
+}
+
+message AttachTagsResponse {
+}
+
+message CreateTagRequest {
+  int64 uid = 1;
+  string name = 2;
+}
+
+message CreateTagResponse {
+  Tag tag = 1;
+}
+
+message GetTagsRequest {
+  int64 uid = 1;
+}
+
+message GetTagsResponse {
+ repeated Tag tag = 1;
+}
+
+message GetBizTagsRequest {
+  string biz = 1;
+  int64 biz_id = 2;
+  int64 uid = 3;
+}
+
+message GetBizTagsResponse {
+  repeated Tag tags = 1;
+}

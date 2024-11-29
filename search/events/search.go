@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const topicSyncData = "sync_article_data"
+const DataSyncData = "sync_article_data"
 
 type SyncDataEventConsumer struct {
 	svc    service.SyncService
@@ -35,7 +35,7 @@ func (a *SyncDataEventConsumer) Start() error {
 		return err
 	}
 	go func() {
-		err := cg.Consume(context.Background(), []string{topicSyncArticle}, saramax.NewHandler[SyncDataEvent](a.l, a.Consume))
+		err := cg.Consume(context.Background(), []string{DataSyncData}, saramax.NewHandler[SyncDataEvent](a.l, a.Consume))
 		if err != nil {
 			a.l.Error("退出了消费循环异常", logger.Error(err))
 		}
