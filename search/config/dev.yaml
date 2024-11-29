@@ -11,7 +11,9 @@ kafka:
 grpc:
 #  启动监听 8090 端口
   addr: ":8090"
-
+etcd:
+  endpoints:
+    - "http://localhost:12379"
 es:
   url: "localhost:9200"
   sniff: false
