@@ -24,7 +24,7 @@ func InitWechatClient(cfg WechatConfig) *core.Client {
 		cfg.KeyPath,
 	)
 	if err != nil {
-		panic(err)
+		logger.Error(err)
 	}
 
 	ctx := context.Background()
@@ -36,7 +36,7 @@ func InitWechatClient(cfg WechatConfig) *core.Client {
 			mchPrivateKey, cfg.MchKey),
 	)
 	if err != nil {
-		panic(err)
+		logger.Error(err)
 	}
 	return client
 }
@@ -58,7 +58,7 @@ func InitWechatNotifyHandler(cfg WechatConfig) *notify.Handler {
 	handler, err := notify.NewRSANotifyHandler(cfg.MchKey,
 		verifiers.NewSHA256WithRSAVerifier(certificateVisitor))
 	if err != nil {
-		panic(err)
+		logger.Error(err)
 	}
 	return handler
 }
