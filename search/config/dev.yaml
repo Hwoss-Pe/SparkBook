@@ -1,0 +1,17 @@
+db:
+  dsn: "root:root@tcp(localhost:13316)/webook"
+
+redis:
+  addr: "localhost:6379"
+
+kafka:
+  addrs:
+    - "localhost:9094"
+
+grpc:
+#  启动监听 8090 端口
+  addr: ":8090"
+
+es:
+  urls: "https://localhost:9200"
+  sniff: false

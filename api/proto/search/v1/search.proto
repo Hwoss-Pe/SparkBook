@@ -1,0 +1,30 @@
+
+syntax="proto3";
+
+import "api/proto/search/v1/sync.proto";
+
+package search.v1;
+option go_package="search/v1;searchv1";
+
+service SearchService {
+  // 这个是最为模糊的搜索接口
+  rpc Search(SearchRequest) returns (SearchResponse);
+}
+
+message SearchRequest {
+  string expression = 1;
+  int64 uid = 2;
+}
+
+message SearchResponse {
+  UserResult user = 1;
+  ArticleResult article = 2;
+}
+
+message UserResult {
+  repeated User users =1;
+}
+
+message ArticleResult {
+  repeated Article articles = 1;
+}

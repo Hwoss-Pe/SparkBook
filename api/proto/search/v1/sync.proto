@@ -1,0 +1,51 @@
+
+syntax="proto3";
+
+package search.v1;
+option go_package="search/v1;searchv1";
+
+// SyncService 在大体量的情况下，这个接口可以考虑进一步细分
+service SyncService {
+  rpc InputUser (InputUserRequest) returns (InputUserResponse);
+  rpc InputArticle (InputArticleRequest) returns (InputArticleResponse);
+  rpc InputAny(InputAnyRequest) returns(InputAnyResponse);
+}
+
+message InputAnyRequest {
+  string index_name = 1;
+  string doc_id = 2;
+  string data = 3;
+}
+
+message InputAnyResponse {
+
+}
+
+message InputUserRequest {
+  User user = 1;
+}
+
+message InputUserResponse {
+}
+
+message InputArticleRequest {
+  Article article = 1;
+}
+
+message InputArticleResponse {
+}
+
+message Article {
+  int64 id = 1;
+  string title = 2;
+  int32 status = 3;
+  string content = 4;
+  repeated string tags = 5;
+}
+
+message User {
+  int64 id = 1;
+  string email = 2;
+  string nickname = 3;
+  string phone = 4;
+}
