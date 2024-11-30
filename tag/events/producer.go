@@ -16,6 +16,10 @@ type SaramaSyncProducer struct {
 	client sarama.SyncProducer
 }
 
+func NewSaramaSyncProducer(client sarama.SyncProducer) Producer {
+	return &SaramaSyncProducer{client: client}
+}
+
 func (s *SaramaSyncProducer) ProduceSyncEvent(ctx context.Context, tags BizTags) error {
 	data, _ := json.Marshal(tags)
 	evt := SyncDataEvent{

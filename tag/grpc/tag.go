@@ -1,4 +1,4 @@
-package grpc
+package grpc2
 
 import (
 	tagv1 "Webook/api/proto/gen/api/proto/tag/v1"

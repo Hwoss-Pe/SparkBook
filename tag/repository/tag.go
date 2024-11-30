@@ -93,6 +93,14 @@ func NewTagRepository(tagDAO dao.TagDAO, c cache.TagCache, l logger.Logger) TagR
 		cache: c,
 	}
 }
+
+func NewPreTagRepository(tagDAO dao.TagDAO, c cache.TagCache, l logger.Logger) *CachedTagRepository {
+	return &CachedTagRepository{
+		dao:   tagDAO,
+		l:     l,
+		cache: c,
+	}
+}
 func (c *CachedTagRepository) toDomain(tag dao.Tag) domain.Tag {
 	return domain.Tag{
 		Id:   tag.Id,

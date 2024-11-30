@@ -8,6 +8,7 @@ import (
 	"testing"
 )
 
+// 需要Gcc环境
 func TestGORMTagDAO_GetTagsByBiz(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open("gorm.db?mode=memory"), &gorm.Config{
 		// 只输出 SQL，不执行查询

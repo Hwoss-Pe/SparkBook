@@ -11,3 +11,9 @@ grpc:
   client:
     user:
       addr: ":8091"
+kafka:
+  addrs:
+    - "localhost:9094"
+etcd:
+  endpoints:
+    - "localhost:12379"

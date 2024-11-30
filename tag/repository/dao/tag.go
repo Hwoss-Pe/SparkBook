@@ -40,7 +40,7 @@ type GORMTagDAO struct {
 	db *gorm.DB
 }
 
-func NewGORMTagDAO(db *gorm.DB) *GORMTagDAO {
+func NewGORMTagDAO(db *gorm.DB) TagDAO {
 	return &GORMTagDAO{db: db}
 }
 
