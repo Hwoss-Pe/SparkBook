@@ -24,11 +24,51 @@ type ArticleService interface {
 
 type articleService struct {
 	// 1. 在 service 这一层使用两个 repository
-	authorRepo repository.ArticleAuthorRepository
-	readerRepo repository.ArticleReaderRepository
+	//authorRepo repository.ArticleAuthorRepository
+	//readerRepo repository.ArticleReaderRepository
 
 	logger logger.Logger
 
+	repo repository.ArticleRepository
+
 	// 搞个异步的
 	producer events.Producer
+}
+
+func (a *articleService) Save(ctx context.Context, art domain.Article) (int64, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *articleService) Publish(ctx context.Context, art domain.Article) (int64, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *articleService) Withdraw(ctx context.Context, uid, id int64) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *articleService) PublishV1(ctx context.Context, art domain.Article) (int64, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *articleService) List(ctx context.Context, author int64, offset, limit int) ([]domain.Article, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *articleService) GetById(ctx context.Context, id int64) (domain.Article, error) {
+	return a.repo.GetById(ctx, id)
+}
+
+func (a *articleService) GetPublishedById(ctx context.Context, id, uid int64) (domain.Article, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *articleService) ListPub(ctx context.Context, startTime time.Time, offset, limit int) ([]domain.Article, error) {
+	return a.repo.ListPub(ctx, startTime, offset, limit)
 }

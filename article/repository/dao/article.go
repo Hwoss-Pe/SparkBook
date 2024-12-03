@@ -1,7 +1,7 @@
 package dao
 
 type Article struct {
-	Id      string `gorm:"primaryKey,autoIncrement" bson:"id,omitempty"`
+	Id      int64  `gorm:"primaryKey,autoIncrement" bson:"id,omitempty"`
 	Title   string `gorm:"type=varchar(4096)" bson:"title,omitempty"`
 	Content string `gorm:"type=BLOB" bson:"content,omitempty"`
 	// 作者
