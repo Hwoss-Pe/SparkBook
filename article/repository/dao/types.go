@@ -2,8 +2,11 @@ package dao
 
 import (
 	"context"
+	"errors"
 	"time"
 )
+
+var ErrPossibleIncorrectAuthor = errors.New("用户在尝试操作非本人数据")
 
 //go:generate mockgen -source=./types.go -package=artdaomocks -destination=mocks/article.mock.go ArticleDAO
 type ArticleDAO interface {

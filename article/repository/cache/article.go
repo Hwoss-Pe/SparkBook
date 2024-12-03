@@ -3,8 +3,10 @@ package cache
 import (
 	"Webook/article/domain"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/redis/go-redis/v9"
+	"time"
 )
 
 var ErrKeyNotExist = redis.Nil
@@ -44,13 +46,23 @@ func (r *RedisArticleCache) DelFirstPage(ctx context.Context, author int64) erro
 	panic("implement me")
 }
 
+// Set 文章全量只缓存一分钟
 func (r *RedisArticleCache) Set(ctx context.Context, art domain.Article) error {
-	//TODO implement me
-	panic("implement me")
+	data, err := json.Marshal(art)
+	if err != nil {
+		return err
+	}
+	return r.client.Set(ctx, r.authorArtKey(art.Id), data, time.Minute).Err()
 }
 
 func (r *RedisArticleCache) Get(ctx context.Context, id int64) (domain.Article, error) {
-	r.client.Get(ctx)
+	data, err := r.client.Get(ctx, r.authorArtKey(id)).Bytes()
+	if err != nil {
+		return domain.Article{}, err
+	}
+	var res domain.Article
+	err = json.Unmarshal(data, &res)
+	return res, err
 }
 
 func (r *RedisArticleCache) SetPub(ctx context.Context, article domain.Article) error {

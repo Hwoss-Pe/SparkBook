@@ -55,9 +55,9 @@ func (a *articleService) PublishV1(ctx context.Context, art domain.Article) (int
 	panic("implement me")
 }
 
-func (a *articleService) List(ctx context.Context, author int64, offset, limit int) ([]domain.Article, error) {
-	//TODO implement me
-	panic("implement me")
+func (a *articleService) List(ctx context.Context, author int64,
+	offset, limit int) ([]domain.Article, error) {
+	return a.repo.List(ctx, author, offset, limit)
 }
 
 func (a *articleService) GetById(ctx context.Context, id int64) (domain.Article, error) {
