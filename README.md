@@ -1,4 +1,4 @@
-## 小微书Webook
+## 小微书SparkBook
 
 ### 简介
 
@@ -150,7 +150,7 @@ api：这里用到了微信开源的github.com/wechatpay-apiv3/wechatpay-go可�
 5.解决offset和limit带来的掠过或者重复读取问题，方案是canal或者加utime
 
 **架构**：
-![image-20241119154948019](https://github.com/Hwoss-Pe/Webook/blob/main/image-20241119154948019.png)
+![image-20241119154948019](https://github.com/Hwoss-Pe/SparkBook/blob/main/image-20241119154948019.png)
 
 ### 技术栈
 
