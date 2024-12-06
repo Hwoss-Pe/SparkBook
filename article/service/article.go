@@ -36,18 +36,22 @@ type articleService struct {
 }
 
 func (a *articleService) Save(ctx context.Context, art domain.Article) (int64, error) {
-	//TODO implement me
-	panic("implement me")
+	// 设置为未发表
+	art.Status = domain.ArticleStatusUnpublished
+	if art.Id > 0 {
+		err := a.update(ctx, art)
+		return art.Id, err
+	}
+	return a.create(ctx, art)
 }
 
 func (a *articleService) Publish(ctx context.Context, art domain.Article) (int64, error) {
-	//TODO implement me
-	panic("implement me")
+	art.Status = domain.ArticleStatusPublished
+	return a.repo.Sync(ctx, art)
 }
 
 func (a *articleService) Withdraw(ctx context.Context, uid, id int64) error {
-	//TODO implement me
-	panic("implement me")
+	return a.repo.SyncStatus(ctx, uid, id, domain.ArticleStatusPrivate)
 }
 
 func (a *articleService) PublishV1(ctx context.Context, art domain.Article) (int64, error) {
@@ -71,4 +75,13 @@ func (a *articleService) GetPublishedById(ctx context.Context, id, uid int64) (d
 
 func (a *articleService) ListPub(ctx context.Context, startTime time.Time, offset, limit int) ([]domain.Article, error) {
 	return a.repo.ListPub(ctx, startTime, offset, limit)
+}
+
+func (a *articleService) create(ctx context.Context,
+	art domain.Article) (int64, error) {
+	return a.repo.Create(ctx, art)
+}
+func (a *articleService) update(ctx context.Context,
+	art domain.Article) error {
+	return a.repo.Update(ctx, art)
 }
