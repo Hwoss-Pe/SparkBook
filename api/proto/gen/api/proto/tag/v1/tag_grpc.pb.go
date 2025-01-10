@@ -26,7 +26,6 @@ type TagServiceClient interface {
 	// 覆盖式的 API
 	// 也就是直接用新的 tag 全部覆盖掉已有的 tag
 	AttachTags(ctx context.Context, in *AttachTagsRequest, opts ...grpc.CallOption) (*AttachTagsResponse, error)
-	// 我们可以预期，一个用户的标签不会有很多，所以没特别大的必要做成分页
 	GetTags(ctx context.Context, in *GetTagsRequest, opts ...grpc.CallOption) (*GetTagsResponse, error)
 	GetBizTags(ctx context.Context, in *GetBizTagsRequest, opts ...grpc.CallOption) (*GetBizTagsResponse, error)
 }
@@ -83,7 +82,6 @@ type TagServiceServer interface {
 	// 覆盖式的 API
 	// 也就是直接用新的 tag 全部覆盖掉已有的 tag
 	AttachTags(context.Context, *AttachTagsRequest) (*AttachTagsResponse, error)
-	// 我们可以预期，一个用户的标签不会有很多，所以没特别大的必要做成分页
 	GetTags(context.Context, *GetTagsRequest) (*GetTagsResponse, error)
 	GetBizTags(context.Context, *GetBizTagsRequest) (*GetBizTagsResponse, error)
 	mustEmbedUnimplementedTagServiceServer()
