@@ -1,1 +1,1 @@
-package interactive
+package main
