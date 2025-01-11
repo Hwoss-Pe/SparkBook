@@ -32,7 +32,7 @@ type CachedReadCntRepository struct {
 	l     logger.Logger
 }
 
-func NewCachedInteractiveRepository(cache cache.InteractiveCache, dao dao.InteractiveDAO, l logger.Logger) *CachedReadCntRepository {
+func NewCachedInteractiveRepository(cache cache.InteractiveCache, dao dao.InteractiveDAO, l logger.Logger) InteractiveRepository {
 	return &CachedReadCntRepository{cache: cache, dao: dao, l: l}
 }
 

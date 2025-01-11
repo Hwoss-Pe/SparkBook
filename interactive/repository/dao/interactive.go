@@ -137,7 +137,7 @@ func (G *GORMInteractiveDAO) InsertCollectionBiz(ctx context.Context, cb UserCol
 
 func (G *GORMInteractiveDAO) GetCollectionInfo(ctx context.Context, biz string, bizId, uid int64) (UserCollectionBiz, error) {
 	var res UserCollectionBiz
-	err := G.db.WithContext(ctx).Where("biz=? AND biz_id = ? AND uid = ?", biz, bizId, uid).
+	err := G.db.WithContext(ctx).Where("biz=? and biz_id = ? and uid = ?", biz, bizId, uid).
 		First(&res).Error
 	return res, err
 }

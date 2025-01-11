@@ -1,3 +1,5 @@
+//go:build wireinject
+
 package main
 
 import (
@@ -6,13 +8,13 @@ import (
 	"Webook/interactive/ioc"
 	"Webook/interactive/repository"
 	"Webook/interactive/repository/cache"
+	"Webook/interactive/repository/dao"
 	"Webook/interactive/service"
-	"Webook/sms/repository/dao"
 	"github.com/google/wire"
 )
 
 var serviceProviderSet = wire.NewSet(
-	dao.NewGORMAsyncSmsDAO,
+	dao.NewGORMInteractiveDAO,
 	cache.NewRedisInteractiveCache,
 	repository.NewCachedInteractiveRepository,
 	service.NewInteractiveService,
