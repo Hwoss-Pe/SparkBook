@@ -32,6 +32,10 @@ type CachedReadCntRepository struct {
 	l     logger.Logger
 }
 
+func NewCachedInteractiveRepository(cache cache.InteractiveCache, dao dao.InteractiveDAO, l logger.Logger) *CachedReadCntRepository {
+	return &CachedReadCntRepository{cache: cache, dao: dao, l: l}
+}
+
 func (c *CachedReadCntRepository) IncrReadCnt(ctx context.Context, biz string, bizId int64) error {
 	err := c.dao.IncrReadCnt(ctx, biz, bizId)
 	if err != nil {
@@ -130,9 +134,6 @@ func (c *CachedReadCntRepository) GetByIds(ctx context.Context, biz string, ids 
 		}), nil
 }
 
-func NewCachedReadCntRepository(cache cache.InteractiveCache, dao dao.InteractiveDAO, l logger.Logger) *CachedReadCntRepository {
-	return &CachedReadCntRepository{cache: cache, dao: dao, l: l}
-}
 func (c *CachedReadCntRepository) toDomain(intr dao.Interactive) domain.Interactive {
 	return domain.Interactive{
 		Biz:        intr.Biz,
