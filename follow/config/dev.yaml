@@ -1,0 +1,5 @@
+db:
+  dsn: "root:root@tcp(localhost:13316)/webook"
+
+grpc:
+  addr: ":8092"
