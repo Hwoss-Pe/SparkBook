@@ -13,28 +13,42 @@ type FollowRelationService interface {
 	CancelFollow(ctx context.Context, follower, followee int64) error
 	// FollowInfo 获取某个人关注另一个人的详细信息
 	FollowInfo(ctx context.Context, follower, followee int64) (domain.FollowRelation, error)
+	GetFollowStatics(ctx context.Context, uid int64) (domain.FollowStatics, error)
+	GetFollower(ctx context.Context, follower, offset, limit int64) ([]domain.FollowRelation, error)
 }
 
 type followRelationService struct {
 	repo repository.FollowRepository
 }
 
+func NewFollowRelationService(repo repository.FollowRepository) FollowRelationService {
+	return &followRelationService{
+		repo: repo,
+	}
+}
+func (f *followRelationService) GetFollower(ctx context.Context, follower, offset, limit int64) ([]domain.FollowRelation, error) {
+	return f.repo.GetFollower(ctx, follower, offset, limit)
+}
 func (f *followRelationService) GetFollowee(ctx context.Context, follower, offset, limit int64) ([]domain.FollowRelation, error) {
-	//TODO implement me
-	panic("implement me")
+	return f.repo.GetFollowee(ctx, follower, offset, limit)
 }
 
 func (f *followRelationService) Follow(ctx context.Context, follower, followee int64) error {
-	//TODO implement me
-	panic("implement me")
+	return f.repo.AddFollowRelation(ctx, domain.FollowRelation{
+		Followee: followee,
+		Follower: follower,
+	})
 }
 
 func (f *followRelationService) CancelFollow(ctx context.Context, follower, followee int64) error {
-	//TODO implement me
-	panic("implement me")
+	return f.repo.InactiveFollowRelation(ctx, follower, followee)
 }
 
 func (f *followRelationService) FollowInfo(ctx context.Context, follower, followee int64) (domain.FollowRelation, error) {
-	//TODO implement me
-	panic("implement me")
+	val, err := f.repo.FollowInfo(ctx, follower, followee)
+	return val, err
+}
+
+func (f *followRelationService) GetFollowStatics(ctx context.Context, uid int64) (domain.FollowStatics, error) {
+	return f.repo.GetFollowStatics(ctx, uid)
 }

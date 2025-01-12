@@ -1,5 +1,15 @@
 db:
-  dsn: "root:root@tcp(localhost:13316)/webook"
+  dsn: "root:root@tcp(localhost:13316)/webook_follow"
 
 grpc:
-  addr: ":8092"
+  #  启动监听 9000 端口
+  server:
+    addr: ":8092"
+    etcdTTL: 60
+redis:
+  addr: "localhost:6379"
+
+etcd:
+  endpoints:
+    - "localhost:12379"
+

@@ -46,6 +46,8 @@ message CancelFollowResponse {
 }
 message GetFollowerRequest {
   int64 followee = 1;
+  int64 offset = 2;
+  int64 limit =3;
 }
 message GetFollowerResponse {
   repeated FollowRelation follow_relations = 1;

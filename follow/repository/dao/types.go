@@ -6,7 +6,7 @@ import (
 
 type FollowRelationDao interface {
 	FollowRelationList(ctx context.Context, follower, offset, limit int64) ([]FollowRelation, error)
-	FollowerRelationList(ctx context.Context, follower int64, followee int64) ([]FollowRelation, error)
+	FollowerRelationDetail(ctx context.Context, follower int64, followee int64) (FollowRelation, error)
 	// CreateFollowRelation 创建联系人
 	CreateFollowRelation(ctx context.Context, c FollowRelation) error
 	// UpdateStatus 更新状态
@@ -15,6 +15,7 @@ type FollowRelationDao interface {
 	CntFollower(ctx context.Context, uid int64) (int64, error)
 	// CntFollowee 统计自己关注了多少人
 	CntFollowee(ctx context.Context, uid int64) (int64, error)
+	FolloweeRelationList(ctx context.Context, followee, offset, limit int64) ([]FollowRelation, error)
 }
 
 // UserRelation 用户关系
@@ -48,3 +49,9 @@ type FollowRelation struct {
 	Ctime int64
 	Utime int64
 }
+
+const (
+	FollowRelationStatusUnknown uint8 = iota
+	FollowRelationStatusActive
+	FollowRelationStatusInactive
+)
