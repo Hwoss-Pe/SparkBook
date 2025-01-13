@@ -44,28 +44,63 @@ type GORMJobDAO struct {
 }
 
 func (G *GORMJobDAO) Preempt(ctx context.Context) (Job, error) {
-	//TODO implement me
-	panic("implement me")
+	db := G.db.WithContext(ctx)
+	for {
+		// 每一个循环都重新计算 time.Now，因为之前可能已经花了一些时间了
+		now := time.Now().UnixMilli()
+		var j Job
+		//	扫描数据库里面下一执行时间小于当前的时间就进行抢占
+		err := db.Where("next_time <= ? and status = ?", now, jobStatusWaiting).First(&j).Error
+		if err != nil {
+			// 数据库有问题
+			return Job{}, err
+		}
+		// 然后要开始抢占更改它的utime
+		// 这里利用 utime 来执行 CAS 操作
+		res := db.Model(&Job{}).Where("id = ? and version = ? ", j.Id, j.Version).Updates(map[string]any{
+			"utime":   now,
+			"version": j.Version + 1,
+			"status":  jobStatusRunning,
+		})
+		if res.Error != nil {
+			return Job{}, err
+		}
+		//抢占成功
+		if res.RowsAffected == 1 {
+			return j, nil
+		}
+		//	没抢到就进行下一个循环
+	}
 }
 
 func (G *GORMJobDAO) UpdateNextTime(ctx context.Context, id int64, t time.Time) error {
-	//TODO implement me
-	panic("implement me")
+	return G.db.WithContext(ctx).Model(&Job{}).
+		Where("id=?", id).Updates(map[string]any{
+		"utime":     time.Now().UnixMilli(),
+		"next_time": t.UnixMilli(),
+	}).Error
 }
 
 func (G *GORMJobDAO) UpdateUtime(ctx context.Context, id int64) error {
-	//TODO implement me
-	panic("implement me")
+	return G.db.WithContext(ctx).Model(&Job{}).
+		Where("id=?", id).Updates(map[string]any{
+		"utime": time.Now().UnixMilli(),
+	}).Error
 }
 
 func (G *GORMJobDAO) Release(ctx context.Context, id int64) error {
-	//TODO implement me
-	panic("implement me")
+	return G.db.WithContext(ctx).Model(&Job{}).
+		Where("id = ?", id).Updates(map[string]any{
+		"status": jobStatusWaiting,
+		"utime":  time.Now().UnixMilli(),
+	}).Error
 }
 
 func (G *GORMJobDAO) Insert(ctx context.Context, j Job) error {
-	//TODO implement me
-	panic("implement me")
+	now := time.Now().UnixMilli()
+	j.Ctime = now
+	j.Utime = now
+	return G.db.WithContext(ctx).Create(&j).Error
 }
 
 func NewGORMJobDAO(db *gorm.DB) JobDAO {
