@@ -2,6 +2,7 @@ package service
 
 import (
 	"Webook/comment/domain"
+	"Webook/comment/repository"
 	"golang.org/x/net/context"
 )
 
@@ -14,4 +15,35 @@ type CommentService interface {
 	// CreateComment 创建评论
 	CreateComment(ctx context.Context, comment domain.Comment) error
 	GetMoreReplies(ctx context.Context, rid int64, maxID int64, limit int64) ([]domain.Comment, error)
+}
+type commentService struct {
+	repo repository.CommentRepository
+}
+
+func (c *commentService) GetCommentList(ctx context.Context, biz string, bizId, minID, limit int64) ([]domain.Comment, error) {
+	comments, err := c.repo.FindByBiz(ctx, biz, bizId, minID, limit)
+	if err != nil {
+		return nil, err
+	}
+	return comments, nil
+}
+
+func (c *commentService) DeleteComment(ctx context.Context, id int64) error {
+	return c.repo.DeleteComment(ctx, domain.Comment{
+		Id: id,
+	})
+}
+
+func (c *commentService) CreateComment(ctx context.Context, comment domain.Comment) error {
+	return c.repo.CreateComment(ctx, comment)
+}
+
+func (c *commentService) GetMoreReplies(ctx context.Context, rid int64, maxID int64, limit int64) ([]domain.Comment, error) {
+	return c.repo.GetMoreReplies(ctx, rid, maxID, limit)
+}
+
+func NewCommentSvc(repo repository.CommentRepository) CommentService {
+	return &commentService{
+		repo: repo,
+	}
 }
