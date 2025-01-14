@@ -35,7 +35,7 @@ type BatchRankingService struct {
 }
 
 func NewBatchRankingService(intrSvc intrv1.InteractiveServiceClient, artSvc articlev1.ArticleServiceClient,
-	repo repository.RankingRepository) *BatchRankingService {
+	repo repository.RankingRepository) RankingService {
 	res := &BatchRankingService{
 		intrSvc:   intrSvc,
 		artSvc:    artSvc,

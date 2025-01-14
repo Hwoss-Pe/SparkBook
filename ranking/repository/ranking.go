@@ -12,6 +12,15 @@ type RankingRepository interface {
 	GetTopN(ctx context.Context) ([]domain.Article, error)
 }
 
+func NewCachedRankingRepository(
+	redisCache *cache.RedisRankingCache,
+	localCache *cache.RankingLocalCache) RankingRepository {
+	return &CachedRankingRepository{
+		redisCache: redisCache,
+		localCache: localCache,
+	}
+}
+
 type CachedRankingRepository struct {
 	redisCache *cache.RedisRankingCache
 	localCache *cache.RankingLocalCache
@@ -39,13 +48,4 @@ func (c *CachedRankingRepository) GetTopN(ctx context.Context) ([]domain.Article
 		return c.localCache.ForceGet(ctx)
 	}
 	return arts, err
-}
-
-func NewCachedRankingRepository(
-	redisCache *cache.RedisRankingCache,
-	localCache *cache.RankingLocalCache) RankingRepository {
-	return &CachedRankingRepository{
-		redisCache: redisCache,
-		localCache: localCache,
-	}
 }

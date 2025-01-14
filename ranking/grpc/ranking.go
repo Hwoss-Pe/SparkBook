@@ -1,8 +1,8 @@
-package grpc
+package grpc2
 
 import (
 	rankingv1 "Webook/api/proto/gen/api/proto/ranking/v1"
-	"Webook/article/domain"
+	"Webook/ranking/domain"
 	"Webook/ranking/service"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
