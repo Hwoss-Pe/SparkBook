@@ -1,0 +1,11 @@
+redis:
+  addr: "localhost:6379"
+
+grpc:
+  server:
+    addr: ":8092"
+  client:
+    intr:
+      addr: ":8090"
+    article:
+      addr: ":8091"

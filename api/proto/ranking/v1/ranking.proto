@@ -1,0 +1,41 @@
+syntax = "proto3" ;
+package ranking.v1;
+option go_package = "ranking/v1;rankingv1";
+
+import "google/protobuf/timestamp.proto";
+
+message Author {
+  int64 id = 1 ;
+  string name = 2;
+}
+message Article {
+  int64 id = 1 ;
+  string title = 2;
+  int32  status = 3 ;
+  string content = 4 ;
+  Author author = 5 ;
+  google.protobuf.Timestamp ctime = 6;
+  google.protobuf.Timestamp utime = 7;
+
+}
+
+
+service RankingService {
+  rpc RankTopN (RankTopNRequest) returns (RankTopNResponse) {}
+  rpc TopN (TopNRequest) returns (TopNResponse) {}
+}
+message RankTopNRequest {
+}
+
+message RankTopNResponse {
+}
+
+
+message TopNRequest {
+}
+
+
+message TopNResponse {
+  repeated Article articles = 1;
+}
+
