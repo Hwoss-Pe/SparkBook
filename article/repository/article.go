@@ -42,6 +42,10 @@ type CachedArticleRepository struct {
 	l  logger.Logger
 }
 
+func NewArticleRepository(dao dao.ArticleDAO, cache cache.ArticleCache, db *gorm.DB, l logger.Logger) ArticleRepository {
+	return &CachedArticleRepository{dao: dao, cache: cache, db: db, l: l}
+}
+
 func (c *CachedArticleRepository) Create(ctx context.Context, art domain.Article) (int64, error) {
 	id, err := c.dao.Insert(ctx, c.toEntity(art))
 	if err != nil {

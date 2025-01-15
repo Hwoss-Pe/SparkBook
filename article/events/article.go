@@ -31,6 +31,6 @@ func (s *SaramaSyncProducer) ProduceReadEvent(evt ReadEvent) error {
 	return err
 }
 
-func NewSaramaSyncProducer(producer sarama.SyncProducer) *SaramaSyncProducer {
+func NewSaramaSyncProducer(producer sarama.SyncProducer) Producer {
 	return &SaramaSyncProducer{producer: producer}
 }

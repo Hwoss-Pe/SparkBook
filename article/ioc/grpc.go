@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func InitGRPCxServer(articleServer grpc2.ArticleServiceServer,
+func InitGRPCxServer(articleServer *grpc2.ArticleServiceServer,
 	l logger.Logger, etcd *clientv3.Client) *grpcx.Server {
 	type Config struct {
 		Port     int    `yaml:"port"`

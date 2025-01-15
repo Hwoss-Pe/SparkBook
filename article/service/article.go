@@ -35,6 +35,10 @@ type articleService struct {
 	producer events.Producer
 }
 
+func NewArticleService(logger logger.Logger, repo repository.ArticleRepository, producer events.Producer) ArticleService {
+	return &articleService{logger: logger, repo: repo, producer: producer}
+}
+
 func (a *articleService) Save(ctx context.Context, art domain.Article) (int64, error) {
 	// 设置为未发表
 	art.Status = domain.ArticleStatusUnpublished
