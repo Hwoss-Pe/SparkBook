@@ -6,6 +6,7 @@ toolchain go1.22.0
 
 require (
 	github.com/IBM/sarama v1.43.3
+	github.com/dlclark/regexp2 v1.11.4
 	github.com/ecodeclub/ekit v0.0.9-0.20240304133850-20b37650f0ba
 	github.com/gin-contrib/sessions v1.0.2
 	github.com/gin-gonic/gin v1.10.0

@@ -50,7 +50,7 @@ func (r *RedisHandler) setRefreshToken(ctx *gin.Context, ssid string, uid int64)
 }
 func (r *RedisHandler) SetLoginToken(ctx *gin.Context, uid int64) error {
 	ssid := uuid.New().String()
-	err := r.SwtJWTToken(ctx, ssid, uid)
+	err := r.SetJWTToken(ctx, ssid, uid)
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (r *RedisHandler) SetLoginToken(ctx *gin.Context, uid int64) error {
 	return err
 }
 
-func (r *RedisHandler) SwtJWTToken(ctx *gin.Context, ssid string, uid int64) error {
+func (r *RedisHandler) SetJWTToken(ctx *gin.Context, ssid string, uid int64) error {
 	//根据key，ssid和user-agent进行生成token，并且存储到x-jwt-token
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, UserClaims{
 		Id:        uid,
