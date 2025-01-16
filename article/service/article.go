@@ -6,6 +6,7 @@ import (
 	"Webook/article/repository"
 	"Webook/pkg/logger"
 	"context"
+	"golang.org/x/sync/errgroup"
 	"time"
 )
 
@@ -24,10 +25,10 @@ type ArticleService interface {
 
 type articleService struct {
 	// 1. 在 service 这一层使用两个 repository
-	//authorRepo repository.ArticleAuthorRepository
-	//readerRepo repository.ArticleReaderRepository
-
-	logger logger.Logger
+	authorRepo repository.ArticleAuthorRepository
+	readerRepo repository.ArticleReaderRepository
+	userRepo   repository.AuthorRepository
+	logger     logger.Logger
 
 	repo repository.ArticleRepository
 
@@ -59,8 +60,37 @@ func (a *articleService) Withdraw(ctx context.Context, uid, id int64) error {
 }
 
 func (a *articleService) PublishV1(ctx context.Context, art domain.Article) (int64, error) {
-	//TODO implement me
-	panic("implement me")
+	var (
+		id  = art.Id
+		err error
+	)
+	if art.Id == 0 {
+		id, err = a.authorRepo.Create(ctx, art)
+	} else {
+		err = a.authorRepo.Update(ctx, art)
+	}
+	if err != nil {
+		return 0, err
+	}
+	//	保证线上库和制作库的id是一样的
+	art.Id = id
+	for i := 0; i < 3; i++ {
+		//可以重试三次
+		err := a.readerRepo.Save(ctx, art)
+		if err == nil {
+			break
+		}
+		a.logger.Error("部分失败：保存数据到线上库失败",
+			logger.Field{Key: "art_id", Value: id},
+			logger.Error(err))
+	}
+	if err != nil {
+		a.logger.Error("部分失败：保存数据到线上库重试都失败了",
+			logger.Field{Key: "art_id", Value: id},
+			logger.Error(err))
+		return 0, err
+	}
+	return id, nil
 }
 
 func (a *articleService) List(ctx context.Context, author int64,
@@ -73,8 +103,41 @@ func (a *articleService) GetById(ctx context.Context, id int64) (domain.Article,
 }
 
 func (a *articleService) GetPublishedById(ctx context.Context, id, uid int64) (domain.Article, error) {
-	//TODO implement me
-	panic("implement me")
+	var eg errgroup.Group
+	var art *domain.Article
+	var author *domain.Author
+	var err error
+	eg.Go(func() error {
+		res, eerr := a.repo.GetPublishedById(ctx, id)
+		art = &res
+		return eerr
+	})
+	eg.Go(func() error {
+		res, eerr := a.userRepo.FindAuthor(ctx, id)
+		author = &res
+		return eerr
+	})
+	if err = eg.Wait(); err != nil {
+		return domain.Article{}, err
+	}
+	art.Author = *author
+	res := *art
+	//	然后还要在这里提高阅读量发送kafka
+	go func() {
+		if err == nil {
+			er := a.producer.ProduceReadEvent(events.ReadEvent{
+				Aid: id,
+				Uid: uid,
+			})
+			if er != nil {
+				a.logger.Error("发送消息失败",
+					logger.Int64("uid", uid),
+					logger.Int64("aid", id),
+					logger.Error(err))
+			}
+		}
+	}()
+	return res, err
 }
 
 func (a *articleService) ListPub(ctx context.Context, startTime time.Time, offset, limit int) ([]domain.Article, error) {

@@ -19,8 +19,20 @@ type GrpcAuthorRepository struct {
 }
 
 func (g *GrpcAuthorRepository) FindAuthor(ctx context.Context, id int64) (domain.Author, error) {
-	//TODO implement me
-	panic("implement me")
+	art, err := g.dao.GetPubById(ctx, id)
+	if err != nil {
+		return domain.Author{}, nil
+	}
+	u, err := g.client.Profile(ctx, &userv1.ProfileRequest{
+		Id: art.AuthorId,
+	})
+	if err != nil {
+		return domain.Author{}, err
+	}
+	return domain.Author{
+		Id:   u.User.Id,
+		Name: u.User.Nickname,
+	}, nil
 }
 
 func NewGrpcAuthorRepository(articleDao dao.ArticleDAO, client userv1.UsersServiceClient) AuthorRepository {

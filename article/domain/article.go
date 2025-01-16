@@ -27,7 +27,7 @@ type ArticleStatus uint8
 const (
 	//	未发表，已发表，仅自己可见
 
-	ArticleStatusUnknown = iota
+	ArticleStatusUnknown ArticleStatus = iota
 	ArticleStatusUnpublished
 	ArticleStatusPublished
 	ArticleStatusPrivate
