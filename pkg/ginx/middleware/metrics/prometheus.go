@@ -14,7 +14,7 @@ type PrometheusBuilder struct {
 	Name      string
 	//可有可无
 	Help string
-	// 这一个实例名字，你可以考虑使用 本地 IP，
+	// 这一个实例名字，   可以考虑使用 本地 IP，
 	// 又或者在启动的时候配置一个 ID
 	InstanceID string
 }

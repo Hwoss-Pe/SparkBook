@@ -73,7 +73,7 @@ func (w *WechatNativeRewardService) GetReward(ctx context.Context, rid, uid int6
 	if r.Completed() {
 		return r, nil
 	}
-	//	当然慢路径就是你还没支付 就亲自调用支付服务查对应的状态
+	//	当然慢路径就是   还没支付 就亲自调用支付服务查对应的状态
 	response, err := w.client.GetPayment(ctx, &pmtv1.GetPaymentRequest{
 		BizTradeNo: w.bizTradeNO(r.Id),
 	})

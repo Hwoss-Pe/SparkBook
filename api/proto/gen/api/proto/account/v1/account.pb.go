@@ -76,7 +76,7 @@ type CreditRequest struct {
 	//  唯一标识业务的
 	Biz   string `protobuf:"bytes,1,opt,name=biz,proto3" json:"biz,omitempty"`
 	BizId int64  `protobuf:"varint,2,opt,name=biz_id,json=bizId,proto3" json:"biz_id,omitempty"`
-	// 后续如果你还有退款，部分退款，平台垫资等需求，在这里加字段
+	// 后续如果   还有退款，部分退款，平台垫资等需求，在这里加字段
 	// 注意一点，就是账号服务一般来说会和很多服务的数据关联在一起
 	// 后续对账、统计、报表，账号都是一个核心
 	// 不同的账号金额变动,这里可能是一加一减的

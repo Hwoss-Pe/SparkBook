@@ -38,10 +38,9 @@ func TestSender(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name:   "发送验证码",
-			tplId:  "1877556",
-			params: []string{"123456"},
-			// 改成你的手机号码
+			name:    "发送验证码",
+			tplId:   "1877556",
+			params:  []string{"123456"},
 			numbers: []string{"15261892580"},
 		},
 	}

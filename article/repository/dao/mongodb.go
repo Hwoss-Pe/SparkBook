@@ -82,7 +82,7 @@ func (m *MongoDBDAO) UpdateById(ctx context.Context, art Article) error {
 	filter := bson.D{bson.E{Key: "id", Value: art.Id},
 		bson.E{Key: "author_id", Value: art.AuthorId}}
 	sets := bson.D{bson.E{Key: "$set",
-		// 这里你可以考虑直接使用整个 art，因为会忽略零值。
+		// 这里   可以考虑直接使用整个 art，因为会忽略零值。
 		// 参考 Sync 中的写法
 		// 但是 一般都喜欢显式指定要被更新的字段，确保可读性和可维护性
 		Value: bson.D{bson.E{Key: "title", Value: art.Title},
@@ -95,7 +95,7 @@ func (m *MongoDBDAO) UpdateById(ctx context.Context, art Article) error {
 		return err
 	}
 	if res.MatchedCount != 1 {
-		// 比较可能就是有人更新别人的文章，比如说攻击者跟你过不去
+		// 比较可能就是有人更新别人的文章，比如说攻击者跟   过不去
 		return errors.New("更新失败")
 	}
 	return nil

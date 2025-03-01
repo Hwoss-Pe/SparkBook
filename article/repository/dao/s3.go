@@ -17,7 +17,7 @@ var statusPrivate = domain.ArticleStatusPrivate.ToUint8()
 type S3DAO struct {
 	oss *s3.S3
 	// 通过组合 GORMArticleDAO 来简化操作
-	// 当然在实践中，你是不太会有组合的机会
+	// 当然在实践中，   是不太会有组合的机会
 	GORMArticleDAO
 	bucket *string
 }

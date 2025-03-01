@@ -66,7 +66,7 @@ func TestGenData(t *testing.T) {
 	// 1000 批
 	for i := 0; i < 10; i++ {
 		// 每次 100 条
-		// 你可以考虑直接用 CreateInBatches，GORM 帮你分批次
+		//    可以考虑直接用 CreateInBatches，GORM 帮   分批次
 		// 自己分可以控制内存消耗
 		const batchSize = 100
 		data := make([]dao.Interactive, 0, batchSize)

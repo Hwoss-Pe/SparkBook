@@ -20,6 +20,8 @@ require (
 	github.com/golang/mock v1.4.4
 	github.com/google/uuid v1.4.0
 	github.com/google/wire v0.6.0
+	github.com/gotomicro/redis-lock v0.0.3
+	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/magiconair/properties v1.8.7
 	github.com/olivere/elastic/v7 v7.0.32
@@ -82,7 +84,6 @@ require (
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/gorilla/sessions v1.2.2 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
-	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
