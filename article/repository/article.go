@@ -83,7 +83,7 @@ func (c *CachedArticleRepository) List(ctx context.Context, author int64, offset
 		page, err := c.cache.GetFirstPage(ctx, author)
 		//这是走缓存的快路径
 		if err == nil {
-			//如果他是这样我就提前准备缓存
+			//如果他是这样 就提前准备缓存
 			if err == nil {
 				go func() {
 					c.preCache(ctx, page)
@@ -194,7 +194,7 @@ func (c *CachedArticleRepository) toEntity(art domain.Article) dao.Article {
 	}
 }
 
-// 我默认用户进作者简介的时候只会点击第一个文章
+// 默认用户进作者简介的时候只会点击第一个文章
 func (c *CachedArticleRepository) preCache(ctx context.Context, arts []domain.Article) {
 	// 1MB
 	const contentSizeThreshold = 1024 * 1024

@@ -222,7 +222,7 @@ type Collection struct {
 type UserCollectionBiz struct {
 	Id int64 `gorm:"primaryKey,autoIncrement"`
 	// 收藏夹 ID
-	// 作为关联关系中的外键，我们这里需要索引
+	// 作为关联关系中的外键，   这里需要索引
 	Cid   int64  `gorm:"index"`
 	BizId int64  `gorm:"uniqueIndex:biz_type_id_uid"`
 	Biz   string `gorm:"type:varchar(128);uniqueIndex:biz_type_id_uid"`

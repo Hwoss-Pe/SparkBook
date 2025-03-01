@@ -84,7 +84,7 @@ func (m *MongoDBDAO) UpdateById(ctx context.Context, art Article) error {
 	sets := bson.D{bson.E{Key: "$set",
 		// 这里你可以考虑直接使用整个 art，因为会忽略零值。
 		// 参考 Sync 中的写法
-		// 但是我一般都喜欢显式指定要被更新的字段，确保可读性和可维护性
+		// 但是 一般都喜欢显式指定要被更新的字段，确保可读性和可维护性
 		Value: bson.D{bson.E{Key: "title", Value: art.Title},
 			bson.E{Key: "content", Value: art.Content},
 			bson.E{Key: "status", Value: art.Status},

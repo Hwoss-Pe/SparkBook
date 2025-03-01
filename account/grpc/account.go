@@ -42,7 +42,7 @@ func (a *AccountServiceServer) itemToDomain(c *accountv1.CreditItem) domain.Cred
 		Account: c.Account,
 		Amt:     c.Amt,
 		Uid:     c.Uid,
-		// 两者取值都是一样的，我偷个懒，直接转
+		// 两者取值都是一样的， 偷个懒，直接转
 		AccountType: domain.AccountType(c.AccountType),
 		Currency:    c.Currency,
 	}

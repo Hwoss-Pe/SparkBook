@@ -32,7 +32,7 @@ func NewCanalIncrValidator[T migrator.Entity](base *gorm.DB, target *gorm.DB, di
 func (v *CanalIncrValidator[T]) Validate(ctx context.Context, id int64) error {
 	var base T
 
-	err := v.base.WithContext(ctx).Where("id = ?").First(&base).Error
+	err := v.base.WithContext(ctx).Where("id = ?", id).First(&base).Error
 	switch {
 	case err == nil:
 		var target T

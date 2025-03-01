@@ -13,7 +13,7 @@ services:
       #      设置初始化脚本
       - ./script/mysql/:/docker-entrypoint-initdb.d/
     ports:
-      #      注意这里我映射为了 13316 端口
+      #      注意这里映射为了 13316 端口
       - "13316:3306"
   redis:
     image: 'bitnami/redis:7.2'
@@ -27,7 +27,6 @@ services:
     environment:
       - ALLOW_NONE_AUTHENTICATION=yes
     ports:
-#      所以你要用 12379 端口来连接 etcd
       - 12379:2379
 #  mongo:
 #    image: mongo:6.0
@@ -67,7 +66,6 @@ services:
       - KAFKA_CFG_NODE_ID=0
 #      - 三个分区
       - KAFKA_CREATE_TOPICS=webook_binlog:3:1
-#      - 允许自动创建 topic，线上不要开启
       - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
       - KAFKA_CFG_PROCESS_ROLES=controller,broker
       - KAFKA_CFG_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://:9093,EXTERNAL://0.0.0.0:9094
@@ -111,7 +109,6 @@ services:
     ports:
       - 5044:5044
   kibana:
-#    注意检查你的 ElasticSearch 版本，这边我将 ES 也改到了这个版本
     image: docker.elastic.co/kibana/kibana:7.13.0
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
@@ -128,7 +125,6 @@ services:
       - mysql8
       - kafka
     ports:
-#      - 暴露了 canal 的端口，但是其实一般比较少直接跟 canal 打交道
       - 11111:11111
     volumes:
       - ./script/canal/webook/instance.properties:/home/admin/canal-server/conf/webook/instance.properties

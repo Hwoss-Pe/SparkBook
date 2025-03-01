@@ -91,7 +91,7 @@ func (G *GORMJobDAO) UpdateUtime(ctx context.Context, id int64) error {
 func (G *GORMJobDAO) Release(ctx context.Context, id int64) error {
 	return G.db.WithContext(ctx).Model(&Job{}).
 		Where("id = ?", id).Updates(map[string]any{
-		"status": jobStatusWaiting,
+		"status": jobStatusEnd,
 		"utime":  time.Now().UnixMilli(),
 	}).Error
 }

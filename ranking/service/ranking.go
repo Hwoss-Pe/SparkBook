@@ -92,7 +92,7 @@ func (a *BatchRankingService) rankTopN(ctx context.Context) ([]domain.Article, e
 	}
 	//	用一个优先队列维持住topN的id
 	priorityQueue := queue.NewPriorityQueue[Score](a.N, func(src Score, dst Score) int {
-		//原来的比目的小就返回-1
+		//原来的比目的小就返回-1，这个是降序
 		if src.score > dst.score {
 			return 1
 		} else if src.score == dst.score {

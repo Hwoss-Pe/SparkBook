@@ -28,7 +28,7 @@ func InitLogger() logger.Logger {
 	l := zap.New(core, zap.AddCaller())
 	res := logger.NewZapLogger(l)
 	go func() {
-		// 测试 ELK，我直接输出日志
+		// 测试 ELK， 直接输出日志
 		ticker := time.NewTicker(time.Millisecond * 1000)
 		for t := range ticker.C {
 			res.Info("模拟输出日志", logger.String("time", t.String()))

@@ -62,7 +62,7 @@ func (G *GORMTagDAO) CreateTagBiz(ctx context.Context, tagBiz []TagBiz) error {
 		t.Ctime = now
 		t.Utime = now
 	}
-	//这一堆记录的uid和对应资源都是一样的,所以我第一个解决
+	//这一堆记录的uid和对应资源都是一样的,所以 第一个解决
 	first := tagBiz[0]
 	return G.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		err := tx.Model(&TagBiz{}).Delete("uid = ? and biz = ? and biz_id = ?", first.Uid, first.Biz, first.BizId).Error

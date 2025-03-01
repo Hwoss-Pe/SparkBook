@@ -83,7 +83,7 @@ func (c *CachedUserRepository) FindById(ctx context.Context, id int64) (domain.U
 	switch {
 	case err == nil:
 		return user, nil
-		//	这里返回的是redis不存在这个key，那我就去数据库找，找完写进缓存
+		//	这里返回的是redis不存在这个key，那 就去数据库找，找完写进缓存
 	case errors.Is(err, cache.ErrKeyNotExist):
 		if ctx.Value("downgrade") == "true" {
 			return domain.User{}, errors.New("缓存中没有数据，并且触发了降级，放弃查询数据库")
@@ -96,7 +96,7 @@ func (c *CachedUserRepository) FindById(ctx context.Context, id int64) (domain.U
 		_ = c.cache.Set(ctx, du)
 		return du, nil
 	default:
-		//这里如果redis出现错误，我就不让他流量直接打到数据库，因此直接返回错误
+		//这里如果redis出现错误， 就不让他流量直接打到数据库，因此直接返回错误
 		return domain.User{}, err
 	}
 }

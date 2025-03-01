@@ -77,7 +77,7 @@ func (r *RedisHandler) SetJWTToken(ctx *gin.Context, ssid string, uid int64) err
 }
 
 func (r *RedisHandler) CheckSession(ctx *gin.Context, ssid string) error {
-	//在缓存里面检查,反向思维，我在redis里面只去记录已经退出登录的
+	//在缓存里面检查,反向思维， 在redis里面只去记录已经退出登录的
 	result, err := r.cmd.Exists(ctx, r.key(ssid)).Result()
 	if err != nil {
 		return err

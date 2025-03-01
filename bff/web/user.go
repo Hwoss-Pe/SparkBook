@@ -198,7 +198,7 @@ func (c *UserHandler) Edit(ctx *gin.Context) {
 	}
 
 	if len(req.AboutMe) > 1024 {
-		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "关于我过长"})
+		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "关于 过长"})
 		return
 	}
 	birthday, err := time.Parse(time.DateOnly, req.Birthday)

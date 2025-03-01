@@ -4,10 +4,10 @@ metadata:
 #  名字叫做 mysql，你也可以随便换
   name: webook-mysql
 spec:
-#  方便我们调试
+#  方便   调试
   type: LoadBalancer
   ports:
-#    避免冲突，我用了 3308 端口
+#    避免冲突， 用了 3308 端口
     - port: 3308
       name: mysql
       protocol: TCP
@@ -62,7 +62,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: webook-mysql-pv-claim
 spec:
-#  这里的 manual 其实是一个我们自己写的，只是用来绑定一下 pv 而已
+#  这里的 manual 其实是一个   自己写的，只是用来绑定一下 pv 而已
   storageClassName: manual
 #  访问模式，这里主要是控制能不能被多个 pod 读写
   accessModes:

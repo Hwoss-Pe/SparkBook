@@ -52,7 +52,6 @@ func (b *BatchHandler[T]) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 				err := json.Unmarshal(msg.Value, &t)
 				if err != nil {
 					// 消息格式都不对，没啥好处理的
-					// 但是也不能直接返回，在线上的时候要继续处理下去
 					b.l.Error("反序列化消息体失败",
 						logger.String("topic", msg.Topic),
 						logger.Int32("partition", msg.Partition),
@@ -72,7 +71,7 @@ func (b *BatchHandler[T]) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 				session.MarkMessage(msg, "")
 			}
 		} else {
-			//	如果批量提交失败怎么办？重试或者发送到死信队列也可以的
+			//	重试或者发送到死信队列也可以的
 			const maxRetries = 3
 			var retryCount int64
 			var err error
@@ -85,15 +84,13 @@ func (b *BatchHandler[T]) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 					}
 					break
 				}
-
 				retryCount++
 				b.l.Error("批量提交失败，正在重试", logger.Int64("retryCount", retryCount), logger.Error(err))
-				time.Sleep(time.Second * time.Duration(retryCount)) // Exponential backoff 可以加上退避
+				time.Sleep(time.Second * time.Duration(retryCount))
 			}
 
 			if err != nil {
 				b.l.Error("批量提交失败，重试已超出最大次数", logger.Error(err))
-				// 可以选择将失败的数据记录到一个持久化存储中，或者将消息放回队列（具体逻辑可以根据业务需求定制）
 			}
 
 		}

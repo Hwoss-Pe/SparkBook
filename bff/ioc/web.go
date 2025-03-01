@@ -36,7 +36,6 @@ func InitGinServer(l logger.Logger,
 		Engine: engine,
 		Addr:   addr,
 	}
-
 }
 func timeout() gin.HandlerFunc {
 	return func(ctx *gin.Context) {

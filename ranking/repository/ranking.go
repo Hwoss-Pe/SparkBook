@@ -44,7 +44,7 @@ func (c *CachedRankingRepository) GetTopN(ctx context.Context) ([]domain.Article
 	if err == nil {
 		_ = c.localCache.Set(ctx, arts)
 	} else {
-		// 这里，我们没有进一步区分是什么原因导致的 Redis 错误
+		// 这里，   没有进一步区分是什么原因导致的 Redis 错误
 		return c.localCache.ForceGet(ctx)
 	}
 	return arts, err

@@ -5,7 +5,7 @@ const (
 	UserInvalidInput = 401001
 	// UserInternalServerError 这是一个非常函数的错误码。代表用户模块系统内部错误
 	UserInternalServerError = 501001
-	// 假设说我们需要进一步关心别的错误
+	// 假设说   需要进一步关心别的错误
 
 	// UserInvalidOrPassword 用户输入的账号或者密码不对
 	UserInvalidOrPassword = 401002

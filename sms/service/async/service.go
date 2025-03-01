@@ -48,7 +48,7 @@ func (s *AsyncService) AsyncSend() {
 		}
 		//如果是抢占到后发送成功
 		res := err == nil
-		// 通知 repository 我这一次的执行结果
+		// 通知 repository  这一次的执行结果
 		err = s.repo.ReportScheduleResult(ctx, sms.Id, res)
 		if err != nil {
 			s.l.Error("执行异步发送短信成功，但是标记数据库失败",

@@ -70,7 +70,7 @@ func (u *userService) Profile(ctx context.Context,
 
 func (u *userService) UpdateNonSensitiveInfo(ctx context.Context,
 	user domain.User) error {
-	///因为我们要修改非敏感信息的话这里对于那些信息要么屏蔽，要么就依赖下一层修改非0值
+	///因为   要修改非敏感信息的话这里对于那些信息要么屏蔽，要么就依赖下一层修改非0值
 	user.Email = ""
 	user.Phone = ""
 	user.Password = ""

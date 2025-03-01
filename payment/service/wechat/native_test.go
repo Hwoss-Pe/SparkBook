@@ -71,7 +71,7 @@ func TestServer(t *testing.T) {
 	http.HandleFunc("/", func(
 		writer http.ResponseWriter,
 		request *http.Request) {
-		writer.Write([]byte("hello, 我进来了"))
+		writer.Write([]byte("hello,  进来了"))
 	})
 	http.ListenAndServe(":8080", nil)
 }

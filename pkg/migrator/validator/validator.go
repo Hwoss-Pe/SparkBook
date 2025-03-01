@@ -163,6 +163,7 @@ func (v *Validator[T]) srcMissingRecords(ctx context.Context, ts []T) {
 		// 说明 ids 全部没有
 		v.notifySrcMissing(ts)
 	case err == nil:
+		//ts 中存在但在 srcs 中缺失的元素
 		missing := slice.DiffSetFunc(ts, srcs, func(src, dst T) bool {
 			return src.ID() == dst.ID()
 		})
