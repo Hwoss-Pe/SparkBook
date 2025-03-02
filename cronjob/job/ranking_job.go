@@ -49,13 +49,29 @@ func NewRankingJobV1(
 		nodeID:         uuid.New().String(),
 		redisClient:    redisClient,
 		rankingLoadKey: "ranking_job_nodes_load",
-		load:           &atomic.Int32{},
+		load:           &atomic.Int32{}, //假设节点负载
 		closeSignal:    make(chan struct{}),
 		loadTicker:     time.NewTicker(loadInterval),
 	}
 	// 开启
 	res.loadCycle()
 	return res
+}
+
+type RedisFuncExecutor struct {
+	funcs map[string]func(ctx context.Context, j RankingJobV1) error
+}
+
+func NewRedisFuncExecutor() *RedisFuncExecutor {
+	return &RedisFuncExecutor{funcs: map[string]func(ctx context.Context, j RankingJobV1) error{}}
+}
+
+func (l *RedisFuncExecutor) Name() string {
+	return "ranking-executor"
+}
+
+func (l *RedisFuncExecutor) RegisterFunc(name string, fn func(ctx context.Context, j RankingJobV1) error) {
+	l.funcs[name] = fn
 }
 
 func (r *RankingJobV1) Name() string {
@@ -74,8 +90,7 @@ func (r *RankingJobV1) Run() error {
 		lock, err := r.client.Lock(ctx, r.key, r.timeout,
 			&rlock.FixIntervalRetry{
 				Interval: time.Millisecond * 100,
-				Max:      3,
-				// 重试的超时
+				Max:      3, // 重试的超时
 			}, time.Second)
 		if err != nil {
 			r.l.Warn("获取分布式锁失败", logger.Error(err))

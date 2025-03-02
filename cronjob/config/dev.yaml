@@ -4,3 +4,8 @@ grpc:
   #  启动监听 8090 端口
   server:
     port: 8095
+    etcdAddr: "localhost:12379"
+    etcdTTL: 60
+  client:
+    ranking:
+      addr: ":8092"

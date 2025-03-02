@@ -1,6 +1,7 @@
 package job
 
 import (
+	rankingv1 "Webook/api/proto/gen/api/proto/ranking/v1"
 	"Webook/cronjob/domain"
 	"Webook/cronjob/service"
 	"Webook/pkg/logger"
@@ -19,15 +20,27 @@ type Executor interface {
 
 // LocalFuncExecutor 调用本地方法的
 type LocalFuncExecutor struct {
-	funcs map[string]func(ctx context.Context, j domain.CronJob) error
+	funcs  map[string]func(ctx context.Context, j domain.CronJob) error
+	client rankingv1.RankingServiceClient
 }
 
-func NewLocalFuncExecutor() *LocalFuncExecutor {
-	return &LocalFuncExecutor{funcs: map[string]func(ctx context.Context, j domain.CronJob) error{}}
+func NewLocalFuncExecutor(client rankingv1.RankingServiceClient) *LocalFuncExecutor {
+	return &LocalFuncExecutor{
+		funcs:  map[string]func(ctx context.Context, j domain.CronJob) error{},
+		client: client,
+	}
 }
 
 func (l *LocalFuncExecutor) Name() string {
 	return "local"
+}
+func (l *LocalFuncExecutor) Ranking(ctx context.Context, job domain.CronJob) error {
+	//只是计算后存储到redis
+	_, err := l.client.TopN(ctx, &rankingv1.TopNRequest{})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (l *LocalFuncExecutor) RegisterFunc(name string, fn func(ctx context.Context, j domain.CronJob) error) {
@@ -69,7 +82,7 @@ func (s *Scheduler) RegisterExecutor(exec Executor) {
 
 func (s *Scheduler) Schedule(ctx context.Context) error {
 	for {
-		// 放弃调度了
+		// 放弃调度
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
@@ -83,10 +96,8 @@ func (s *Scheduler) Schedule(ctx context.Context) error {
 		if err != nil {
 			continue
 		}
-		// 肯定要调度执行 j
 		exec, ok := s.executors[j.Executor]
 		if !ok {
-			// 你可以直接中断了，也可以下一轮
 			s.l.Error("找不到执行器",
 				logger.Int64("jid", j.Id),
 				logger.String("executor", j.Executor))
