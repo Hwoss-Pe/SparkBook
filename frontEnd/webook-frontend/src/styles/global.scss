@@ -1,0 +1,118 @@
+:root {
+  /* 颜色变量 */
+  --primary-color: #ff2442;
+  --primary-light: #ff6b80;
+  --primary-dark: #d01a35;
+  
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9f9f9;
+  --bg-tertiary: #f0f0f0;
+  
+  /* 边框 */
+  --border-color: #e0e0e0;
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  
+  /* 阴影 */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  
+  /* 间距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+}
+
+body {
+  font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  margin: 0;
+  padding: 0;
+  line-height: 1.5;
+}
+
+/* 按钮样式优化 */
+.el-button--primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.el-button--primary:hover,
+.el-button--primary:focus {
+  background-color: var(--primary-light);
+  border-color: var(--primary-light);
+}
+
+.el-button--primary.is-plain {
+  color: var(--primary-color);
+  background-color: #fff;
+  border-color: var(--primary-color);
+}
+
+.el-button--primary.is-plain:hover,
+.el-button--primary.is-plain:focus {
+  background-color: #fff;
+  border-color: var(--primary-light);
+  color: var(--primary-light);
+}
+
+/* 标签页样式优化 */
+.el-tabs__active-bar {
+  background-color: var(--primary-color);
+}
+
+.el-tabs__item.is-active {
+  color: var(--primary-color);
+}
+
+.el-tabs__item:hover {
+  color: var(--primary-light);
+}
+
+/* 输入框样式优化 */
+.el-input__inner:focus,
+.el-textarea__inner:focus {
+  border-color: var(--primary-color);
+}
+
+/* 卡片样式 */
+.card {
+  background-color: var(--bg-primary);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-lg);
+}
+
+/* 通用容器 */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+/* 通用动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* 响应式断点 */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 var(--spacing-sm);
+  }
+}
