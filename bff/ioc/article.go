@@ -2,6 +2,11 @@ package ioc
 
 import (
 	articlev1 "Webook/api/proto/gen/api/proto/article/v1"
+	intrv1 "Webook/api/proto/gen/api/proto/intr/v1"
+	rankingv1 "Webook/api/proto/gen/api/proto/ranking/v1"
+	rewardv1 "Webook/api/proto/gen/api/proto/reward/v1"
+	"Webook/bff/web"
+	"Webook/pkg/logger"
 	"github.com/spf13/viper"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/naming/resolver"
@@ -32,4 +37,12 @@ func InitArticleClient(ecli *clientv3.Client) articlev1.ArticleServiceClient {
 		panic(err)
 	}
 	return articlev1.NewArticleServiceClient(cc)
+}
+
+func NewArticleHandler(artSvc articlev1.ArticleServiceClient,
+	intrSvc intrv1.InteractiveServiceClient,
+	rankingSvc rankingv1.RankingServiceClient,
+	rewardSvc rewardv1.RewardServiceClient,
+	l logger.Logger) *web.ArticleHandler {
+	return web.NewArticleHandler(artSvc, intrSvc, rankingSvc, rewardSvc, l)
 }

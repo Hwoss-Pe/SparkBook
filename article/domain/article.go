@@ -44,6 +44,7 @@ func (s ArticleStatus) ToUint8() uint8 {
 
 // Author 在领域的概念里面，他只有作者而不是用户的概念，用户有额外的用户领域
 type Author struct {
-	Id   int64
-	Name string
+	Id     int64
+	Name   string
+	Avatar string // 作者头像URL
 }

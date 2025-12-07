@@ -15,3 +15,5 @@ grpc:
       target: "etcd:///service/interactive"
     reward:
       target: "etcd:///service/reward"
+    ranking:
+      target: "etcd:///service/ranking"

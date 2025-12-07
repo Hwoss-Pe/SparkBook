@@ -32,18 +32,47 @@ type RedisArticleCache struct {
 }
 
 func (r *RedisArticleCache) GetFirstPage(ctx context.Context, author int64) ([]domain.Article, error) {
-	//TODO implement me
-	panic("implement me")
+	key := r.firstPageKey(author)
+	data, err := r.client.Get(ctx, key).Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	var res []domain.Article
+	err = json.Unmarshal(data, &res)
+	return res, err
 }
 
 func (r *RedisArticleCache) SetFirstPage(ctx context.Context, author int64, arts []domain.Article) error {
-	//TODO implement me
-	panic("implement me")
+	key := r.firstPageKey(author)
+
+	// 为了节省内存，缓存时不包含文章内容，只保留摘要信息
+	cacheArts := make([]domain.Article, len(arts))
+	for i, art := range arts {
+		cacheArts[i] = domain.Article{
+			Id:         art.Id,
+			Title:      art.Title,
+			Status:     art.Status,
+			CoverImage: art.CoverImage,
+			Author:     art.Author,
+			Ctime:      art.Ctime,
+			Utime:      art.Utime,
+			// 不缓存 Content，节省内存
+		}
+	}
+
+	data, err := json.Marshal(cacheArts)
+	if err != nil {
+		return err
+	}
+
+	// 第一页缓存 10 分钟，因为作者文章列表变化不频繁
+	return r.client.Set(ctx, key, data, 10*time.Minute).Err()
 }
 
 func (r *RedisArticleCache) DelFirstPage(ctx context.Context, author int64) error {
-	//TODO implement me
-	panic("implement me")
+	key := r.firstPageKey(author)
+	return r.client.Del(ctx, key).Err()
 }
 
 // Set 文章全量只缓存一分钟

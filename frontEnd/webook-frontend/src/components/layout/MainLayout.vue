@@ -87,6 +87,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { userApi } from '@/api/user'
 import { Search, House, Star, Histogram, ChatDotRound, Edit, User } from '@element-plus/icons-vue'
 
 const userStore = useUserStore()
@@ -118,9 +119,18 @@ const navigateTo = (path: string) => {
 }
 
 // 处理登出
-const handleLogout = () => {
-  userStore.clearUser()
-  router.push('/login')
+const handleLogout = async () => {
+  try {
+    // 调用后端退出登录接口
+    await userApi.logout()
+  } catch (error) {
+    console.error('退出登录接口调用失败:', error)
+    // 即使接口调用失败，也要清除本地状态
+  } finally {
+    // 清除本地用户状态
+    userStore.clearUser()
+    router.push('/login')
+  }
 }
 
 // 初始化用户状态

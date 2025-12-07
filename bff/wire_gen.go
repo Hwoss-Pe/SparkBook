@@ -25,8 +25,9 @@ func InitApp() *wego.App {
 	userHandler := web.NewUserHandler(usersServiceClient, codeServiceClient, handler)
 	articleServiceClient := ioc.InitArticleClient(client)
 	interactiveServiceClient := ioc.InitIntrClient(client)
+	rankingServiceClient := ioc.InitRankingClient(client)
 	rewardServiceClient := ioc.InitRewardClient(client)
-	articleHandler := web.NewArticleHandler(articleServiceClient, interactiveServiceClient, rewardServiceClient, logger)
+	articleHandler := ioc.NewArticleHandler(articleServiceClient, interactiveServiceClient, rankingServiceClient, rewardServiceClient, logger)
 	rewardHandler := web.NewRewardHandler(rewardServiceClient, articleServiceClient)
 	server := ioc.InitGinServer(logger, handler, userHandler, articleHandler, rewardHandler)
 	app := &wego.App{

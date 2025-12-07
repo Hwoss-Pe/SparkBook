@@ -85,6 +85,7 @@ type User struct {
 	Birthday sql.NullInt64
 	Nickname sql.NullString `gorm:"type=varchar(128)"`
 	AboutMe  sql.NullString `gorm:"type=varchar(1024)"`
+	Avatar   sql.NullString `gorm:"type=varchar(512)"` // 头像URL
 
 	WechatOpenId  sql.NullString `gorm:"type=varchar(256);unique"`
 	WechatUnionId sql.NullString `gorm:"type=varchar(256)"`

@@ -30,8 +30,9 @@ func (g *GrpcAuthorRepository) FindAuthor(ctx context.Context, id int64) (domain
 		return domain.Author{}, err
 	}
 	return domain.Author{
-		Id:   u.User.Id,
-		Name: u.User.Nickname,
+		Id:     u.User.Id,
+		Name:   u.User.Nickname,
+		Avatar: u.User.Avatar,
 	}, nil
 }
 

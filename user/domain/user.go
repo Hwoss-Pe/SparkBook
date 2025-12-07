@@ -11,6 +11,7 @@ type User struct {
 	Password string
 	Phone    string
 	AboutMe  string
+	Avatar   string // 头像URL
 	Ctime    time.Time
 	Birthday time.Time
 	//	可以使用微信扫码登录，这里封装一下对应的登录api所用参数

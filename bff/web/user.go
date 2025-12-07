@@ -187,6 +187,7 @@ func (c *UserHandler) Edit(ctx *gin.Context) {
 		// 2023-01-01
 		Birthday string `json:"birthday"`
 		AboutMe  string `json:"aboutMe"`
+		Avatar   string `json:"avatar"`
 	}
 	var req Req
 	if err := ctx.Bind(&req); err != nil {
@@ -214,6 +215,7 @@ func (c *UserHandler) Edit(ctx *gin.Context) {
 				Id:       uc.Id,
 				Nickname: req.Nickname,
 				AboutMe:  req.AboutMe,
+				Avatar:   req.Avatar,
 				Birthday: timestamppb.New(birthday),
 			},
 		})
@@ -232,6 +234,7 @@ func (c *UserHandler) ProfileJWT(ctx *gin.Context) {
 		Nickname string
 		Birthday string
 		AboutMe  string
+		Avatar   string
 	}
 	uc := ctx.MustGet("user").(jwt2.UserClaims)
 	resp, err := c.userSvc.Profile(ctx, &userv1.ProfileRequest{Id: uc.Id})
@@ -248,6 +251,7 @@ func (c *UserHandler) ProfileJWT(ctx *gin.Context) {
 		Nickname: u.Nickname,
 		Birthday: u.Birthday.AsTime().Format(time.DateOnly),
 		AboutMe:  u.AboutMe,
+		Avatar:   u.Avatar,
 	})
 }
 func (c *UserHandler) Profile(ctx *gin.Context) {

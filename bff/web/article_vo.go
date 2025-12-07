@@ -62,8 +62,9 @@ func (req ArticleReq) toDTO(uid int64) *articlev1.Article {
 
 // AuthorVo 作者信息
 type AuthorVo struct {
-	Id   int64  `json:"id"`
-	Name string `json:"name"`
+	Id     int64  `json:"id"`
+	Name   string `json:"name"`
+	Avatar string `json:"avatar"`
 }
 
 // ArticlePubVo 推荐文章列表返回的文章信息

@@ -113,8 +113,9 @@ func convertToV(dm domain.Article) (*articlev1.Article, error) {
 	newArticle.CoverImage = dm.CoverImage
 	newArticle.Status = int32(dm.Status)
 	newArticle.Author = &articlev1.Author{
-		Id:   dm.Author.Id,
-		Name: dm.Author.Name,
+		Id:     dm.Author.Id,
+		Name:   dm.Author.Name,
+		Avatar: dm.Author.Avatar,
 	}
 	newArticle.Ctime = timestamppb.New(dm.Ctime)
 	newArticle.Utime = timestamppb.New(dm.Utime)
@@ -128,8 +129,9 @@ func convertToDomain(vArticle *articlev1.Article) (domain.Article, error) {
 		art.Content = vArticle.GetContent()
 		art.CoverImage = vArticle.GetCoverImage()
 		art.Author = domain.Author{
-			Id:   vArticle.Author.GetId(),
-			Name: vArticle.Author.GetName(),
+			Id:     vArticle.Author.GetId(),
+			Name:   vArticle.Author.GetName(),
+			Avatar: vArticle.Author.GetAvatar(),
 		}
 		art.Status = domain.ArticleStatus(vArticle.GetStatus())
 		art.Title = vArticle.GetTitle()

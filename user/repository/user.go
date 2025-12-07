@@ -46,6 +46,10 @@ func (c *CachedUserRepository) Create(ctx context.Context, u domain.User) error 
 			String: u.Phone,
 			Valid:  u.Phone != "",
 		},
+		Avatar: sql.NullString{
+			String: u.Avatar,
+			Valid:  u.Avatar != "",
+		},
 		WechatOpenId: sql.NullString{
 			String: u.WechatInfo.OpenId,
 			Valid:  u.WechatInfo.OpenId != "",
@@ -130,6 +134,10 @@ func (c *CachedUserRepository) domainToEntity(user domain.User) dao.User {
 			String: user.AboutMe,
 			Valid:  user.AboutMe != "",
 		},
+		Avatar: sql.NullString{
+			String: user.Avatar,
+			Valid:  user.Avatar != "",
+		},
 	}
 }
 
@@ -147,6 +155,7 @@ func (c *CachedUserRepository) entityToDomain(ue dao.User) domain.User {
 		Phone:    ue.Phone.String,
 		Nickname: ue.Nickname.String,
 		AboutMe:  ue.AboutMe.String,
+		Avatar:   ue.Avatar.String,
 		Birthday: birthday,
 		Ctime:    time.UnixMilli(ue.Ctime),
 		WechatInfo: domain.WechatInfo{

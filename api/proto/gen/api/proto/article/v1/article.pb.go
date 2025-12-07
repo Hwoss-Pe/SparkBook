@@ -134,6 +134,7 @@ type Author struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Avatar        string                 `protobuf:"bytes,3,opt,name=avatar,proto3" json:"avatar,omitempty"` // 作者头像URL
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -178,6 +179,13 @@ func (x *Author) GetId() int64 {
 func (x *Author) GetName() string {
 	if x != nil {
 		return x.Name
+	}
+	return ""
+}
+
+func (x *Author) GetAvatar() string {
+	if x != nil {
+		return x.Avatar
 	}
 	return ""
 }
@@ -942,10 +950,11 @@ const file_api_proto_article_v1_article_proto_rawDesc = "" +
 	"\x05utime\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\x05utime\x12\x1a\n" +
 	"\babstract\x18\b \x01(\tR\babstract\x12\x1f\n" +
 	"\vcover_image\x18\t \x01(\tR\n" +
-	"coverImage\",\n" +
+	"coverImage\"D\n" +
 	"\x06Author\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\"<\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x16\n" +
+	"\x06avatar\x18\x03 \x01(\tR\x06avatar\"<\n" +
 	"\vSaveRequest\x12-\n" +
 	"\aarticle\x18\x01 \x01(\v2\x13.article.v1.ArticleR\aarticle\"\x1e\n" +
 	"\fSaveResponse\x12\x0e\n" +

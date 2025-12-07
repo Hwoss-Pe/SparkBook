@@ -73,10 +73,16 @@ func convertToDomain(u *userv1.User) domain.User {
 	du.Password = u.GetPassword()
 	du.Phone = u.GetPhone()
 	du.AboutMe = u.GetAboutMe()
+	du.Avatar = u.GetAvatar()
 	du.Ctime = u.GetCtime().AsTime()
-	du.WechatInfo = domain.WechatInfo{
-		OpenId:  u.GetWechatInfo().GetOpenId(),
-		UnionId: u.GetWechatInfo().GetUnionId(),
+	if u.GetBirthday() != nil {
+		du.Birthday = u.GetBirthday().AsTime()
+	}
+	if u.GetWechatInfo() != nil {
+		du.WechatInfo = domain.WechatInfo{
+			OpenId:  u.GetWechatInfo().GetOpenId(),
+			UnionId: u.GetWechatInfo().GetUnionId(),
+		}
 	}
 	return du
 }
@@ -89,6 +95,7 @@ func convertToV(user domain.User) *userv1.User {
 		Password: user.Password,
 		Phone:    user.Phone,
 		AboutMe:  user.AboutMe,
+		Avatar:   user.Avatar,
 		Ctime:    timestamppb.New(user.Ctime),
 		Birthday: timestamppb.New(user.Birthday),
 		WechatInfo: &userv1.WechatInfo{

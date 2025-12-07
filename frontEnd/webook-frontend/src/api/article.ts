@@ -80,12 +80,12 @@ export const articleApi = {
   
   // 保存文章（草稿）
   saveArticle: (article: Partial<Article>) => {
-    return post<{ id: number }>('/articles/edit', article)
+    return post<number>('/articles/edit', article)
   },
   
   // 发布文章
   publishArticle: (article: Partial<Article>) => {
-    return post<{ id: number }>('/articles/publish', article)
+    return post<number>('/articles/publish', article)
   },
   
   // 撤回文章

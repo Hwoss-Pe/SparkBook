@@ -114,8 +114,36 @@ func (c *CachedArticleRepository) List(ctx context.Context, author int64, offset
 }
 
 func (c *CachedArticleRepository) Sync(ctx context.Context, art domain.Article) (int64, error) {
-	//TODO implement me
-	panic("implement me")
+	// 调用 DAO 层的 Sync 方法，实现制作库到线上库的同步
+	id, err := c.dao.Sync(ctx, c.toEntity(art))
+	if err != nil {
+		return 0, err
+	}
+
+	// 同步成功后，处理缓存
+	author := art.Author.Id
+
+	// 删除作者文章列表的第一页缓存，因为新发布的文章会影响列表
+	go func() {
+		if delErr := c.cache.DelFirstPage(ctx, author); delErr != nil {
+			c.l.Error("删除作者文章列表缓存失败",
+				logger.Int64("author", author),
+				logger.Int64("article_id", id),
+				logger.Error(delErr))
+		}
+	}()
+
+	// 设置已发布文章的缓存
+	art.Id = id
+	go func() {
+		if setErr := c.cache.SetPub(ctx, art); setErr != nil {
+			c.l.Error("设置已发布文章缓存失败",
+				logger.Int64("article_id", id),
+				logger.Error(setErr))
+		}
+	}()
+
+	return id, nil
 }
 
 func (c *CachedArticleRepository) SyncStatus(ctx context.Context,

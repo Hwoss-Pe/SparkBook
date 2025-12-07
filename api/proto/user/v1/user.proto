@@ -23,6 +23,7 @@ message User {
   google.protobuf.Timestamp ctime = 7;
   google.protobuf.Timestamp birthday = 8;
   WechatInfo wechatInfo = 9;
+  string avatar = 10; // 头像URL
 }
 message WechatInfo {
   string openId = 1;

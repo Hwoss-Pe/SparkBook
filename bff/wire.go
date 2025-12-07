@@ -16,7 +16,7 @@ func InitApp() *wego.App {
 		ioc.InitRedis,
 		ioc.InitEtcdClient,
 
-		web.NewArticleHandler,
+		ioc.NewArticleHandler,
 		web.NewUserHandler,
 		web.NewRewardHandler,
 		jwt.NewRedisHandler,
@@ -24,6 +24,7 @@ func InitApp() *wego.App {
 		ioc.InitUserClient,
 		ioc.InitIntrClient,
 		ioc.InitRewardClient,
+		ioc.InitRankingClient,
 		ioc.InitCodeClient,
 		ioc.InitArticleClient,
 		ioc.InitGinServer,

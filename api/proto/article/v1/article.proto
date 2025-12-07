@@ -19,6 +19,7 @@ message Article {
 message Author {
   int64 id = 1;
   string name = 2;
+  string avatar = 3; // 作者头像URL
 }
 
 service ArticleService {

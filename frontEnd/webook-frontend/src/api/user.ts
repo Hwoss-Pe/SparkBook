@@ -8,6 +8,7 @@ export interface User {
   phone: string
   aboutMe: string
   birthday?: string
+  avatar?: string // 头像URL
   wechatInfo?: {
     openId: string
     unionId: string
@@ -38,12 +39,14 @@ export interface ProfileResponse {
   phone?: string
   aboutMe?: string
   birthday?: string
+  avatar?: string
   // 后端实际返回的字段名（大写开头）
   Email?: string
   Nickname?: string
   Phone?: string
   AboutMe?: string
   Birthday?: string
+  Avatar?: string
 }
 
 // 用户相关API
@@ -81,7 +84,12 @@ export const userApi = {
   
   // 更新用户信息
   updateProfile: (user: Partial<User>) => {
-    return post('/users/edit', user)
+    return post('/users/edit', {
+      nickname: user.nickname,
+      birthday: user.birthday,
+      aboutMe: user.aboutMe,
+      avatar: user.avatar
+    })
   },
   
   // 发送短信验证码

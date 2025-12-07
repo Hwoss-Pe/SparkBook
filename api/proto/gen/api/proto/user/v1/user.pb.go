@@ -33,6 +33,7 @@ type User struct {
 	Ctime         *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=ctime,proto3" json:"ctime,omitempty"`
 	Birthday      *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=birthday,proto3" json:"birthday,omitempty"`
 	WechatInfo    *WechatInfo            `protobuf:"bytes,9,opt,name=wechatInfo,proto3" json:"wechatInfo,omitempty"`
+	Avatar        string                 `protobuf:"bytes,10,opt,name=avatar,proto3" json:"avatar,omitempty"` // 头像URL
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -128,6 +129,13 @@ func (x *User) GetWechatInfo() *WechatInfo {
 		return x.WechatInfo
 	}
 	return nil
+}
+
+func (x *User) GetAvatar() string {
+	if x != nil {
+		return x.Avatar
+	}
+	return ""
 }
 
 type WechatInfo struct {
@@ -706,7 +714,7 @@ var File_api_proto_user_v1_user_proto protoreflect.FileDescriptor
 
 const file_api_proto_user_v1_user_proto_rawDesc = "" +
 	"\n" +
-	"\x1capi/proto/user/v1/user.proto\x12\auser.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb3\x02\n" +
+	"\x1capi/proto/user/v1/user.proto\x12\auser.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xcb\x02\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +
@@ -718,7 +726,9 @@ const file_api_proto_user_v1_user_proto_rawDesc = "" +
 	"\bbirthday\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\bbirthday\x123\n" +
 	"\n" +
 	"wechatInfo\x18\t \x01(\v2\x13.user.v1.WechatInfoR\n" +
-	"wechatInfo\">\n" +
+	"wechatInfo\x12\x16\n" +
+	"\x06avatar\x18\n" +
+	" \x01(\tR\x06avatar\">\n" +
 	"\n" +
 	"WechatInfo\x12\x16\n" +
 	"\x06openId\x18\x01 \x01(\tR\x06openId\x12\x18\n" +
