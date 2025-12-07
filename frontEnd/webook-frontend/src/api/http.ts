@@ -17,8 +17,15 @@ service.interceptors.request.use(
   (config) => {
     // 在发送请求之前做些什么
     const token = localStorage.getItem('token')
+    console.log('发送请求:', config.url)
+    console.log('localStorage 中的 token:', token ? token.substring(0, 50) + '...' : 'null')
+    
     if (token) {
-      config.headers['x-jwt-token'] = token
+      // 后端从 Authorization 头提取 token，格式为 "Bearer token"
+      config.headers['Authorization'] = `Bearer ${token}`
+      console.log('已添加 Authorization 头')
+    } else {
+      console.log('没有 token，未添加 Authorization 头')
     }
     return config
   },
@@ -32,6 +39,23 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
   (response: AxiosResponse) => {
+    // 从响应头获取 token 并保存
+    // 注意：响应头的 key 会被浏览器转为小写
+    const jwtToken = response.headers['x-jwt-token']
+    const refreshToken = response.headers['x-refresh-token']
+    
+    console.log('响应头:', response.headers)
+    console.log('x-jwt-token:', jwtToken)
+    console.log('x-refresh-token:', refreshToken)
+    
+    if (jwtToken) {
+      localStorage.setItem('token', jwtToken)
+      console.log('token 已保存到 localStorage')
+    }
+    if (refreshToken) {
+      localStorage.setItem('refreshToken', refreshToken)
+    }
+    
     const res = response.data
     
     // 如果是文件下载等二进制数据，直接返回
@@ -41,10 +65,10 @@ service.interceptors.response.use(
     
     // 根据后端API的响应结构进行处理
     // 假设后端返回的数据结构为 { code: number, data: any, msg: string }
-    if (res.code === 0) {
-      return res.data
+    if (res.code === 0 || res.Msg === 'OK' || res.Msg === '登录成功') {
+      return res.data || res
     } else {
-      ElMessage.error(res.msg || '请求失败')
+      ElMessage.error(res.msg || res.Msg || '请求失败')
       
       // 处理特定错误码
       if (res.code === 401) {
@@ -54,7 +78,7 @@ service.interceptors.response.use(
         router.push('/login')
       }
       
-      return Promise.reject(new Error(res.msg || '请求失败'))
+      return Promise.reject(new Error(res.msg || res.Msg || '请求失败'))
     }
   },
   (error) => {

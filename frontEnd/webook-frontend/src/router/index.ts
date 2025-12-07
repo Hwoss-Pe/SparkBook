@@ -1,15 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '@/views/HomeView.vue'
+import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeView,
-      meta: { title: '首页 - 小微书' }
-    },
     {
       path: '/follow',
       name: 'follow',
@@ -31,7 +25,7 @@ const router = createRouter({
     {
       path: '/article/:id',
       name: 'article',
-      component: () => import('@/views/ArticleDetailView.vue'),
+      component: () => import('../views/ArticleDetailView.vue'),
       meta: { title: '文章详情 - 小微书' }
     },
     {
@@ -59,6 +53,11 @@ const router = createRouter({
       meta: { title: '创作中心 - 小微书', requiresAuth: true }
     },
     // 关于页面已删除
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('../views/HomeView.vue'),
+    }
   ],
 })
 
@@ -71,8 +70,9 @@ router.beforeEach((to, from, next) => {
   
   // 检查是否需要登录
   if (to.meta.requiresAuth) {
-    // 这里应该检查用户是否已登录
-    const isLoggedIn = false // 临时设置为false，实际应该从store或localStorage中获取
+    // 从 localStorage 中检查是否有 token
+    const token = localStorage.getItem('token')
+    const isLoggedIn = !!token
     
     if (!isLoggedIn) {
       next({

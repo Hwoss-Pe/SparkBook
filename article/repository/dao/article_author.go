@@ -25,16 +25,17 @@ func (dao *GORMArticleAuthorDAO) Create(ctx context.Context,
 	return art.Id, err
 }
 
-// UpdateById 只更新标题和
+// UpdateById 只更新标题、内容和封面图片
 func (dao *GORMArticleAuthorDAO) UpdateById(ctx context.Context,
 	art Article) error {
 	now := time.Now().UnixMilli()
 	res := dao.db.Model(&Article{}).WithContext(ctx).
 		Where("id=? AND author_id = ? ", art.Id, art.AuthorId).
 		Updates(map[string]any{
-			"title":   art.Title,
-			"content": art.Content,
-			"utime":   now,
+			"title":       art.Title,
+			"content":     art.Content,
+			"cover_image": art.CoverImage,
+			"utime":       now,
 		})
 	err := res.Error
 	if err != nil {

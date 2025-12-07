@@ -62,3 +62,4 @@ export const interactiveApi = {
     return post('/interactive/collect', { biz, biz_id, uid, cid })
   }
 }
+

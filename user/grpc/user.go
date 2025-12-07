@@ -69,6 +69,7 @@ func convertToDomain(u *userv1.User) domain.User {
 	du := domain.User{}
 	du.Id = u.GetId()
 	du.Nickname = u.GetNickname()
+	du.Email = u.GetEmail()
 	du.Password = u.GetPassword()
 	du.Phone = u.GetPhone()
 	du.AboutMe = u.GetAboutMe()

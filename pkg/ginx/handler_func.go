@@ -64,6 +64,8 @@ func WrapReq[Req any](fn func(*gin.Context, Req) (Result, error)) gin.HandlerFun
 		if err != nil {
 			log.Error("执行业务逻辑失败",
 				logger.Error(err))
+			ctx.JSON(http.StatusUnauthorized, res)
+			return
 		}
 		vector.WithLabelValues(strconv.Itoa(res.Code)).Inc()
 		ctx.JSON(http.StatusOK, res)

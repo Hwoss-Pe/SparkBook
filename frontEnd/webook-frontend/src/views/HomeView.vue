@@ -36,10 +36,10 @@
                 <p class="article-abstract">{{ article.abstract }}</p>
                 <div class="article-meta">
                   <div class="author-info">
-                    <el-avatar :size="24" :src="article.author.avatar">
-                      {{ article.author.name.substring(0, 1) }}
+                    <el-avatar :size="24">
+                      {{ article.author.name ? article.author.name.substring(0, 1) : '匿' }}
                     </el-avatar>
-                    <span class="author-name">{{ article.author.name }}</span>
+                    <span class="author-name">{{ article.author.name || '匿名用户' }}</span>
                   </div>
                   <div class="interaction-info">
                     <span class="interaction-item">
@@ -51,8 +51,8 @@
                       {{ formatNumber(article.likeCount) }}
                     </span>
                     <span class="interaction-item">
-                      <el-icon><ChatDotRound /></el-icon>
-                      {{ formatNumber(article.commentCount) }}
+                      <el-icon><Star /></el-icon>
+                      {{ formatNumber(article.collectCount) }}
                     </span>
                   </div>
                 </div>
@@ -111,8 +111,8 @@
 
 <script setup lang="ts">
 import MainLayout from '@/components/layout/MainLayout.vue'
-import { View, ChatDotRound } from '@element-plus/icons-vue'
-import { Star as ThumbsUp } from '@element-plus/icons-vue'
+import { View, Star } from '@element-plus/icons-vue'
+import { StarFilled as ThumbsUp } from '@element-plus/icons-vue'
 import useHomeView from '@/scripts/views/HomeView'
 
 const {

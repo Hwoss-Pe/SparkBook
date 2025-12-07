@@ -1,9 +1,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { userApi, User } from '@/api/user'
+import { userApi } from '@/api/user'
+import type { User } from '@/api/user'
 import { followApi } from '@/api/follow'
-import { articleApi, Article as ApiArticle } from '@/api/article'
+import { articleApi } from '@/api/article'
+import type { Article as ApiArticle } from '@/api/article'
 
 // 定义类型接口
 interface UserProfile {

@@ -110,6 +110,7 @@ func convertToV(dm domain.Article) (*articlev1.Article, error) {
 	newArticle.Id = dm.Id
 	newArticle.Title = dm.Title
 	newArticle.Content = dm.Content
+	newArticle.CoverImage = dm.CoverImage
 	newArticle.Status = int32(dm.Status)
 	newArticle.Author = &articlev1.Author{
 		Id:   dm.Author.Id,
@@ -125,6 +126,7 @@ func convertToDomain(vArticle *articlev1.Article) (domain.Article, error) {
 	if vArticle != nil {
 		art.Id = vArticle.GetId()
 		art.Content = vArticle.GetContent()
+		art.CoverImage = vArticle.GetCoverImage()
 		art.Author = domain.Author{
 			Id:   vArticle.Author.GetId(),
 			Name: vArticle.Author.GetName(),

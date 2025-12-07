@@ -24,10 +24,12 @@ type ArticleVo struct {
 	Abstract string `json:"abstract"`
 	// 内容
 	Content string `json:"content"`
-	Status  int32  `json:"status"`
-	Author  string `json:"author"`
-	Ctime   string `json:"ctime"`
-	Utime   string `json:"utime"`
+	// 封面图片
+	CoverImage string `json:"coverImage"`
+	Status     int32  `json:"status"`
+	Author     string `json:"author"`
+	Ctime      string `json:"ctime"`
+	Utime      string `json:"utime"`
 
 	// 点赞之类的信息
 	LikeCnt    int64 `json:"likeCnt"`
@@ -40,18 +42,41 @@ type ArticleVo struct {
 }
 
 type ArticleReq struct {
-	Id      int64  `json:"id"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
+	Id         int64  `json:"id"`
+	Title      string `json:"title"`
+	Content    string `json:"content"`
+	CoverImage string `json:"coverImage"`
 }
 
 func (req ArticleReq) toDTO(uid int64) *articlev1.Article {
 	return &articlev1.Article{
-		Id:      req.Id,
-		Title:   req.Title,
-		Content: req.Content,
+		Id:         req.Id,
+		Title:      req.Title,
+		Content:    req.Content,
+		CoverImage: req.CoverImage,
 		Author: &articlev1.Author{
 			Id: uid,
 		},
 	}
+}
+
+// AuthorVo 作者信息
+type AuthorVo struct {
+	Id   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
+// ArticlePubVo 推荐文章列表返回的文章信息
+type ArticlePubVo struct {
+	Id         int64    `json:"id"`
+	Title      string   `json:"title"`
+	Abstract   string   `json:"abstract"`
+	CoverImage string   `json:"coverImage"`
+	Author     AuthorVo `json:"author"`
+	Ctime      string   `json:"ctime"`
+	Utime      string   `json:"utime"`
+	// 互动数据
+	ReadCnt    int64 `json:"readCnt"`
+	LikeCnt    int64 `json:"likeCnt"`
+	CollectCnt int64 `json:"collectCnt"`
 }

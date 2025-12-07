@@ -55,17 +55,17 @@ export const commentApi = {
   getCommentList: (params: CommentListRequest) => {
     return get<CommentListResponse>('/comment/list', params)
   },
-  
+
   // 创建评论
   createComment: (data: CreateCommentRequest) => {
     return post('/comment/create', data)
   },
-  
+
   // 删除评论
   deleteComment: (id: number) => {
     return post('/comment/delete', { id })
   },
-  
+
   // 获取更多回复
   getMoreReplies: (params: GetMoreRepliesRequest) => {
     return get<GetMoreRepliesResponse>('/comment/replies', params)

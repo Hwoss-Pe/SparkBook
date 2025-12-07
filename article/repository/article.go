@@ -146,10 +146,11 @@ func (c *CachedArticleRepository) GetPublishedById(ctx context.Context, id int64
 		return domain.Article{}, err
 	}
 	res = domain.Article{
-		Id:      art.Id,
-		Title:   art.Title,
-		Status:  domain.ArticleStatus(art.Status),
-		Content: art.Content,
+		Id:         art.Id,
+		Title:      art.Title,
+		Status:     domain.ArticleStatus(art.Status),
+		Content:    art.Content,
+		CoverImage: art.CoverImage,
 	}
 	//	异步设置缓存 也可以同步
 	go func() {
@@ -173,10 +174,11 @@ func (c *CachedArticleRepository) ListPub(ctx context.Context, utime time.Time, 
 
 func (c *CachedArticleRepository) ToDomain(art dao.Article) domain.Article {
 	return domain.Article{
-		Id:      art.Id,
-		Title:   art.Title,
-		Status:  domain.ArticleStatus(art.Status),
-		Content: art.Content,
+		Id:         art.Id,
+		Title:      art.Title,
+		Status:     domain.ArticleStatus(art.Status),
+		Content:    art.Content,
+		CoverImage: art.CoverImage,
 		Author: domain.Author{
 			Id: art.AuthorId,
 		},
@@ -185,10 +187,11 @@ func (c *CachedArticleRepository) ToDomain(art dao.Article) domain.Article {
 
 func (c *CachedArticleRepository) toEntity(art domain.Article) dao.Article {
 	return dao.Article{
-		Id:       art.Id,
-		Title:    art.Title,
-		Content:  art.Content,
-		AuthorId: art.Author.Id,
+		Id:         art.Id,
+		Title:      art.Title,
+		Content:    art.Content,
+		CoverImage: art.CoverImage,
+		AuthorId:   art.Author.Id,
 		// 这一步，就是将领域状态转化为存储状态。
 		Status: uint8(art.Status),
 	}

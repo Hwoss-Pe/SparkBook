@@ -11,6 +11,7 @@ import (
 	"github.com/ecodeclub/ekit/slice"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"net/http"
 	"strconv"
 	"time"
@@ -46,6 +47,8 @@ func (a *ArticleHandler) RegisterRoute(s *gin.Engine) {
 	g.POST("/withdraw", a.Withdraw)
 	pub := g.Group("/pub")
 	pub.GET("/:id", ginx.WrapClaims(a.PubDetail))
+	// 推荐文章列表（首页使用）
+	pub.POST("/list", ginx.WrapReq[ListPubReq](a.ListPub))
 	pub.POST("/like", ginx.WrapClaimsAndReq[LikeReq](a.Like))
 	pub.POST("/collect", ginx.WrapClaimsAndReq[CollectReq](a.Collect))
 	// 打赏
@@ -97,17 +100,24 @@ func (a *ArticleHandler) Detail(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, Result{
 		Data: ArticleVo{
-			Id:      art.Id,
-			Title:   art.Title,
-			Status:  art.Status,
-			Content: art.Content,
-			Ctime:   art.Ctime.AsTime().Format(time.DateTime),
-			Utime:   art.Utime.AsTime().Format(time.DateTime),
+			Id:         art.Id,
+			Title:      art.Title,
+			Status:     art.Status,
+			Content:    art.Content,
+			CoverImage: art.CoverImage,
+			Ctime:      art.Ctime.AsTime().Format(time.DateTime),
+			Utime:      art.Utime.AsTime().Format(time.DateTime),
 		},
 	})
 }
 
 type ListReq struct {
+	Offset int32 `json:"offset"`
+	Limit  int32 `json:"limit"`
+}
+
+// ListPubReq 推荐文章列表请求
+type ListPubReq struct {
 	Offset int32 `json:"offset"`
 	Limit  int32 `json:"limit"`
 }
@@ -133,12 +143,13 @@ func (a *ArticleHandler) List(ctx *gin.Context, req ListReq, usr ginx.UserClaims
 		Data: slice.Map[*articlev1.Article, ArticleVo](arts.Articles,
 			func(idx int, src *articlev1.Article) ArticleVo {
 				return ArticleVo{
-					Id:       src.Id,
-					Title:    src.Title,
-					Abstract: src.Abstract,
-					Status:   src.Status,
-					Ctime:    src.Ctime.AsTime().Format(time.DateTime),
-					Utime:    src.Utime.AsTime().Format(time.DateTime),
+					Id:         src.Id,
+					Title:      src.Title,
+					Abstract:   src.Abstract,
+					CoverImage: src.CoverImage,
+					Status:     src.Status,
+					Ctime:      src.Ctime.AsTime().Format(time.DateTime),
+					Utime:      src.Utime.AsTime().Format(time.DateTime),
 				}
 			}),
 	}, nil
@@ -190,9 +201,10 @@ func (a *ArticleHandler) Publish(ctx *gin.Context) {
 	}
 	idResp, err := a.svc.Publish(ctx, &articlev1.PublishRequest{
 		Article: &articlev1.Article{
-			Id:      req.Id,
-			Title:   req.Title,
-			Content: req.Content,
+			Id:         req.Id,
+			Title:      req.Title,
+			Content:    req.Content,
+			CoverImage: req.CoverImage,
 			Author: &articlev1.Author{
 				Id: usr.Id,
 			},
@@ -261,10 +273,11 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (ginx.R
 	intr := intrResp.Intr
 	return Result{
 		Data: ArticleVo{
-			Id:      art.Id,
-			Title:   art.Title,
-			Status:  art.Status,
-			Content: art.Content,
+			Id:         art.Id,
+			Title:      art.Title,
+			Status:     art.Status,
+			Content:    art.Content,
+			CoverImage: art.CoverImage,
 			// 要把作者信息带出去
 			Author:     art.Author.Name,
 			Ctime:      art.Ctime.AsTime().Format(time.DateTime),
@@ -280,6 +293,85 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (ginx.R
 
 func (a *ArticleHandler) Withdraw(ctx *gin.Context) {
 
+}
+
+// ListPub 获取推荐文章列表（首页使用，按时间排序）
+func (a *ArticleHandler) ListPub(ctx *gin.Context, req ListPubReq) (ginx.Result, error) {
+	if req.Limit > 100 || req.Limit <= 0 {
+		req.Limit = 10
+	}
+	// 获取已发布文章列表（按时间排序）
+	artResp, err := a.svc.ListPub(ctx, &articlev1.ListPubRequest{
+		StartTime: timestamppb.Now(),
+		Offset:    req.Offset,
+		Limit:     req.Limit,
+	})
+	if err != nil {
+		a.l.Error("获取推荐文章列表失败", logger.Error(err))
+		return ginx.Result{
+			Code: 5,
+			Msg:  "系统错误",
+		}, err
+	}
+
+	articles := artResp.GetArticles()
+	if len(articles) == 0 {
+		return ginx.Result{
+			Data: []ArticlePubVo{},
+		}, nil
+	}
+
+	// 提取文章ID列表
+	ids := make([]int64, 0, len(articles))
+	for _, art := range articles {
+		ids = append(ids, art.Id)
+	}
+
+	// 批量获取互动数据
+	intrResp, err := a.intrSvc.GetByIds(ctx, &intrv1.GetByIdsRequest{
+		Biz: a.biz,
+		Ids: ids,
+	})
+	if err != nil {
+		a.l.Error("获取互动数据失败", logger.Error(err))
+		// 互动数据获取失败不影响文章列表返回，只是互动数据为空
+	}
+
+	intrMap := make(map[int64]*intrv1.Interactive)
+	if intrResp != nil {
+		intrMap = intrResp.GetIntrs()
+	}
+
+	// 组装返回数据
+	result := make([]ArticlePubVo, 0, len(articles))
+	for _, art := range articles {
+		vo := ArticlePubVo{
+			Id:         art.Id,
+			Title:      art.Title,
+			Abstract:   art.Abstract,
+			CoverImage: art.CoverImage,
+			Ctime:      art.Ctime.AsTime().Format(time.DateTime),
+			Utime:      art.Utime.AsTime().Format(time.DateTime),
+		}
+		// 设置作者信息
+		if art.Author != nil {
+			vo.Author = AuthorVo{
+				Id:   art.Author.Id,
+				Name: art.Author.Name,
+			}
+		}
+		// 设置互动数据
+		if intr, ok := intrMap[art.Id]; ok {
+			vo.ReadCnt = intr.ReadCnt
+			vo.LikeCnt = intr.LikeCnt
+			vo.CollectCnt = intr.CollectCnt
+		}
+		result = append(result, vo)
+	}
+
+	return ginx.Result{
+		Data: result,
+	}, nil
 }
 
 func (a *ArticleHandler) Like(ctx *gin.Context, req LikeReq, uc ginx.UserClaims) (ginx.Result, error) {

@@ -3,10 +3,11 @@ package domain
 import "time"
 
 type Article struct {
-	Id      int64
-	Title   string
-	Status  ArticleStatus
-	Content string
+	Id         int64
+	Title      string
+	Status     ArticleStatus
+	Content    string
+	CoverImage string // 封面图片URL
 
 	Author Author
 	Ctime  time.Time

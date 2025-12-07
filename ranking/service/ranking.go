@@ -72,6 +72,7 @@ func articleToDomain(article *articlev1.Article) domain.Article {
 		domainArticle.Title = article.GetTitle()
 		domainArticle.Status = domain.ArticleStatus(article.Status)
 		domainArticle.Content = article.Content
+		domainArticle.CoverImage = article.CoverImage
 		domainArticle.Author = domain.Author{
 			Id:   article.GetAuthor().GetId(),
 			Name: article.GetAuthor().GetName(),

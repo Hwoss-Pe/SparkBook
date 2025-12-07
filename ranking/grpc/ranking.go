@@ -43,10 +43,11 @@ func (r *RankingServiceServer) TopN(ctx context.Context, request *rankingv1.TopN
 
 func convertToV(da domain.Article) *rankingv1.Article {
 	return &rankingv1.Article{
-		Id:      da.Id,
-		Title:   da.Title,
-		Content: da.Content,
-		Status:  int32(da.Status),
+		Id:         da.Id,
+		Title:      da.Title,
+		Content:    da.Content,
+		CoverImage: da.CoverImage,
+		Status:     int32(da.Status),
 		Author: &rankingv1.Author{
 			Id:   da.Author.Id,
 			Name: da.Author.Name,

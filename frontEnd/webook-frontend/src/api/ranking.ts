@@ -30,3 +30,4 @@ export const rankingApi = {
     return get('/ranking/calculate')
   }
 }
+

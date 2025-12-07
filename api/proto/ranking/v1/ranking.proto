@@ -16,7 +16,7 @@ message Article {
   Author author = 5 ;
   google.protobuf.Timestamp ctime = 6;
   google.protobuf.Timestamp utime = 7;
-
+  string cover_image = 8; // 封面图片URL
 }
 
 

@@ -20,12 +20,9 @@ export interface LoginRequest {
 }
 
 export interface SignupRequest {
-  user: {
-    email: string
-    nickname: string
-    password: string
-    phone: string
-  }
+  email: string
+  password: string
+  confirmPassword: string
 }
 
 export interface LoginResponse {
@@ -42,31 +39,42 @@ export interface ProfileResponse {
 export const userApi = {
   // 登录
   login: (data: LoginRequest) => {
-    return post<LoginResponse>('/user/login', data)
+    return post<LoginResponse>('/users/login', data)
   },
   
   // 注册
   signup: (data: SignupRequest) => {
-    return post('/user/signup', data)
+    return post('/users/signup', data)
   },
   
   // 获取用户信息
-  getProfile: (id: number) => {
-    return get<ProfileResponse>(`/user/profile/${id}`)
+  getProfile: () => {
+    return get<ProfileResponse>('/users/profile')
   },
   
   // 更新用户信息
   updateProfile: (user: Partial<User>) => {
-    return post('/user/profile/update', { user })
+    return post('/users/edit', user)
+  },
+  
+  // 发送短信验证码
+  sendSmsCode: (phone: string) => {
+    return post('/users/login_sms/code/send', { phone })
   },
   
   // 手机号登录/注册
   loginByPhone: (phone: string, code: string) => {
-    return post<LoginResponse>('/user/login/phone', { phone, code })
+    return post<LoginResponse>('/users/login_sms', { phone, code })
   },
   
-  // 微信登录
-  loginByWechat: (code: string, state: string) => {
-    return post<LoginResponse>('/user/login/wechat', { code, state })
+  // 登出
+  logout: () => {
+    return post('/users/logout', {})
+  },
+  
+  // 刷新 token
+  refreshToken: () => {
+    return post('/users/refresh_token', {})
   }
 }
+

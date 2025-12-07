@@ -29,8 +29,9 @@ func (dao *GORMArticleReaderDAO) Upsert(ctx context.Context, art Article) error 
 		// ID 冲突的时候。实际上，在 MYSQL 里面   写不写都可以
 		Columns: []clause.Column{{Name: "id"}},
 		DoUpdates: clause.Assignments(map[string]interface{}{
-			"title":   art.Title,
-			"content": art.Content,
+			"title":       art.Title,
+			"content":     art.Content,
+			"cover_image": art.CoverImage,
 		}),
 	}).Create(&art).Error
 }
@@ -41,8 +42,9 @@ func (dao *GORMArticleReaderDAO) UpsertV2(ctx context.Context, art PublishedArti
 		// ID 冲突的时候。实际上，在 MYSQL 里面写不写都可以
 		Columns: []clause.Column{{Name: "id"}},
 		DoUpdates: clause.Assignments(map[string]interface{}{
-			"title":   art.Title,
-			"content": art.Content,
+			"title":       art.Title,
+			"content":     art.Content,
+			"cover_image": art.CoverImage,
 		}),
 	}).Create(&art).Error
 }

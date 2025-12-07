@@ -81,3 +81,4 @@ export const followApi = {
     return get<GetFollowStaticResponse>('/follow/statics', params)
   }
 }
+

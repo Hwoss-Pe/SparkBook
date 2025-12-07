@@ -25,10 +25,11 @@ func (G *GORMArticleDAO) UpdateById(ctx context.Context, art Article) error {
 	res := G.db.Model(&Article{}).WithContext(ctx).
 		Where("id=? AND author_id = ? ", art.Id, art.AuthorId).
 		Updates(map[string]any{
-			"title":   art.Title,
-			"content": art.Content,
-			"status":  art.Status,
-			"utime":   now,
+			"title":       art.Title,
+			"content":     art.Content,
+			"cover_image": art.CoverImage,
+			"status":      art.Status,
+			"utime":       now,
 		})
 	err := res.Error
 	if err != nil {
@@ -98,10 +99,11 @@ func (G *GORMArticleDAO) Sync(ctx context.Context, art Article) (int64, error) {
 			},
 		},
 		DoUpdates: clause.Assignments(map[string]interface{}{
-			"title":   art.Title,
-			"content": art.Content,
-			"status":  art.Status,
-			"utime":   now,
+			"title":       art.Title,
+			"content":     art.Content,
+			"cover_image": art.CoverImage,
+			"status":      art.Status,
+			"utime":       now,
 		}),
 	}).Create(&publishArt).Error
 	if err != nil {

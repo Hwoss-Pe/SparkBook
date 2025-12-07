@@ -28,3 +28,4 @@ export const codeApi = {
     return post<VerifyResponse>('/code/verify', data)
   }
 }
+

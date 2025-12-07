@@ -131,7 +131,7 @@ func NewUserHandler(userSvc userv1.UsersServiceClient, codeSvc codev1.CodeServic
 		userSvc:          userSvc,
 		codeSvc:          codeSvc,
 		emailRegexExp:    regexp.MustCompile(emailRegexPattern, regexp.None),
-		passwordRegexExp: regexp.MustCompile(emailRegexPattern, regexp.None),
+		passwordRegexExp: regexp.MustCompile(passwordRegexPattern, regexp.None),
 	}
 }
 

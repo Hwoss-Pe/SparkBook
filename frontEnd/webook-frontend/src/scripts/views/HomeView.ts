@@ -1,10 +1,27 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { articleApi } from '@/api/article'
+import type { ArticlePub } from '@/api/article'
+
+// 首页文章展示的数据结构
+interface HomeArticle {
+  id: number
+  title: string
+  abstract: string
+  coverImage: string
+  author: {
+    id: number
+    name: string
+  }
+  readCount: number
+  likeCount: number
+  collectCount: number
+}
 
 export default function useHomeView() {
   const router = useRouter()
 
-  // 模拟Banner数据
+  // Banner数据
   const bannerItems = ref([
     {
       title: '探索美食新世界',
@@ -23,95 +40,13 @@ export default function useHomeView() {
     }
   ])
 
-  // 模拟文章数据
-  const articles = ref([
-    {
-      id: 1,
-      title: '如何在家制作完美的提拉米苏',
-      abstract: '提拉米苏是一道经典的意大利甜点，本文将分享专业大厨的独家秘方...',
-      coverImage: 'https://picsum.photos/id/431/400/300',
-      author: {
-        id: 101,
-        name: '美食达人',
-        avatar: 'https://picsum.photos/id/1027/100/100'
-      },
-      readCount: 12500,
-      likeCount: 3200,
-      commentCount: 128
-    },
-    {
-      id: 2,
-      title: '2025年最值得去的10个小众旅行地',
-      abstract: '厌倦了人山人海的热门景点？这些鲜为人知的目的地将带给你全新的旅行体验...',
-      coverImage: 'https://picsum.photos/id/1036/400/300',
-      author: {
-        id: 102,
-        name: '旅行笔记',
-        avatar: 'https://picsum.photos/id/1012/100/100'
-      },
-      readCount: 18700,
-      likeCount: 5400,
-      commentCount: 342
-    },
-    {
-      id: 3,
-      title: '极简主义：如何通过断舍离改变你的生活',
-      abstract: '极简主义不仅是一种生活方式，更是一种思维模式。本文将分享如何开始你的极简之旅...',
-      coverImage: 'https://picsum.photos/id/106/400/300',
-      author: {
-        id: 103,
-        name: '生活家',
-        avatar: 'https://picsum.photos/id/1005/100/100'
-      },
-      readCount: 9800,
-      likeCount: 2100,
-      commentCount: 98
-    },
-    {
-      id: 4,
-      title: '数字游民：如何边旅行边工作',
-      abstract: '远程工作正在改变我们的生活和工作方式，本文分享如何成为一名成功的数字游民...',
-      coverImage: 'https://picsum.photos/id/1081/400/300',
-      author: {
-        id: 104,
-        name: '自由职业者',
-        avatar: 'https://picsum.photos/id/1025/100/100'
-      },
-      readCount: 15300,
-      likeCount: 4200,
-      commentCount: 215
-    },
-    {
-      id: 5,
-      title: '家庭花园：从零开始的种植指南',
-      abstract: '无论你是有着一片后院，还是只有一个小阳台，都可以打造自己的绿色天地...',
-      coverImage: 'https://picsum.photos/id/145/400/300',
-      author: {
-        id: 105,
-        name: '园艺爱好者',
-        avatar: 'https://picsum.photos/id/1074/100/100'
-      },
-      readCount: 7600,
-      likeCount: 1800,
-      commentCount: 76
-    },
-    {
-      id: 6,
-      title: '如何提高你的摄影技巧：从入门到精通',
-      abstract: '无需昂贵的设备，掌握这些基本技巧，你也能拍出令人惊艳的照片...',
-      coverImage: 'https://picsum.photos/id/250/400/300',
-      author: {
-        id: 106,
-        name: '摄影师小王',
-        avatar: 'https://picsum.photos/id/1062/100/100'
-      },
-      readCount: 21000,
-      likeCount: 6300,
-      commentCount: 430
-    }
-  ])
+  // 文章列表
+  const articles = ref<HomeArticle[]>([])
+  // 当前分页
+  const currentOffset = ref(0)
+  const pageSize = 10
 
-  // 模拟热榜数据
+  // 热榜数据（暂时使用模拟数据，后续可接入热榜服务）
   const hotRankings = ref([
     {
       id: 101,
@@ -205,45 +140,51 @@ export default function useHomeView() {
     router.push(`/article/${id}`)
   }
 
+  // 将API返回的数据转换为首页展示的数据结构
+  const convertToHomeArticle = (article: ArticlePub): HomeArticle => {
+    return {
+      id: article.id,
+      title: article.title,
+      abstract: article.abstract,
+      coverImage: article.coverImage || `https://picsum.photos/id/${400 + article.id}/400/300`,
+      author: {
+        id: article.author?.id || 0,
+        name: article.author?.name || '匿名用户'
+      },
+      readCount: article.readCnt || 0,
+      likeCount: article.likeCnt || 0,
+      collectCount: article.collectCnt || 0
+    }
+  }
+
+  // 获取推荐文章列表
+  const fetchArticles = async (isLoadMore = false) => {
+    try {
+      const offset = isLoadMore ? currentOffset.value : 0
+      const res = await articleApi.getRecommendList({
+        offset,
+        limit: pageSize
+      })
+      
+      const newArticles = (res || []).map(convertToHomeArticle)
+      
+      if (isLoadMore) {
+        articles.value = [...articles.value, ...newArticles]
+      } else {
+        articles.value = newArticles
+      }
+      
+      currentOffset.value = offset + newArticles.length
+      hasMoreArticles.value = newArticles.length >= pageSize
+    } catch (error) {
+      console.error('获取推荐文章失败:', error)
+      hasMoreArticles.value = false
+    }
+  }
+
   // 加载更多文章
   const loadMoreArticles = () => {
-    // 这里应该调用API加载更多文章
-    // 模拟加载更多
-    const moreArticles = [
-      {
-        id: 7,
-        title: '零基础学习编程：从何开始？',
-        abstract: '想学编程但不知道从何入手？本文为你提供清晰的学习路径...',
-        coverImage: 'https://picsum.photos/id/0/400/300',
-        author: {
-          id: 107,
-          name: '编程教练',
-          avatar: 'https://picsum.photos/id/1/100/100'
-        },
-        readCount: 18500,
-        likeCount: 5100,
-        commentCount: 320
-      },
-      {
-        id: 8,
-        title: '每天10分钟，21天养成冥想习惯',
-        abstract: '冥想不仅能减轻压力，还能提高注意力和创造力...',
-        coverImage: 'https://picsum.photos/id/1029/400/300',
-        author: {
-          id: 108,
-          name: '心灵导师',
-          avatar: 'https://picsum.photos/id/1002/100/100'
-        },
-        readCount: 12300,
-        likeCount: 3600,
-        commentCount: 145
-      }
-    ]
-    
-    articles.value = [...articles.value, ...moreArticles]
-    
-    // 假设没有更多文章了
-    hasMoreArticles.value = false
+    fetchArticles(true)
   }
 
   // 关注作者
@@ -257,8 +198,8 @@ export default function useHomeView() {
   }
 
   onMounted(() => {
-    // 这里应该调用API获取首页数据
-    // 目前使用模拟数据
+    // 获取推荐文章列表
+    fetchArticles()
   })
 
   return {
