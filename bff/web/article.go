@@ -260,7 +260,15 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (ginx.R
 			Msg:  "系统错误",
 		}, fmt.Errorf("获取文章信息失败 %w", err)
 	}
+	err = eg.Wait()
+	if err != nil {
+		return ginx.Result{}, err
+	}
 	art := artResp.GetArticle()
+	if art == nil {
+		return Result{Data: nil}, nil
+	}
+
 	go func() {
 		_, err = a.intrSvc.IncrReadCnt(ctx, &intrv1.IncrReadCntRequest{
 			Biz:   "article",

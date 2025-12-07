@@ -182,6 +182,8 @@ func (c *CachedArticleRepository) ToDomain(art dao.Article) domain.Article {
 		Author: domain.Author{
 			Id: art.AuthorId,
 		},
+		Ctime: time.UnixMilli(art.Ctime),
+		Utime: time.UnixMilli(art.Utime),
 	}
 }
 

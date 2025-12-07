@@ -24,6 +24,7 @@ func NewJWTLoginMiddlewareBuilder(hdl jwt2.Handler) *JWTLoginMiddlewareBuilder {
 	s.Add("/oauth2/wechat/authurl")
 	s.Add("/oauth2/wechat/callback")
 	s.Add("/test/random")
+	s.Add("/articles/pub/list")
 	return &JWTLoginMiddlewareBuilder{
 		publicPaths: s,
 		Handler:     hdl,
@@ -34,6 +35,10 @@ func (j *JWTLoginMiddlewareBuilder) Build() gin.HandlerFunc {
 	//逻辑是先进行url过滤,否则获取Authorization对应的jwt串,结合uc和key进行解析
 	//对时间进行校验,在对ssid进行校验是否已经退出登录
 	return func(ctx *gin.Context) {
+		//目前先放开所有接口后续更新 TODO
+		// 调试模式下设置一个默认用户
+		ctx.Set("user", jwt2.UserClaims{Id: 1})
+		return
 		if j.publicPaths.Exist(ctx.Request.URL.Path) {
 			return
 		}

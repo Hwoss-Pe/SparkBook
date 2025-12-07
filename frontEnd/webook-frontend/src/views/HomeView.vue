@@ -43,15 +43,22 @@
                   </div>
                   <div class="interaction-info">
                     <span class="interaction-item">
-                      <el-icon><View /></el-icon>
+                      <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
                       {{ formatNumber(article.readCount) }}
                     </span>
-                    <span class="interaction-item">
-                      <el-icon><ThumbsUp /></el-icon>
+                    <span class="interaction-item like">
+                      <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                      </svg>
                       {{ formatNumber(article.likeCount) }}
                     </span>
-                    <span class="interaction-item">
-                      <el-icon><Star /></el-icon>
+                    <span class="interaction-item collect">
+                      <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                      </svg>
                       {{ formatNumber(article.collectCount) }}
                     </span>
                   </div>
@@ -91,7 +98,7 @@
             <div class="author-list">
               <div v-for="author in recommendedAuthors" :key="author.id" class="author-item">
                 <el-avatar :size="40" :src="author.avatar">
-                  {{ author.name.substring(0, 1) }}
+                  {{ author.name ? author.name.substring(0, 1) : '匿' }}
                 </el-avatar>
                 <div class="author-info">
                   <div class="author-name">{{ author.name }}</div>
@@ -111,8 +118,6 @@
 
 <script setup lang="ts">
 import MainLayout from '@/components/layout/MainLayout.vue'
-import { View, Star } from '@element-plus/icons-vue'
-import { StarFilled as ThumbsUp } from '@element-plus/icons-vue'
 import useHomeView from '@/scripts/views/HomeView'
 
 const {

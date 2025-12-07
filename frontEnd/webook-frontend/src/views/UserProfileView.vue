@@ -9,7 +9,7 @@
         <div class="profile-info">
           <div class="profile-avatar">
             <el-avatar :size="100" :src="userProfile.avatar">
-              {{ userProfile.nickname.substring(0, 1) }}
+              {{ userProfile.nickname ? userProfile.nickname.substring(0, 1) : '匿' }}
             </el-avatar>
           </div>
           
@@ -101,9 +101,9 @@
                   <div class="article-meta">
                     <div class="author-info">
                       <el-avatar :size="24" :src="article.author.avatar">
-                        {{ article.author.name.substring(0, 1) }}
+                        {{ article.author.name ? article.author.name.substring(0, 1) : '匿' }}
                       </el-avatar>
-                      <span class="author-name">{{ article.author.name }}</span>
+                      <span class="author-name">{{ article.author.name || '匿名用户' }}</span>
                     </div>
                     <div class="interaction-info">
                       <span class="interaction-item">
@@ -142,7 +142,7 @@
           <div v-for="user in followDialogUsers" :key="user.id" class="user-item">
             <div class="user-avatar" @click="viewUser(user.id)">
               <el-avatar :size="40" :src="user.avatar">
-                {{ user.name.substring(0, 1) }}
+                {{ user.name ? user.name.substring(0, 1) : '匿' }}
               </el-avatar>
             </div>
             <div class="user-info" @click="viewUser(user.id)">

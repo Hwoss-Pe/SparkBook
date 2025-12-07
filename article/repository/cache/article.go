@@ -65,19 +65,30 @@ func (r *RedisArticleCache) Get(ctx context.Context, id int64) (domain.Article, 
 	return res, err
 }
 
+// SetPub 缓存已发布的文章，读者端访问量大，缓存时间设置长一些
 func (r *RedisArticleCache) SetPub(ctx context.Context, article domain.Article) error {
-	//TODO implement me
-	panic("implement me")
+	data, err := json.Marshal(article)
+	if err != nil {
+		return err
+	}
+	// 已发布文章缓存 30 分钟，因为读者访问量大
+	return r.client.Set(ctx, r.readerArtKey(article.Id), data, 30*time.Minute).Err()
 }
 
+// DelPub 删除已发布文章的缓存（文章撤回或更新时使用）
 func (r *RedisArticleCache) DelPub(ctx context.Context, id int64) error {
-	//TODO implement me
-	panic("implement me")
+	return r.client.Del(ctx, r.readerArtKey(id)).Err()
 }
 
+// GetPub 获取已发布文章的缓存
 func (r *RedisArticleCache) GetPub(ctx context.Context, id int64) (domain.Article, error) {
-	//TODO implement me
-	panic("implement me")
+	data, err := r.client.Get(ctx, r.readerArtKey(id)).Bytes()
+	if err != nil {
+		return domain.Article{}, err
+	}
+	var res domain.Article
+	err = json.Unmarshal(data, &res)
+	return res, err
 }
 
 func NewRedisArticleCache(client redis.Cmdable) ArticleCache {

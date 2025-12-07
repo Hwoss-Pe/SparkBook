@@ -17,10 +17,10 @@
           <div class="article-meta">
             <div class="author-info" @click="viewAuthor(article.author.id)">
               <el-avatar :size="40" :src="article.author.avatar">
-                {{ article.author.name.substring(0, 1) }}
+                {{ article.author.name ? article.author.name.substring(0, 1) : '匿' }}
               </el-avatar>
               <div class="author-details">
-                <div class="author-name">{{ article.author.name }}</div>
+                <div class="author-name">{{ article.author.name || '匿名用户' }}</div>
                 <div class="publish-time">{{ formatDateTime(article.publishTime) }}</div>
               </div>
             </div>
@@ -103,7 +103,7 @@
             <div v-for="comment in comments" :key="comment.id" class="comment-item">
               <div class="comment-user">
                 <el-avatar :size="32" :src="comment.user.avatar">
-                  {{ comment.user.name.substring(0, 1) }}
+                  {{ comment.user.name ? comment.user.name.substring(0, 1) : '匿' }}
                 </el-avatar>
                 <div class="comment-user-info">
                   <div class="comment-user-name">{{ comment.user.name }}</div>
@@ -123,7 +123,7 @@
                 <div v-for="reply in comment.replies" :key="reply.id" class="reply-item">
                   <div class="comment-user">
                     <el-avatar :size="24" :src="reply.user.avatar">
-                      {{ reply.user.name.substring(0, 1) }}
+                      {{ reply.user.name ? reply.user.name.substring(0, 1) : '匿' }}
                     </el-avatar>
                     <div class="comment-user-info">
                       <div class="comment-user-name">

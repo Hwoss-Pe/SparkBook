@@ -56,9 +56,9 @@
             <div class="article-meta">
               <div class="author-info">
                 <el-avatar :size="24" :src="article.author.avatar">
-                  {{ article.author.name.substring(0, 1) }}
+                  {{ article.author.name ? article.author.name.substring(0, 1) : '匿' }}
                 </el-avatar>
-                <span class="author-name">{{ article.author.name }}</span>
+                <span class="author-name">{{ article.author.name || '匿名用户' }}</span>
               </div>
               <div class="interaction-info">
                 <span class="interaction-item">
@@ -88,7 +88,7 @@
           <div class="article-info">
             <div class="author-info" style="margin-bottom: 15px;">
               <el-avatar :size="50" :src="user.avatar">
-                {{ user.name.substring(0, 1) }}
+                {{ user.name ? user.name.substring(0, 1) : '匿' }}
               </el-avatar>
               <div>
                 <h3 class="article-title" @click="viewUser(user.id)">{{ user.name }}</h3>

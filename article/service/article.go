@@ -36,8 +36,17 @@ type articleService struct {
 	producer events.Producer
 }
 
-func NewArticleService(logger logger.Logger, repo repository.ArticleRepository, producer events.Producer) ArticleService {
-	return &articleService{logger: logger, repo: repo, producer: producer}
+func NewArticleService(logger logger.Logger, repo repository.ArticleRepository,
+	authorRepo repository.ArticleAuthorRepository, readerRepo repository.ArticleReaderRepository,
+	userRepo repository.AuthorRepository, producer events.Producer) ArticleService {
+	return &articleService{
+		logger:     logger,
+		repo:       repo,
+		authorRepo: authorRepo,
+		readerRepo: readerRepo,
+		userRepo:   userRepo,
+		producer:   producer,
+	}
 }
 
 func (a *articleService) Save(ctx context.Context, art domain.Article) (int64, error) {

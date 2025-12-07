@@ -157,7 +157,7 @@ func (G *GORMInteractiveDAO) BatchIncrReadCnt(ctx context.Context, bizs []string
 
 func (G *GORMInteractiveDAO) GetByIds(ctx context.Context, biz string, ids []int64) ([]Interactive, error) {
 	var res []Interactive
-	err := G.db.WithContext(ctx).Where("biz = ? and id in ?", biz, ids).Find(&res).Error
+	err := G.db.WithContext(ctx).Where("biz = ? and biz_id in ?", biz, ids).Find(&res).Error
 	return res, err
 }
 

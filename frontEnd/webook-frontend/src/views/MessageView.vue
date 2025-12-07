@@ -10,7 +10,7 @@
               <div v-for="message in interactionMessages" :key="message.id" class="message-item">
                 <div class="message-avatar">
                   <el-avatar :size="40" :src="message.sender.avatar">
-                    {{ message.sender.name.substring(0, 1) }}
+                    {{ message.sender.name ? message.sender.name.substring(0, 1) : '匿' }}
                   </el-avatar>
                 </div>
                 <div class="message-body">
@@ -42,7 +42,7 @@
               <div v-for="message in followMessages" :key="message.id" class="message-item">
                 <div class="message-avatar">
                   <el-avatar :size="40" :src="message.sender.avatar">
-                    {{ message.sender.name.substring(0, 1) }}
+                    {{ message.sender.name ? message.sender.name.substring(0, 1) : '匿' }}
                   </el-avatar>
                 </div>
                 <div class="message-body">

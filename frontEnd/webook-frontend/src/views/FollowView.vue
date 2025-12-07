@@ -37,9 +37,9 @@
               <div class="article-meta">
                 <div class="author-info">
                   <el-avatar :size="24" :src="article.author.avatar">
-                    {{ article.author.name.substring(0, 1) }}
+                    {{ article.author.name ? article.author.name.substring(0, 1) : '匿' }}
                   </el-avatar>
-                  <span class="author-name">{{ article.author.name }}</span>
+                  <span class="author-name">{{ article.author.name || '匿名用户' }}</span>
                 </div>
                 <div class="interaction-info">
                   <span class="interaction-item">
