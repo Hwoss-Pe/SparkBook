@@ -32,7 +32,18 @@ export interface LoginResponse {
 }
 
 export interface ProfileResponse {
-  user: User
+  id?: number
+  email?: string
+  nickname?: string
+  phone?: string
+  aboutMe?: string
+  birthday?: string
+  // 后端实际返回的字段名（大写开头）
+  Email?: string
+  Nickname?: string
+  Phone?: string
+  AboutMe?: string
+  Birthday?: string
 }
 
 // 用户相关API
@@ -49,7 +60,23 @@ export const userApi = {
   
   // 获取用户信息
   getProfile: () => {
-    return get<ProfileResponse>('/users/profile')
+    console.log('=== 发起个人信息请求 ===')
+    console.log('请求URL: /users/profile')
+    console.log('请求方法: GET')
+    console.log('当前时间:', new Date().toISOString())
+    
+    return get<ProfileResponse>('/users/profile').then(response => {
+      console.log('=== 个人信息请求成功 ===')
+      console.log('响应数据:', response)
+      console.log('响应数据类型:', typeof response)
+      console.log('响应数据详细:', JSON.stringify(response, null, 2))
+      return response
+    }).catch(error => {
+      console.error('=== 个人信息请求失败 ===')
+      console.error('请求错误:', error)
+      console.error('错误详情:', JSON.stringify(error, null, 2))
+      throw error
+    })
   },
   
   // 更新用户信息

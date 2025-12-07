@@ -17,13 +17,23 @@ service.interceptors.request.use(
   (config) => {
     // 在发送请求之前做些什么
     const token = localStorage.getItem('token')
+    console.log('=== HTTP 请求拦截器 ===')
     console.log('发送请求:', config.url)
+    console.log('请求方法:', config.method?.toUpperCase())
+    console.log('请求数据:', config.data)
+    console.log('请求参数:', config.params)
     console.log('localStorage 中的 token:', token ? token.substring(0, 50) + '...' : 'null')
+    
+    // 特别关注个人信息接口
+    if (config.url?.includes('/users/profile')) {
+      console.log('🔍 这是个人信息接口请求')
+      console.log('完整token:', token)
+    }
     
     if (token) {
       // 后端从 Authorization 头提取 token，格式为 "Bearer token"
       config.headers['Authorization'] = `Bearer ${token}`
-      console.log('已添加 Authorization 头')
+      console.log('已添加 Authorization 头:', `Bearer ${token.substring(0, 20)}...`)
     } else {
       console.log('没有 token，未添加 Authorization 头')
     }
@@ -39,6 +49,19 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
   (response: AxiosResponse) => {
+    console.log('=== HTTP 响应拦截器 ===')
+    console.log('响应URL:', response.config.url)
+    console.log('响应状态:', response.status)
+    console.log('响应状态文本:', response.statusText)
+    
+    // 特别关注个人信息接口
+    if (response.config.url?.includes('/users/profile')) {
+      console.log('🔍 这是个人信息接口响应')
+      console.log('个人信息响应数据:', response.data)
+      console.log('个人信息响应数据类型:', typeof response.data)
+      console.log('个人信息响应详细:', JSON.stringify(response.data, null, 2))
+    }
+    
     // 从响应头获取 token 并保存
     // 注意：响应头的 key 会被浏览器转为小写
     const jwtToken = response.headers['x-jwt-token']
@@ -64,8 +87,13 @@ service.interceptors.response.use(
     }
     
     // 根据后端API的响应结构进行处理
-    // 假设后端返回的数据结构为 { code: number, data: any, msg: string }
-    if (res.code === 0 || res.Msg === 'OK' || res.Msg === '登录成功') {
+    // 判断响应是否成功
+    if (res.msg === '登录成功' || res.code === 0 || response.status === 200) {
+      // 对于个人信息接口，直接返回数据
+      if (response.config.url?.includes('/users/profile')) {
+        console.log('✅ 个人信息接口响应成功，直接返回数据')
+        return res
+      }
       return res.data || res
     } else {
       ElMessage.error(res.msg || res.Msg || '请求失败')

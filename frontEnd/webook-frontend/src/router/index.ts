@@ -49,8 +49,20 @@ const router = createRouter({
     {
       path: '/create',
       name: 'create',
-      component: () => import('../views/CreateArticleView.vue'),
+      component: () => import('../views/CreatorCenterView.vue'),
       meta: { title: '创作中心 - 小微书', requiresAuth: true }
+    },
+    {
+      path: '/create/article',
+      name: 'create-article',
+      component: () => import('../views/CreateArticleView.vue'),
+      meta: { title: '写文章 - 小微书', requiresAuth: true }
+    },
+    {
+      path: '/my',
+      name: 'my',
+      component: () => import('../views/MyProfileView.vue'),
+      meta: { title: '我的 - 小微书', requiresAuth: true }
     },
     // 关于页面已删除
     {

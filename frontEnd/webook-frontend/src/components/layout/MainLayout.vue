@@ -25,7 +25,7 @@
             </div>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="navigateTo('/user/profile')">个人主页</el-dropdown-item>
+                <el-dropdown-item @click="navigateTo('/my')">我的</el-dropdown-item>
                 <el-dropdown-item @click="navigateTo('/user/settings')">设置</el-dropdown-item>
                 <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
@@ -65,6 +65,10 @@
             <el-icon><Edit /></el-icon>
             <span>创作中心</span>
           </el-menu-item>
+          <el-menu-item index="/my" v-if="isLoggedIn">
+            <el-icon><User /></el-icon>
+            <span>我的</span>
+          </el-menu-item>
         </el-menu>
       </div>
       
@@ -80,14 +84,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue' // 修复导入
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search, House, Star, Histogram, ChatDotRound, Edit } from '@element-plus/icons-vue'
+import { useUserStore } from '@/stores/user'
+import { Search, House, Star, Histogram, ChatDotRound, Edit, User } from '@element-plus/icons-vue'
 
-// 模拟用户登录状态
-const isLoggedIn = ref(false)
-const userAvatar = ref('')
-const userName = ref('')
+const userStore = useUserStore()
+const isLoggedIn = computed(() => userStore.isLoggedIn)
+const userAvatar = computed(() => userStore.user?.avatar || '')
+const userName = computed(() => userStore.user?.nickname || '')
 
 const userInitials = computed(() => {
   return userName.value ? userName.value.substring(0, 1).toUpperCase() : 'U'
@@ -114,10 +119,31 @@ const navigateTo = (path: string) => {
 
 // 处理登出
 const handleLogout = () => {
-  isLoggedIn.value = false
-  // 这里应该调用登出API，清除token等
+  userStore.clearUser()
   router.push('/login')
 }
+
+// 初始化用户状态
+onMounted(() => {
+  userStore.initUserState()
+  
+  // 如果localStorage有token但Store没有登录状态，尝试获取用户信息
+  const token = localStorage.getItem('token')
+  const storedUser = localStorage.getItem('user')
+  
+  if (token && storedUser && !userStore.isLoggedIn) {
+    try {
+      const userData = JSON.parse(storedUser)
+      userStore.setUser(userData, token, localStorage.getItem('refreshToken') || '')
+    } catch (error) {
+      console.error('恢复用户状态失败:', error)
+      // 清除无效的localStorage数据
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      localStorage.removeItem('refreshToken')
+    }
+  }
+})
 </script>
 
 <style scoped>

@@ -2,12 +2,20 @@ package middleware
 
 import (
 	jwt2 "Webook/bff/web/jwt"
+	"fmt"
 	"github.com/ecodeclub/ekit/set"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"time"
 )
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
 
 type JWTLoginMiddlewareBuilder struct {
 	publicPaths set.Set[string]
@@ -37,30 +45,41 @@ func (j *JWTLoginMiddlewareBuilder) Build() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		//目前先放开所有接口后续更新 TODO
 		// 调试模式下设置一个默认用户
-		ctx.Set("user", jwt2.UserClaims{Id: 1})
-		return
+		// ctx.Set("user", jwt2.UserClaims{Id: 1})
+		// return
 		if j.publicPaths.Exist(ctx.Request.URL.Path) {
 			return
 		}
 		//提取jwt
 		tokenStr := j.ExtractTokenString(ctx)
+		if tokenStr == "" {
+			fmt.Printf("JWT中间件: 未找到token, URL: %s\n", ctx.Request.URL.Path)
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		fmt.Printf("JWT中间件: 提取到token: %s...\n", tokenStr[:min(len(tokenStr), 20)])
+
 		uc := jwt2.UserClaims{}
-		token, err := jwt.ParseWithClaims(tokenStr, uc, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenStr, &uc, func(token *jwt.Token) (interface{}, error) {
 			return jwt2.AccessTokenKey, nil
 		})
 		if err != nil || !token.Valid {
 			// 不正确的 token
+			fmt.Printf("JWT中间件: token解析失败, error: %v, valid: %v\n", err, token != nil && token.Valid)
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+		fmt.Printf("JWT中间件: token解析成功, 用户ID: %d, 会话ID: %s\n", uc.Id, uc.Ssid)
 		expireTime, err := uc.GetExpirationTime()
 		if err != nil {
 			// 拿不到过期时间
+			fmt.Printf("JWT中间件: 获取过期时间失败, error: %v\n", err)
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
 		if expireTime.Before(time.Now()) {
 			// 已经过期
+			fmt.Printf("JWT中间件: token已过期, 过期时间: %v, 当前时间: %v\n", expireTime, time.Now())
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
@@ -74,10 +93,12 @@ func (j *JWTLoginMiddlewareBuilder) Build() gin.HandlerFunc {
 			// 系统错误或者用户已经主动退出登录了
 			// 这里也可以考虑说，如果在 Redis 已经崩溃的时候，
 			// 就不要去校验是不是已经主动退出登录了。
+			fmt.Printf("JWT中间件: 会话检查失败, error: %v\n", err)
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
 
+		fmt.Printf("JWT中间件: 验证成功, 设置用户信息到上下文\n")
 		ctx.Set("user", uc)
 	}
 }
