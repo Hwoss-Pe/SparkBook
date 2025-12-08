@@ -26,7 +26,7 @@ func InitGRPCxServer(l logger.Logger, ecli *clientv3.Client,
 	return &grpcx.Server{
 		Server:     server,
 		Port:       cfg.Port,
-		Name:       "interactive",
+		Name:       "comment",
 		L:          l,
 		EtcdTTL:    cfg.EtcdTTL,
 		EtcdClient: ecli,

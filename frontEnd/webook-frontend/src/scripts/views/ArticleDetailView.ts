@@ -3,6 +3,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { articleApi, type ArticleDetail } from '@/api/article'
 import { commentApi, type Comment } from '@/api/comment'
+import { useUserStore } from '@/stores/user'
 
 // 定义类型接口
 interface ArticleData {
@@ -100,6 +101,9 @@ export default function useArticleDetailView() {
   const commentContent = ref('')
   const commentsSection = ref<HTMLElement | null>(null)
   const relatedArticles = ref<RelatedArticle[]>([])
+  const minCommentId = ref(0)
+  const pageSize = 10
+  const userStore = useUserStore()
 
   // 格式化数字，例如1200显示为1.2k
   const formatNumber = (num: number): string => {
@@ -200,10 +204,70 @@ export default function useArticleDetailView() {
     })
   }
 
-  // 提交评论（暂时禁用）
+  const mapComment = (c: Comment): CommentData => {
+    return {
+      id: c.id,
+      content: c.content,
+      createTime: new Date(c.ctime),
+      likeCount: 0,
+      isLiked: false,
+      user: {
+        id: c.uid,
+        name: `用户#${c.uid}`,
+        avatar: `https://picsum.photos/id/${1000 + c.uid}/100/100`
+      },
+      replies: []
+    }
+  }
+
+  const fetchComments = async (initial = false) => {
+    try {
+      const res = await commentApi.getCommentList({
+        biz: 'article',
+        bizid: articleId.value,
+        min_id: initial ? 0 : minCommentId.value,
+        limit: pageSize
+      })
+      const list = (res.comments || []).map(mapComment)
+      if (initial) {
+        comments.value = list
+      } else {
+        comments.value = [...comments.value, ...list]
+      }
+      if (list.length > 0) {
+        minCommentId.value = list[list.length - 1].id
+      }
+      hasMoreComments.value = list.length === pageSize
+      article.value.commentCount = comments.value.length
+    } catch (error) {
+      console.error('加载评论失败:', error)
+      ElMessage.error('加载评论失败')
+    }
+  }
+
   const submitComment = async () => {
-    // 暂时不支持评论功能
-    ElMessage.info('评论功能暂未开放')
+    try {
+      const content = commentContent.value.trim()
+      if (!content) return
+      if (!userStore.user?.id) {
+        ElMessage.error('请先登录后再发表评论')
+        return
+      }
+      await commentApi.createComment({
+        comment: {
+          uid: userStore.user.id,
+          biz: 'article',
+          bizid: articleId.value,
+          content
+        }
+      })
+      commentContent.value = ''
+      await fetchComments(true)
+      ElMessage.success('评论已发布')
+    } catch (error) {
+      console.error('发表评论失败:', error)
+      ElMessage.error('发表评论失败')
+    }
   }
 
   // 点赞评论（暂时禁用）
@@ -218,10 +282,8 @@ export default function useArticleDetailView() {
     ElMessage.info('评论功能暂未开放')
   }
 
-  // 加载更多评论（暂时禁用）
   const loadMoreComments = async () => {
-    // 暂时不加载评论数据
-    ElMessage.info('评论功能暂未开放')
+    await fetchComments(false)
   }
 
   // 获取文章详情
@@ -256,9 +318,7 @@ export default function useArticleDetailView() {
         tags: [] // 移除假标签，等待后端支持标签功能
       }
       
-      // 暂时不加载评论数据
-      comments.value = []
-      hasMoreComments.value = false
+      await fetchComments(true)
       
       // 获取相关文章
       // TODO: 实际项目中应该有相关文章的API

@@ -37,31 +37,28 @@ func (c *CachedCommentRepo) FindByBiz(ctx context.Context, biz string, bizId, mi
 	if err != nil {
 		return nil, err
 	}
-	//  找到评论，还要再去找该评论的三条回复
-	res := make([]domain.Comment, 0, len(daoComments))
-	//	这里还有个降级是策略，也就是控制不去找对应的回复
-	bools := ctx.Value("downgraded") == "true"
+	res := make([]domain.Comment, len(daoComments))
+	downgraded := ctx.Value("downgraded") == "true"
 	var eg errgroup.Group
-	//评论不可以被修改，所以这里读取不需要加锁
-	for _, comment := range daoComments {
-		//	避免闭包捕获
-		comment := comment
+	for i, cmt := range daoComments {
+		comment := cmt
 		cm := c.toDomain(comment)
-		res = append(res, cm)
-		if bools {
+		res[i] = cm
+		if downgraded {
 			continue
 		}
+		idx := i
 		eg.Go(func() error {
-			cm.Children = make([]domain.Comment, 0, 3)
 			rs, err := c.dao.FindRepliesByPid(ctx, comment.Id, 0, 3)
 			if err != nil {
-				// 这是一个可以容忍的错误
 				c.l.Error("查询子评论失败", logger.Error(err))
 				return nil
 			}
+			children := make([]domain.Comment, 0, len(rs))
 			for _, r := range rs {
-				cm.Children = append(cm.Children, c.toDomain(r))
+				children = append(children, c.toDomain(r))
 			}
+			res[idx].Children = children
 			return nil
 		})
 	}

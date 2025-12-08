@@ -17,3 +17,5 @@ grpc:
       target: "etcd:///service/reward"
     ranking:
       target: "etcd:///service/ranking"
+    comment:
+      target: "etcd:///service/comment"

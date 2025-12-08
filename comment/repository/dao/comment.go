@@ -66,7 +66,9 @@ func (G *GORMCommentDAO) Insert(ctx context.Context, u Comment) error {
 func (G *GORMCommentDAO) FindByBiz(ctx context.Context, biz string, bizId, minID, limit int64) ([]Comment, error) {
 	var res []Comment
 	err := G.db.WithContext(ctx).
-		Where("biz = ? AND biz_id = ? AND id > ? AND pid IS NULL", biz, bizId, minID).
+		Where("biz = ? AND biz_id = ? AND pid IS NULL", biz, bizId).
+		Where("id < ?", minID).
+		Order("id DESC").
 		Limit(int(limit)).
 		Find(&res).Error
 	return res, err

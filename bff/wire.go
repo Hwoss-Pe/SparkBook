@@ -17,6 +17,7 @@ func InitApp() *wego.App {
 		ioc.InitEtcdClient,
 
 		ioc.NewArticleHandler,
+		web.NewCommentHandler,
 		web.NewUserHandler,
 		web.NewRewardHandler,
 		jwt.NewRedisHandler,
@@ -27,6 +28,7 @@ func InitApp() *wego.App {
 		ioc.InitRankingClient,
 		ioc.InitCodeClient,
 		ioc.InitArticleClient,
+		ioc.InitCommentClient,
 		ioc.InitGinServer,
 		wire.Struct(new(wego.App), "WebServer"),
 	)

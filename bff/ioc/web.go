@@ -19,12 +19,14 @@ func InitGinServer(l logger.Logger,
 	jwtHdl jwt2.Handler,
 	user *web.UserHandler,
 	article *web.ArticleHandler,
-	reward *web.RewardHandler) *ginx.Server {
+	reward *web.RewardHandler,
+	comment *web.CommentHandler) *ginx.Server {
 	engine := gin.Default()
 	engine.Use(corsHdl(), timeout(), middleware.NewJWTLoginMiddlewareBuilder(jwtHdl).Build())
 	user.RegisterRoute(engine)
 	article.RegisterRoute(engine)
 	reward.RegisterRoute(engine)
+	comment.RegisterRoute(engine)
 	addr := viper.GetString("http.addr")
 	ginx.InitCounter(prometheus.CounterOpts{
 		Namespace: "daming_geektime",

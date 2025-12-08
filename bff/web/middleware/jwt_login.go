@@ -4,6 +4,7 @@ import (
 	jwt2 "Webook/bff/web/jwt"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ecodeclub/ekit/set"
@@ -36,6 +37,8 @@ func NewJWTLoginMiddlewareBuilder(hdl jwt2.Handler) *JWTLoginMiddlewareBuilder {
 	s.Add("/articles/pub/list")
 	s.Add("/articles/pub/ranking")
 	s.Add("/users/recommend_authors")
+	s.Add("/comment/list")
+	s.Add("/comment/replies")
 	return &JWTLoginMiddlewareBuilder{
 		publicPaths: s,
 		Handler:     hdl,
@@ -50,7 +53,8 @@ func (j *JWTLoginMiddlewareBuilder) Build() gin.HandlerFunc {
 		// 调试模式下设置一个默认用户
 		// ctx.Set("user", jwt2.UserClaims{Id: 1})
 		// return
-		if j.publicPaths.Exist(ctx.Request.URL.Path) {
+		// 公开路径支持前缀匹配，例如 /articles/pub/:id
+		if j.publicPaths.Exist(ctx.Request.URL.Path) || strings.HasPrefix(ctx.Request.URL.Path, "/articles/pub/") {
 			// 公开路径也尝试解析 JWT，但不强制要求
 			tokenStr := j.ExtractTokenString(ctx)
 			if tokenStr != "" {
