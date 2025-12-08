@@ -94,6 +94,10 @@
               maxlength="500"
               show-word-limit
             />
+            <div v-if="replyTarget" class="reply-target" style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+              <el-tag type="info" effect="plain">正在回复 {{ replyTarget.userName }}</el-tag>
+              <el-button size="small" text @click="replyTarget = null">取消</el-button>
+            </div>
             <div class="comment-submit">
               <el-button type="primary" @click="submitComment" :disabled="!commentContent.trim()">
                 发表评论
@@ -150,6 +154,9 @@
                     <span class="comment-reply" @click="replyToComment(reply, comment)">回复</span>
                   </div>
                 </div>
+                <div class="load-more" style="margin-top: 8px;">
+                  <el-button size="small" @click="loadMoreRepliesFor(comment.id)">查看更多回复</el-button>
+                </div>
               </div>
             </div>
           </div>
@@ -203,6 +210,7 @@ const {
   comments,
   hasMoreComments,
   commentContent,
+  replyTarget,
   commentsSection,
   relatedArticles,
   formatNumber,
@@ -217,7 +225,8 @@ const {
   submitComment,
   likeComment,
   replyToComment,
-  loadMoreComments
+  loadMoreComments,
+  loadMoreRepliesFor
 } = useArticleDetailView()
 </script>
 

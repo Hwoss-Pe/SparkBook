@@ -99,11 +99,14 @@ export default function useArticleDetailView() {
   const comments = ref<CommentData[]>([])
   const hasMoreComments = ref(false)
   const commentContent = ref('')
+  const replyTarget = ref<{ rootId: number; parentId: number; userName: string } | null>(null)
   const commentsSection = ref<HTMLElement | null>(null)
   const relatedArticles = ref<RelatedArticle[]>([])
   const minCommentId = ref(0)
   const pageSize = 10
   const userStore = useUserStore()
+  const replyMaxId = ref<Record<number, number>>({})
+  const hasMoreRepliesMap = ref<Record<number, boolean>>({})
 
   // 格式化数字，例如1200显示为1.2k
   const formatNumber = (num: number): string => {
@@ -205,6 +208,21 @@ export default function useArticleDetailView() {
   }
 
   const mapComment = (c: Comment): CommentData => {
+    const replies: ReplyData[] = (c.children || []).map((r) => ({
+      id: r.id,
+      content: r.content,
+      createTime: new Date(r.ctime),
+      likeCount: 0,
+      isLiked: false,
+      user: {
+        id: r.uid,
+        name: `用户#${r.uid}`,
+        avatar: `https://picsum.photos/id/${1000 + r.uid}/100/100`
+      },
+      replyTo: r.parent_comment?.id
+        ? { id: r.parent_comment.id, name: `用户#${r.parent_comment.uid}` }
+        : undefined
+    }))
     return {
       id: c.id,
       content: c.content,
@@ -216,7 +234,7 @@ export default function useArticleDetailView() {
         name: `用户#${c.uid}`,
         avatar: `https://picsum.photos/id/${1000 + c.uid}/100/100`
       },
-      replies: []
+      replies
     }
   }
 
@@ -231,8 +249,24 @@ export default function useArticleDetailView() {
       const list = (res.comments || []).map(mapComment)
       if (initial) {
         comments.value = list
+        // 初始化每个根评论的回复分页游标为当前已展示的最小ID
+        list.forEach(c => {
+          if (c.replies && c.replies.length > 0) {
+            replyMaxId.value[c.id] = Math.min(...c.replies.map(r => r.id))
+            hasMoreRepliesMap.value[c.id] = true
+          } else {
+            replyMaxId.value[c.id] = Number.MAX_SAFE_INTEGER
+            hasMoreRepliesMap.value[c.id] = false
+          }
+        })
       } else {
         comments.value = [...comments.value, ...list]
+        list.forEach(c => {
+          if (!(c.id in replyMaxId.value)) {
+            replyMaxId.value[c.id] = Number.MAX_SAFE_INTEGER
+            hasMoreRepliesMap.value[c.id] = (c.replies && c.replies.length >= 3)
+          }
+        })
       }
       if (list.length > 0) {
         minCommentId.value = list[list.length - 1].id
@@ -253,15 +287,21 @@ export default function useArticleDetailView() {
         ElMessage.error('请先登录后再发表评论')
         return
       }
-      await commentApi.createComment({
+      const payload: any = {
         comment: {
           uid: userStore.user.id,
           biz: 'article',
           bizid: articleId.value,
           content
         }
-      })
+      }
+      if (replyTarget.value) {
+        payload.comment.root_comment = { id: replyTarget.value.rootId }
+        payload.comment.parent_comment = { id: replyTarget.value.parentId }
+      }
+      await commentApi.createComment(payload)
       commentContent.value = ''
+      replyTarget.value = null
       await fetchComments(true)
       ElMessage.success('评论已发布')
     } catch (error) {
@@ -272,18 +312,68 @@ export default function useArticleDetailView() {
 
   // 点赞评论（暂时禁用）
   const likeComment = async (comment: CommentData | ReplyData) => {
-    // 暂时不支持评论功能
-    ElMessage.info('评论功能暂未开放')
+    if (comment.isLiked) {
+      comment.isLiked = false
+      comment.likeCount = Math.max(0, comment.likeCount - 1)
+    } else {
+      comment.isLiked = true
+      comment.likeCount += 1
+    }
   }
 
   // 回复评论（暂时禁用）
   const replyToComment = (comment: CommentData | ReplyData, parentComment: CommentData | null = null) => {
-    // 暂时不支持评论功能
-    ElMessage.info('评论功能暂未开放')
+    if ('replies' in comment) {
+      replyTarget.value = { rootId: comment.id, parentId: comment.id, userName: comment.user.name || `用户#${comment.user.id}` }
+    } else if (parentComment) {
+      replyTarget.value = { rootId: parentComment.id, parentId: comment.id, userName: comment.user.name || `用户#${comment.user.id}` }
+    }
+    scrollToComments()
   }
 
   const loadMoreComments = async () => {
     await fetchComments(false)
+  }
+
+  const mapReply = (r: Comment): ReplyData => ({
+    id: r.id,
+    content: r.content,
+    createTime: new Date(r.ctime),
+    likeCount: 0,
+    isLiked: false,
+    user: {
+      id: r.uid,
+      name: `用户#${r.uid}`,
+      avatar: `https://picsum.photos/id/${1000 + r.uid}/100/100`
+    },
+    replyTo: r.parent_comment?.id
+      ? { id: r.parent_comment.id, name: `用户#${r.parent_comment.uid}` }
+      : undefined
+  })
+
+  const loadMoreRepliesFor = async (rootId: number) => {
+    try {
+      const maxId = replyMaxId.value[rootId] ?? Number.MAX_SAFE_INTEGER
+      const res = await commentApi.getMoreReplies({ rid: rootId, max_id: maxId, limit: 10 })
+      const fetched = (res.replies || []).map(mapReply)
+      const idx = comments.value.findIndex(c => c.id === rootId)
+      if (idx < 0) return
+      const existingIds = new Set(comments.value[idx].replies.map(r => r.id))
+      const add = fetched.filter(r => !existingIds.has(r.id))
+      if (add.length > 0) {
+        comments.value[idx].replies = [...comments.value[idx].replies, ...add]
+        // 更新游标为当前已加载的最小ID，确保下一页只拿更旧的数据
+        const currentMin = replyMaxId.value[rootId] ?? Number.MAX_SAFE_INTEGER
+        replyMaxId.value[rootId] = Math.min(currentMin, ...add.map(r => r.id))
+        hasMoreRepliesMap.value[rootId] = true
+      } else {
+        // 没有更多数据，隐藏按钮
+        hasMoreRepliesMap.value[rootId] = false
+      }
+    } catch (error) {
+      console.error('加载更多回复失败:', error)
+      ElMessage.error('加载更多回复失败')
+    }
   }
 
   // 获取文章详情
@@ -344,6 +434,9 @@ export default function useArticleDetailView() {
     comments,
     hasMoreComments,
     commentContent,
+    replyTarget,
+    loadMoreRepliesFor,
+    hasMoreRepliesMap,
     commentsSection,
     relatedArticles,
     formatNumber,

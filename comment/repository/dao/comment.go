@@ -2,6 +2,7 @@ package dao
 
 import (
 	"database/sql"
+
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -59,7 +60,7 @@ func NewGORMCommentDAO(db *gorm.DB) CommentDAO {
 func (G *GORMCommentDAO) Insert(ctx context.Context, u Comment) error {
 	return G.db.
 		WithContext(ctx).
-		Create(u).
+		Create(&u).
 		Error
 }
 
@@ -117,7 +118,7 @@ func (G *GORMCommentDAO) FindRepliesByRid(ctx context.Context, rid int64, id int
 	var res []Comment
 	err := G.db.WithContext(ctx).
 		Where("root_id = ? AND id < ?", rid, id).
-		Order("id ASC").
+		Order("id DESC").
 		Limit(int(limit)).Find(&res).Error
 	return res, err
 }

@@ -9,6 +9,7 @@ export interface Comment {
   content: string
   root_comment?: Comment
   parent_comment?: Comment
+  children?: Comment[]
   ctime: string
   utime: string
 }
