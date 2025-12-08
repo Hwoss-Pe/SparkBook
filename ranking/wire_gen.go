@@ -19,14 +19,14 @@ import (
 
 func Init() *App {
 	interactiveServiceClient := ioc.InitInterActiveRpcClient()
-	articleServiceClient := ioc.InitArticleRpcClient()
+	client := ioc.InitEtcdClient()
+	articleServiceClient := ioc.InitArticleRpcClient(client)
 	cmdable := ioc.InitRedis()
 	redisRankingCache := cache.NewRedisRankingCache(cmdable)
 	rankingLocalCache := cache.NewRankingLocalCache()
 	rankingRepository := repository.NewCachedRankingRepository(redisRankingCache, rankingLocalCache)
 	rankingService := service.NewBatchRankingService(interactiveServiceClient, articleServiceClient, rankingRepository)
 	rankingServiceServer := grpc2.NewRankingServiceServer(rankingService)
-	client := ioc.InitEtcdClient()
 	logger := ioc.InitLogger()
 	server := ioc.InitGRPCxServer(rankingServiceServer, client, logger)
 	app := &App{

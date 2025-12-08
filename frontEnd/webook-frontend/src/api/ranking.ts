@@ -1,33 +1,44 @@
-import { get } from './http'
+import { get, post } from './http'
 
 // 热榜相关接口类型定义
 export interface RankingArticle {
   id: number
   title: string
-  status: number
-  content: string
+  abstract: string
+  coverImage: string
   author: {
     id: number
     name: string
+    avatar: string
   }
   ctime: string
   utime: string
+  readCnt: number
+  likeCnt: number
+  collectCnt: number
 }
 
-export interface TopNResponse {
-  articles: RankingArticle[]
+export interface RankingRequest {
+  offset?: number
+  limit?: number
+}
+
+export interface RankingResponse {
+  code: number
+  msg: string
+  data: RankingArticle[]
 }
 
 // 热榜相关API
 export const rankingApi = {
   // 获取热榜文章
-  getTopN: () => {
-    return get<TopNResponse>('/ranking/top')
+  getRanking: (params: RankingRequest = { offset: 0, limit: 10 }) => {
+    return get<RankingResponse>('/articles/pub/ranking', params)
   },
   
-  // 计算热榜（通常是后台任务，前端一般不调用）
-  rankTopN: () => {
-    return get('/ranking/calculate')
+  // 手动触发热榜计算
+  triggerRanking: () => {
+    return post<{ code: number; msg: string; data: any }>('/articles/pub/ranking/trigger', {})
   }
 }
 

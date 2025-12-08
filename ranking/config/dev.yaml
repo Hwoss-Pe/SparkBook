@@ -8,9 +8,10 @@ grpc:
     etcdTTL: 60
   client:
     intr:
-      addr: ":8090"
+      addr: ":8094"
     article:
-      addr: ":8091"
+      target: "etcd:///service/article"
+      secure: false
 etcd:
   endpoints:
     - "localhost:12379"

@@ -150,7 +150,26 @@ func (a *articleService) GetPublishedById(ctx context.Context, id, uid int64) (d
 }
 
 func (a *articleService) ListPub(ctx context.Context, startTime time.Time, offset, limit int) ([]domain.Article, error) {
-	return a.repo.ListPub(ctx, startTime, offset, limit)
+	articles, err := a.repo.ListPub(ctx, startTime, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	// 批量获取作者信息
+	for i := range articles {
+		author, err := a.userRepo.FindAuthor(ctx, articles[i].Id)
+		if err != nil {
+			// 如果获取作者信息失败，记录日志但不影响整体流程
+			a.logger.Error("获取作者信息失败",
+				logger.Int64("articleId", articles[i].Id),
+				logger.Int64("authorId", articles[i].Author.Id),
+				logger.Error(err))
+			continue
+		}
+		articles[i].Author = author
+	}
+
+	return articles, nil
 }
 
 func (a *articleService) create(ctx context.Context,

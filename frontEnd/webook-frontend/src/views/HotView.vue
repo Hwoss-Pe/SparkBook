@@ -2,8 +2,17 @@
   <MainLayout>
     <div class="hot-container">
       <div class="hot-header">
-        <h1 class="hot-title">热门榜单</h1>
-        <p class="hot-subtitle">发现最受欢迎的内容</p>
+        <div class="header-content">
+          <div class="title-section">
+            <h1 class="hot-title">热门榜单</h1>
+            <p class="hot-subtitle">发现最受欢迎的内容</p>
+          </div>
+          <div class="action-section">
+            <el-button type="primary" @click="triggerRankingCalculation" :loading="isTriggering">
+              重新计算热榜
+            </el-button>
+          </div>
+        </div>
       </div>
       
       <div class="tab-container">
@@ -84,10 +93,12 @@ const {
   activeTab,
   hotArticles,
   hasMoreArticles,
+  isTriggering,
   formatNumber,
   viewArticle,
   changeTab,
-  loadMoreArticles
+  loadMoreArticles,
+  triggerRankingCalculation
 } = useHotView()
 </script>
 

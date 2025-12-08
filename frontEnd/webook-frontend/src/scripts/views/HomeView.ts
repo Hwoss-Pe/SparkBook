@@ -46,57 +46,34 @@ export default function useHomeView() {
   const currentOffset = ref(0)
   const pageSize = 10
 
-  // 热榜数据（暂时使用模拟数据，后续可接入热榜服务）
-  const hotRankings = ref([
-    {
-      id: 101,
-      title: '年轻人为什么都在做副业？',
-      author: { name: '经济观察家' },
-      readCount: 125000
-    },
-    {
-      id: 102,
-      title: '这些小众景点比网红打卡地更值得去',
-      author: { name: '旅行达人' },
-      readCount: 98000
-    },
-    {
-      id: 103,
-      title: '如何在30天内养成一个新习惯',
-      author: { name: '生活改造师' },
-      readCount: 87000
-    },
-    {
-      id: 104,
-      title: '2025年最值得学习的5个技能',
-      author: { name: '职场导师' },
-      readCount: 76000
-    },
-    {
-      id: 105,
-      title: '这样做，让你的朋友圈不再单调',
-      author: { name: '社交达人' },
-      readCount: 65000
-    },
-    {
-      id: 106,
-      title: '低成本高品质的家居改造指南',
-      author: { name: '家居设计师' },
-      readCount: 54000
-    },
-    {
-      id: 107,
-      title: '如何科学健身：避开这些常见误区',
-      author: { name: '健身教练' },
-      readCount: 43000
-    },
-    {
-      id: 108,
-      title: '读懂财报的10个关键指标',
-      author: { name: '投资顾问' },
-      readCount: 32000
+  // 热榜数据
+  const hotRankings = ref<Array<{
+    id: number
+    title: string
+    author: { name: string }
+    readCount: number
+  }>>([])
+
+  // 获取热榜数据
+  const fetchHotRankings = async () => {
+    try {
+      const { rankingApi } = await import('@/api/ranking')
+      const response = await rankingApi.getRanking({ offset: 0, limit: 8 })
+      
+      if (response.code === 0 && response.data) {
+        hotRankings.value = response.data.map(article => ({
+          id: article.id,
+          title: article.title,
+          author: { name: article.author.name || '匿名用户' },
+          readCount: article.readCnt || 0
+        }))
+      }
+    } catch (error) {
+      console.error('获取热榜数据失败:', error)
+      // 如果获取失败，保持空数组
+      hotRankings.value = []
     }
-  ])
+  }
 
   // 模拟推荐作者数据
   const recommendedAuthors = ref([
@@ -200,6 +177,8 @@ export default function useHomeView() {
   onMounted(() => {
     // 获取推荐文章列表
     fetchArticles()
+    // 获取热榜数据
+    fetchHotRankings()
   })
 
   return {

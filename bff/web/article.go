@@ -3,6 +3,7 @@ package web
 import (
 	articlev1 "Webook/api/proto/gen/api/proto/article/v1"
 	intrv1 "Webook/api/proto/gen/api/proto/intr/v1"
+	rankingv1 "Webook/api/proto/gen/api/proto/ranking/v1"
 	rewardv1 "Webook/api/proto/gen/api/proto/reward/v1"
 	"Webook/bff/web/jwt"
 	"Webook/pkg/ginx"
@@ -18,23 +19,26 @@ import (
 )
 
 type ArticleHandler struct {
-	svc     articlev1.ArticleServiceClient
-	intrSvc intrv1.InteractiveServiceClient
-	reward  rewardv1.RewardServiceClient
-	l       logger.Logger
-	biz     string
+	svc        articlev1.ArticleServiceClient
+	intrSvc    intrv1.InteractiveServiceClient
+	rankingSvc rankingv1.RankingServiceClient
+	reward     rewardv1.RewardServiceClient
+	l          logger.Logger
+	biz        string
 }
 
 func NewArticleHandler(svc articlev1.ArticleServiceClient,
 	intrSvc intrv1.InteractiveServiceClient,
+	rankingSvc rankingv1.RankingServiceClient,
 	reward rewardv1.RewardServiceClient,
 	l logger.Logger) *ArticleHandler {
 	return &ArticleHandler{
-		svc:     svc,
-		l:       l,
-		reward:  reward,
-		biz:     "article",
-		intrSvc: intrSvc,
+		svc:        svc,
+		l:          l,
+		reward:     reward,
+		biz:        "article",
+		intrSvc:    intrSvc,
+		rankingSvc: rankingSvc,
 	}
 }
 
@@ -53,6 +57,10 @@ func (a *ArticleHandler) RegisterRoute(s *gin.Engine) {
 	pub.POST("/collect", ginx.WrapClaimsAndReq[CollectReq](a.Collect))
 	// 打赏
 	pub.POST("/reward", ginx.WrapClaimsAndReq[RewardReq](a.Reward))
+	// 热榜
+	pub.GET("/ranking", ginx.WrapReq[RankingReq](a.Ranking))
+	// 手动触发热榜计算
+	pub.POST("/ranking/trigger", ginx.WrapReq[TriggerRankingReq](a.TriggerRanking))
 }
 
 func (a *ArticleHandler) Detail(ctx *gin.Context) {
@@ -447,5 +455,126 @@ func (a *ArticleHandler) Reward(ctx *gin.Context, req RewardReq, uc ginx.UserCla
 			"codeURL": resp.CodeUrl,
 			"rid":     resp.Rid,
 		},
+	}, nil
+}
+
+// RankingReq 热榜请求
+type RankingReq struct {
+	Offset int32 `json:"offset"`
+	Limit  int32 `json:"limit"`
+}
+
+// TriggerRankingReq 触发热榜计算请求
+type TriggerRankingReq struct {
+}
+
+// TriggerRanking 手动触发热榜计算
+func (a *ArticleHandler) TriggerRanking(ctx *gin.Context, req TriggerRankingReq) (ginx.Result, error) {
+	// 调用 ranking 服务的 RankTopN 方法来触发热榜计算
+	_, err := a.rankingSvc.RankTopN(ctx, &rankingv1.RankTopNRequest{})
+	if err != nil {
+		a.l.Error("触发热榜计算失败", logger.Error(err))
+		return ginx.Result{
+			Code: 5,
+			Msg:  "触发热榜计算失败",
+		}, err
+	}
+
+	a.l.Info("热榜计算已手动触发")
+	return ginx.Result{
+		Code: 0,
+		Msg:  "热榜计算已成功触发",
+		Data: map[string]any{
+			"message": "热榜正在重新计算中，请稍后查看最新结果",
+		},
+	}, nil
+}
+
+// Ranking 获取热榜文章
+func (a *ArticleHandler) Ranking(ctx *gin.Context, req RankingReq) (ginx.Result, error) {
+	if req.Limit > 100 || req.Limit <= 0 {
+		req.Limit = 10
+	}
+
+	// 调用热榜服务获取热榜文章
+	rankResp, err := a.rankingSvc.TopN(ctx, &rankingv1.TopNRequest{})
+	if err != nil {
+		a.l.Error("获取热榜失败", logger.Error(err))
+		return ginx.Result{
+			Code: 5,
+			Msg:  "系统错误",
+		}, err
+	}
+
+	allArticles := rankResp.GetArticles()
+	if len(allArticles) == 0 {
+		return ginx.Result{
+			Data: []ArticlePubVo{},
+		}, nil
+	}
+
+	// 在BFF层进行分页处理
+	start := int(req.Offset)
+	end := start + int(req.Limit)
+	if start >= len(allArticles) {
+		return ginx.Result{
+			Data: []ArticlePubVo{},
+		}, nil
+	}
+	if end > len(allArticles) {
+		end = len(allArticles)
+	}
+	articles := allArticles[start:end]
+
+	// 提取文章ID列表
+	ids := make([]int64, 0, len(articles))
+	for _, art := range articles {
+		ids = append(ids, art.Id)
+	}
+
+	// 批量获取互动数据
+	intrResp, err := a.intrSvc.GetByIds(ctx, &intrv1.GetByIdsRequest{
+		Biz: a.biz,
+		Ids: ids,
+	})
+	if err != nil {
+		a.l.Error("获取互动数据失败", logger.Error(err))
+		// 互动数据获取失败不影响文章列表返回，只是互动数据为空
+	}
+
+	intrMap := make(map[int64]*intrv1.Interactive)
+	if intrResp != nil {
+		intrMap = intrResp.GetIntrs()
+	}
+
+	// 组装返回数据
+	result := make([]ArticlePubVo, 0, len(articles))
+	for _, art := range articles {
+		vo := ArticlePubVo{
+			Id:    art.Id,
+			Title: art.Title,
+			//Abstract:   art.,
+			CoverImage: art.CoverImage,
+			Ctime:      art.Ctime.AsTime().Format(time.DateTime),
+			Utime:      art.Utime.AsTime().Format(time.DateTime),
+		}
+		// 设置作者信息
+		if art.Author != nil {
+			vo.Author = AuthorVo{
+				Id:   art.Author.Id,
+				Name: art.Author.Name,
+			}
+		}
+		// 设置互动数据
+		if intr, ok := intrMap[art.Id]; ok {
+			vo.ReadCnt = intr.ReadCnt
+			vo.LikeCnt = intr.LikeCnt
+			vo.CollectCnt = intr.CollectCnt
+		}
+		result = append(result, vo)
+	}
+
+	return ginx.Result{
+		Data: result,
 	}, nil
 }
