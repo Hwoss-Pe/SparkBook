@@ -248,6 +248,8 @@ func (*RankTopNResponse) Descriptor() ([]byte, []int) {
 
 type TopNRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Offset        int32                  `protobuf:"varint,1,opt,name=offset,proto3" json:"offset,omitempty"`
+	Limit         int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -280,6 +282,20 @@ func (x *TopNRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use TopNRequest.ProtoReflect.Descriptor instead.
 func (*TopNRequest) Descriptor() ([]byte, []int) {
 	return file_api_proto_ranking_v1_ranking_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *TopNRequest) GetOffset() int32 {
+	if x != nil {
+		return x.Offset
+	}
+	return 0
+}
+
+func (x *TopNRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
 }
 
 type TopNResponse struct {
@@ -346,8 +362,10 @@ const file_api_proto_ranking_v1_ranking_proto_rawDesc = "" +
 	"\vcover_image\x18\b \x01(\tR\n" +
 	"coverImage\"\x11\n" +
 	"\x0fRankTopNRequest\"\x12\n" +
-	"\x10RankTopNResponse\"\r\n" +
-	"\vTopNRequest\"?\n" +
+	"\x10RankTopNResponse\";\n" +
+	"\vTopNRequest\x12\x16\n" +
+	"\x06offset\x18\x01 \x01(\x05R\x06offset\x12\x14\n" +
+	"\x05limit\x18\x02 \x01(\x05R\x05limit\"?\n" +
 	"\fTopNResponse\x12/\n" +
 	"\barticles\x18\x01 \x03(\v2\x13.ranking.v1.ArticleR\barticles2\x96\x01\n" +
 	"\x0eRankingService\x12G\n" +

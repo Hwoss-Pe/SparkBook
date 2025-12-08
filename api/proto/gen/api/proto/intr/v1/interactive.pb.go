@@ -697,6 +697,110 @@ func (x *CollectRequest) GetCid() int64 {
 	return 0
 }
 
+type CancelCollectRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Biz           string                 `protobuf:"bytes,1,opt,name=biz,proto3" json:"biz,omitempty"`
+	BizId         int64                  `protobuf:"varint,2,opt,name=biz_id,json=bizId,proto3" json:"biz_id,omitempty"`
+	Uid           int64                  `protobuf:"varint,3,opt,name=uid,proto3" json:"uid,omitempty"`
+	Cid           int64                  `protobuf:"varint,4,opt,name=cid,proto3" json:"cid,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CancelCollectRequest) Reset() {
+	*x = CancelCollectRequest{}
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CancelCollectRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CancelCollectRequest) ProtoMessage() {}
+
+func (x *CancelCollectRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CancelCollectRequest.ProtoReflect.Descriptor instead.
+func (*CancelCollectRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_intr_v1_interactive_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *CancelCollectRequest) GetBiz() string {
+	if x != nil {
+		return x.Biz
+	}
+	return ""
+}
+
+func (x *CancelCollectRequest) GetBizId() int64 {
+	if x != nil {
+		return x.BizId
+	}
+	return 0
+}
+
+func (x *CancelCollectRequest) GetUid() int64 {
+	if x != nil {
+		return x.Uid
+	}
+	return 0
+}
+
+func (x *CancelCollectRequest) GetCid() int64 {
+	if x != nil {
+		return x.Cid
+	}
+	return 0
+}
+
+type CancelCollectResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CancelCollectResponse) Reset() {
+	*x = CancelCollectResponse{}
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CancelCollectResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CancelCollectResponse) ProtoMessage() {}
+
+func (x *CancelCollectResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CancelCollectResponse.ProtoReflect.Descriptor instead.
+func (*CancelCollectResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_intr_v1_interactive_proto_rawDescGZIP(), []int{14}
+}
+
 var File_api_proto_intr_v1_interactive_proto protoreflect.FileDescriptor
 
 const file_api_proto_intr_v1_interactive_proto_rawDesc = "" +
@@ -746,13 +850,20 @@ const file_api_proto_intr_v1_interactive_proto_rawDesc = "" +
 	"\x03biz\x18\x01 \x01(\tR\x03biz\x12\x15\n" +
 	"\x06biz_id\x18\x02 \x01(\x03R\x05bizId\x12\x10\n" +
 	"\x03uid\x18\x03 \x01(\x03R\x03uid\x12\x10\n" +
-	"\x03cid\x18\x04 \x01(\x03R\x03cid2\x8b\x03\n" +
+	"\x03cid\x18\x04 \x01(\x03R\x03cid\"c\n" +
+	"\x14CancelCollectRequest\x12\x10\n" +
+	"\x03biz\x18\x01 \x01(\tR\x03biz\x12\x15\n" +
+	"\x06biz_id\x18\x02 \x01(\x03R\x05bizId\x12\x10\n" +
+	"\x03uid\x18\x03 \x01(\x03R\x03uid\x12\x10\n" +
+	"\x03cid\x18\x04 \x01(\x03R\x03cid\"\x17\n" +
+	"\x15CancelCollectResponse2\xdb\x03\n" +
 	"\x12InteractiveService\x12H\n" +
 	"\vIncrReadCnt\x12\x1b.intr.v1.IncrReadCntRequest\x1a\x1c.intr.v1.IncrReadCntResponse\x123\n" +
 	"\x04Like\x12\x14.intr.v1.LikeRequest\x1a\x15.intr.v1.LikeResponse\x12E\n" +
 	"\n" +
 	"CancelLike\x12\x1a.intr.v1.CancelLikeRequest\x1a\x1b.intr.v1.CancelLikeResponse\x12<\n" +
-	"\aCollect\x12\x17.intr.v1.CollectRequest\x1a\x18.intr.v1.CollectResponse\x120\n" +
+	"\aCollect\x12\x17.intr.v1.CollectRequest\x1a\x18.intr.v1.CollectResponse\x12N\n" +
+	"\rCancelCollect\x12\x1d.intr.v1.CancelCollectRequest\x1a\x1e.intr.v1.CancelCollectResponse\x120\n" +
 	"\x03Get\x12\x13.intr.v1.GetRequest\x1a\x14.intr.v1.GetResponse\x12?\n" +
 	"\bGetByIds\x12\x18.intr.v1.GetByIdsRequest\x1a\x19.intr.v1.GetByIdsResponseB\x89\x01\n" +
 	"\vcom.intr.v1B\x10InteractiveProtoP\x01Z+ecodepub/pkg/model/api/proto/intr/v1;intrv1\xa2\x02\x03IXX\xaa\x02\aIntr.V1\xca\x02\aIntr\\V1\xe2\x02\x13Intr\\V1\\GPBMetadata\xea\x02\bIntr::V1b\x06proto3"
@@ -769,41 +880,45 @@ func file_api_proto_intr_v1_interactive_proto_rawDescGZIP() []byte {
 	return file_api_proto_intr_v1_interactive_proto_rawDescData
 }
 
-var file_api_proto_intr_v1_interactive_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_api_proto_intr_v1_interactive_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_api_proto_intr_v1_interactive_proto_goTypes = []any{
-	(*GetResponse)(nil),         // 0: intr.v1.GetResponse
-	(*GetRequest)(nil),          // 1: intr.v1.GetRequest
-	(*GetByIdsRequest)(nil),     // 2: intr.v1.GetByIdsRequest
-	(*GetByIdsResponse)(nil),    // 3: intr.v1.GetByIdsResponse
-	(*Interactive)(nil),         // 4: intr.v1.Interactive
-	(*IncrReadCntRequest)(nil),  // 5: intr.v1.IncrReadCntRequest
-	(*IncrReadCntResponse)(nil), // 6: intr.v1.IncrReadCntResponse
-	(*CancelLikeResponse)(nil),  // 7: intr.v1.CancelLikeResponse
-	(*CancelLikeRequest)(nil),   // 8: intr.v1.CancelLikeRequest
-	(*LikeRequest)(nil),         // 9: intr.v1.LikeRequest
-	(*LikeResponse)(nil),        // 10: intr.v1.LikeResponse
-	(*CollectResponse)(nil),     // 11: intr.v1.CollectResponse
-	(*CollectRequest)(nil),      // 12: intr.v1.CollectRequest
-	nil,                         // 13: intr.v1.GetByIdsResponse.IntrsEntry
+	(*GetResponse)(nil),           // 0: intr.v1.GetResponse
+	(*GetRequest)(nil),            // 1: intr.v1.GetRequest
+	(*GetByIdsRequest)(nil),       // 2: intr.v1.GetByIdsRequest
+	(*GetByIdsResponse)(nil),      // 3: intr.v1.GetByIdsResponse
+	(*Interactive)(nil),           // 4: intr.v1.Interactive
+	(*IncrReadCntRequest)(nil),    // 5: intr.v1.IncrReadCntRequest
+	(*IncrReadCntResponse)(nil),   // 6: intr.v1.IncrReadCntResponse
+	(*CancelLikeResponse)(nil),    // 7: intr.v1.CancelLikeResponse
+	(*CancelLikeRequest)(nil),     // 8: intr.v1.CancelLikeRequest
+	(*LikeRequest)(nil),           // 9: intr.v1.LikeRequest
+	(*LikeResponse)(nil),          // 10: intr.v1.LikeResponse
+	(*CollectResponse)(nil),       // 11: intr.v1.CollectResponse
+	(*CollectRequest)(nil),        // 12: intr.v1.CollectRequest
+	(*CancelCollectRequest)(nil),  // 13: intr.v1.CancelCollectRequest
+	(*CancelCollectResponse)(nil), // 14: intr.v1.CancelCollectResponse
+	nil,                           // 15: intr.v1.GetByIdsResponse.IntrsEntry
 }
 var file_api_proto_intr_v1_interactive_proto_depIdxs = []int32{
 	4,  // 0: intr.v1.GetResponse.intr:type_name -> intr.v1.Interactive
-	13, // 1: intr.v1.GetByIdsResponse.intrs:type_name -> intr.v1.GetByIdsResponse.IntrsEntry
+	15, // 1: intr.v1.GetByIdsResponse.intrs:type_name -> intr.v1.GetByIdsResponse.IntrsEntry
 	4,  // 2: intr.v1.GetByIdsResponse.IntrsEntry.value:type_name -> intr.v1.Interactive
 	5,  // 3: intr.v1.InteractiveService.IncrReadCnt:input_type -> intr.v1.IncrReadCntRequest
 	9,  // 4: intr.v1.InteractiveService.Like:input_type -> intr.v1.LikeRequest
 	8,  // 5: intr.v1.InteractiveService.CancelLike:input_type -> intr.v1.CancelLikeRequest
 	12, // 6: intr.v1.InteractiveService.Collect:input_type -> intr.v1.CollectRequest
-	1,  // 7: intr.v1.InteractiveService.Get:input_type -> intr.v1.GetRequest
-	2,  // 8: intr.v1.InteractiveService.GetByIds:input_type -> intr.v1.GetByIdsRequest
-	6,  // 9: intr.v1.InteractiveService.IncrReadCnt:output_type -> intr.v1.IncrReadCntResponse
-	10, // 10: intr.v1.InteractiveService.Like:output_type -> intr.v1.LikeResponse
-	7,  // 11: intr.v1.InteractiveService.CancelLike:output_type -> intr.v1.CancelLikeResponse
-	11, // 12: intr.v1.InteractiveService.Collect:output_type -> intr.v1.CollectResponse
-	0,  // 13: intr.v1.InteractiveService.Get:output_type -> intr.v1.GetResponse
-	3,  // 14: intr.v1.InteractiveService.GetByIds:output_type -> intr.v1.GetByIdsResponse
-	9,  // [9:15] is the sub-list for method output_type
-	3,  // [3:9] is the sub-list for method input_type
+	13, // 7: intr.v1.InteractiveService.CancelCollect:input_type -> intr.v1.CancelCollectRequest
+	1,  // 8: intr.v1.InteractiveService.Get:input_type -> intr.v1.GetRequest
+	2,  // 9: intr.v1.InteractiveService.GetByIds:input_type -> intr.v1.GetByIdsRequest
+	6,  // 10: intr.v1.InteractiveService.IncrReadCnt:output_type -> intr.v1.IncrReadCntResponse
+	10, // 11: intr.v1.InteractiveService.Like:output_type -> intr.v1.LikeResponse
+	7,  // 12: intr.v1.InteractiveService.CancelLike:output_type -> intr.v1.CancelLikeResponse
+	11, // 13: intr.v1.InteractiveService.Collect:output_type -> intr.v1.CollectResponse
+	14, // 14: intr.v1.InteractiveService.CancelCollect:output_type -> intr.v1.CancelCollectResponse
+	0,  // 15: intr.v1.InteractiveService.Get:output_type -> intr.v1.GetResponse
+	3,  // 16: intr.v1.InteractiveService.GetByIds:output_type -> intr.v1.GetByIdsResponse
+	10, // [10:17] is the sub-list for method output_type
+	3,  // [3:10] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
 	3,  // [3:3] is the sub-list for extension extendee
 	0,  // [0:3] is the sub-list for field type_name
@@ -820,7 +935,7 @@ func file_api_proto_intr_v1_interactive_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_intr_v1_interactive_proto_rawDesc), len(file_api_proto_intr_v1_interactive_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

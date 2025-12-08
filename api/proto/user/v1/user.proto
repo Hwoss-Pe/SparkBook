@@ -11,6 +11,7 @@ service UsersService{
   rpc Profile (ProfileRequest) returns (ProfileResponse);
   rpc UpdateNonSensitiveInfo (UpdateNonSensitiveInfoRequest) returns (UpdateNonSensitiveInfoResponse);
   rpc FindOrCreateByWechat (FindOrCreateByWechatRequest) returns (FindOrCreateByWechatResponse);
+  rpc RecommendAuthors (RecommendAuthorsRequest) returns (RecommendAuthorsResponse);
 }
 
 message User {
@@ -58,6 +59,13 @@ message UpdateNonSensitiveInfoRequest {
   User user = 1;
 }
 message UpdateNonSensitiveInfoResponse {
+}
+
+message RecommendAuthorsRequest {
+  int32 limit = 1;
+}
+message RecommendAuthorsResponse {
+  repeated User users = 1;
 }
 message FindOrCreateByWechatRequest {
   WechatInfo info = 1;

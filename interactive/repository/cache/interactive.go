@@ -32,6 +32,7 @@ type InteractiveCache interface {
 	DecrLikeCntIfPresent(ctx context.Context,
 		biz string, bizId int64) error
 	IncrCollectCntIfPresent(ctx context.Context, biz string, bizId int64) error
+	DecrCollectCntIfPresent(ctx context.Context, biz string, bizId int64) error
 	// Get 查询缓存中数据
 	Get(ctx context.Context, biz string, bizId int64) (domain.Interactive, error)
 	Set(ctx context.Context, biz string, bizId int64, intr domain.Interactive) error
@@ -59,6 +60,10 @@ func (r *RedisInteractiveCache) DecrLikeCntIfPresent(ctx context.Context, biz st
 
 func (r *RedisInteractiveCache) IncrCollectCntIfPresent(ctx context.Context, biz string, bizId int64) error {
 	return r.client.Eval(ctx, luaIncrCnt, []string{r.key(biz, bizId)}, fieldCollectCnt, 1).Err()
+}
+
+func (r *RedisInteractiveCache) DecrCollectCntIfPresent(ctx context.Context, biz string, bizId int64) error {
+	return r.client.Eval(ctx, luaIncrCnt, []string{r.key(biz, bizId)}, fieldCollectCnt, -1).Err()
 }
 
 func (r *RedisInteractiveCache) Get(ctx context.Context, biz string, bizId int64) (domain.Interactive, error) {

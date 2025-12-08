@@ -14,14 +14,7 @@
         </el-carousel>
       </div>
 
-      <div class="tab-navigation">
-        <div class="tab-container">
-          <div class="tab active">综合榜</div>
-          <div class="tab">日榜</div>
-          <div class="tab">周榜</div>
-          <div class="tab">月榜</div>
-        </div>
-      </div>
+      
 
       <div class="content-container">
         <div class="article-list">
@@ -36,7 +29,7 @@
                 <p class="article-abstract">{{ article.abstract }}</p>
                 <div class="article-meta">
                   <div class="author-info">
-                    <el-avatar :size="24">
+                    <el-avatar :size="32" :src="article.author.avatar">
                       {{ article.author.name ? article.author.name.substring(0, 1) : '匿' }}
                     </el-avatar>
                     <span class="author-name">{{ article.author.name || '匿名用户' }}</span>
@@ -49,13 +42,13 @@
                       </svg>
                       {{ formatNumber(article.readCount) }}
                     </span>
-                    <span class="interaction-item like">
+                    <span class="interaction-item like" :class="{ active: article.isLiked, animating: article.isLikeAnimating }" @click="toggleArticleLike(article)">
                       <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
                       </svg>
                       {{ formatNumber(article.likeCount) }}
                     </span>
-                    <span class="interaction-item collect">
+                    <span class="interaction-item collect" :class="{ active: article.isFavorited, animating: article.isFavAnimating }" @click="toggleArticleFavorite(article)">
                       <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                       </svg>
@@ -129,7 +122,9 @@ const {
   formatNumber,
   viewArticle,
   loadMoreArticles,
-  followAuthor
+  followAuthor,
+  toggleArticleLike,
+  toggleArticleFavorite
 } = useHomeView()
 </script>
 

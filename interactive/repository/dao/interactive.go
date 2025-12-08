@@ -17,6 +17,7 @@ type InteractiveDAO interface {
 	Get(ctx context.Context, biz string, bizId int64) (Interactive, error)
 	InsertCollectionBiz(ctx context.Context, cb UserCollectionBiz) error
 	GetCollectionInfo(ctx context.Context, biz string, bizId, uid int64) (UserCollectionBiz, error)
+	DeleteCollectionBiz(ctx context.Context, biz string, bizId, cid, uid int64) error
 	BatchIncrReadCnt(ctx context.Context, bizs []string, ids []int64) error
 	GetByIds(ctx context.Context, biz string, ids []int64) ([]Interactive, error)
 }
@@ -131,6 +132,30 @@ func (G *GORMInteractiveDAO) InsertCollectionBiz(ctx context.Context, cb UserCol
 			Utime:      now,
 			Biz:        cb.Biz,
 			BizId:      cb.BizId,
+		}).Error
+	})
+}
+
+func (G *GORMInteractiveDAO) DeleteCollectionBiz(ctx context.Context, biz string, bizId, cid, uid int64) error {
+	now := time.Now().UnixMilli()
+	return G.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 删除用户收藏记录
+		if err := tx.Where("biz = ? AND biz_id = ? AND uid = ? AND cid = ?", biz, bizId, uid, cid).
+			Delete(&UserCollectionBiz{}).Error; err != nil {
+			return err
+		}
+		// 递减互动收藏数
+		return tx.Clauses(clause.OnConflict{
+			DoUpdates: clause.Assignments(map[string]any{
+				"collect_cnt": gorm.Expr("`collect_cnt` - 1"),
+				"utime":       now,
+			}),
+		}).Create(&Interactive{
+			CollectCnt: 1,
+			Ctime:      now,
+			Utime:      now,
+			Biz:        biz,
+			BizId:      bizId,
 		}).Error
 	})
 }

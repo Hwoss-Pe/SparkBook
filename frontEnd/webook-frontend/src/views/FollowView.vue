@@ -47,7 +47,9 @@
                     {{ formatNumber(article.readCount) }}
                   </span>
                   <span class="interaction-item">
-                    <el-icon><ThumbsUp /></el-icon>
+                    <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                    </svg>
                     {{ formatNumber(article.likeCount) }}
                   </span>
                   <span class="interaction-item">
@@ -77,7 +79,6 @@
 <script setup lang="ts">
 import MainLayout from '@/components/layout/MainLayout.vue'
 import { View, ChatDotRound } from '@element-plus/icons-vue'
-import { Star as ThumbsUp } from '@element-plus/icons-vue'
 import useFollowView from '@/scripts/views/FollowView'
 
 const {

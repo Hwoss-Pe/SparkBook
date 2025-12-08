@@ -56,6 +56,18 @@ func (u *UserServiceServer) FindOrCreateByWechat(ctx context.Context, request *u
 	}, err
 }
 
+func (u *UserServiceServer) RecommendAuthors(ctx context.Context, request *userv1.RecommendAuthorsRequest) (*userv1.RecommendAuthorsResponse, error) {
+	list, err := u.service.RecommendAuthors(ctx, int(request.GetLimit()))
+	if err != nil {
+		return nil, err
+	}
+	users := make([]*userv1.User, 0, len(list))
+	for _, du := range list {
+		users = append(users, convertToV(du))
+	}
+	return &userv1.RecommendAuthorsResponse{Users: users}, nil
+}
+
 func NewUserServiceServer(userService service.UserService) *UserServiceServer {
 	return &UserServiceServer{service: userService}
 }

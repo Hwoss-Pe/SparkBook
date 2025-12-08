@@ -3,11 +3,12 @@ package middleware
 import (
 	jwt2 "Webook/bff/web/jwt"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/ecodeclub/ekit/set"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"net/http"
-	"time"
 )
 
 func min(a, b int) int {
@@ -33,6 +34,8 @@ func NewJWTLoginMiddlewareBuilder(hdl jwt2.Handler) *JWTLoginMiddlewareBuilder {
 	s.Add("/oauth2/wechat/callback")
 	s.Add("/test/random")
 	s.Add("/articles/pub/list")
+	s.Add("/articles/pub/ranking")
+	s.Add("/users/recommend_authors")
 	return &JWTLoginMiddlewareBuilder{
 		publicPaths: s,
 		Handler:     hdl,
@@ -48,6 +51,17 @@ func (j *JWTLoginMiddlewareBuilder) Build() gin.HandlerFunc {
 		// ctx.Set("user", jwt2.UserClaims{Id: 1})
 		// return
 		if j.publicPaths.Exist(ctx.Request.URL.Path) {
+			// 公开路径也尝试解析 JWT，但不强制要求
+			tokenStr := j.ExtractTokenString(ctx)
+			if tokenStr != "" {
+				uc := jwt2.UserClaims{}
+				token, err := jwt.ParseWithClaims(tokenStr, &uc, func(token *jwt.Token) (interface{}, error) {
+					return jwt2.AccessTokenKey, nil
+				})
+				if err == nil && token.Valid {
+					ctx.Set("user", uc)
+				}
+			}
 			return
 		}
 		//提取jwt

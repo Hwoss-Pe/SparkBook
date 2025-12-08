@@ -20,6 +20,7 @@ type InteractiveRepository interface {
 	IncrLike(ctx context.Context, biz string, bizId, uid int64) error
 	DecrLike(ctx context.Context, biz string, bizId, uid int64) error
 	AddCollectionItem(ctx context.Context, biz string, bizId, cid int64, uid int64) error
+	RemoveCollectionItem(ctx context.Context, biz string, bizId, cid int64, uid int64) error
 	Get(ctx context.Context, biz string, bizId int64) (domain.Interactive, error)
 	Liked(ctx context.Context, biz string, id int64, uid int64) (bool, error)
 	Collected(ctx context.Context, biz string, id int64, uid int64) (bool, error)
@@ -75,6 +76,20 @@ func (c *CachedReadCntRepository) AddCollectionItem(ctx context.Context, biz str
 		return err
 	}
 	return c.cache.IncrCollectCntIfPresent(ctx, biz, bizId)
+}
+
+func (c *CachedReadCntRepository) RemoveCollectionItem(ctx context.Context, biz string, bizId, cid int64, uid int64) error {
+	err := c.dao.DeleteCollectionBiz(ctx, biz, bizId, cid, uid)
+	if err != nil {
+		return err
+	}
+	// 尝试递减缓存中的收藏数
+	if dc, ok := c.cache.(interface {
+		DecrCollectCntIfPresent(ctx context.Context, biz string, bizId int64) error
+	}); ok {
+		_ = dc.DecrCollectCntIfPresent(ctx, biz, bizId)
+	}
+	return nil
 }
 
 func (c *CachedReadCntRepository) Get(ctx context.Context, biz string, bizId int64) (domain.Interactive, error) {

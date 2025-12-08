@@ -24,6 +24,7 @@ type UserRepository interface {
 	// FindByWechat 暂时可以认为按照 openId来查询
 	// 将来可能需要按照 unionId 来查询
 	FindByWechat(ctx context.Context, openId string) (domain.User, error)
+	FindRandom(ctx context.Context, limit int) ([]domain.User, error)
 }
 
 type CachedUserRepository struct {
@@ -108,6 +109,18 @@ func (c *CachedUserRepository) FindById(ctx context.Context, id int64) (domain.U
 func (c *CachedUserRepository) FindByWechat(ctx context.Context, openId string) (domain.User, error) {
 	u, err := c.dao.FindByPhone(ctx, openId)
 	return c.entityToDomain(u), err
+}
+
+func (c *CachedUserRepository) FindRandom(ctx context.Context, limit int) ([]domain.User, error) {
+	us, err := c.dao.FindRandom(ctx, limit)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]domain.User, 0, len(us))
+	for _, ue := range us {
+		res = append(res, c.entityToDomain(ue))
+	}
+	return res, nil
 }
 
 func (c *CachedUserRepository) domainToEntity(user domain.User) dao.User {

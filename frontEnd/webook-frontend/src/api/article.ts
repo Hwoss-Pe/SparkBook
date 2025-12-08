@@ -4,6 +4,7 @@ import { get, post } from './http'
 export interface Author {
   id: number
   name: string
+  avatar: string
 }
 
 // 文章相关接口类型定义
@@ -31,6 +32,8 @@ export interface ArticlePub {
   readCnt: number
   likeCnt: number
   collectCnt: number
+  liked?: boolean
+  collected?: boolean
 }
 
 export interface ArticleDetail extends Article {
@@ -94,13 +97,18 @@ export const articleApi = {
   },
   
   // 点赞
-  like: (id: number, like: boolean) => {
-    return post('/articles/pub/like', { id, like })
+  like: (id: number) => {
+    return post('/articles/pub/like', { id, like: true })
+  },
+  cancelLike: (id: number) => {
+    return post('/articles/pub/cancelLike', { id, like: false })
   },
   
   // 收藏
   collect: (id: number, cid: number) => {
     return post('/articles/pub/collect', { id, cid })
+  },
+  cancelCollect: (id: number, cid: number) => {
+    return post('/articles/pub/cancelCollect', { id, cid })
   }
 }
-

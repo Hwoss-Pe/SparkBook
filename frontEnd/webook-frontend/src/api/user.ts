@@ -110,6 +110,10 @@ export const userApi = {
   // 刷新 token
   refreshToken: () => {
     return post('/users/refresh_token', {})
+  },
+
+  // 推荐作者列表
+  getRecommendAuthors: (limit: number) => {
+    return post<Array<{ id: number; name: string; avatar?: string; description?: string }>>('/users/recommend_authors', { limit })
   }
 }
-

@@ -25,11 +25,11 @@ type ArticleVo struct {
 	// 内容
 	Content string `json:"content"`
 	// 封面图片
-	CoverImage string `json:"coverImage"`
-	Status     int32  `json:"status"`
-	Author     string `json:"author"`
-	Ctime      string `json:"ctime"`
-	Utime      string `json:"utime"`
+	CoverImage string   `json:"coverImage"`
+	Status     int32    `json:"status"`
+	Author     AuthorVo `json:"author"`
+	Ctime      string   `json:"ctime"`
+	Utime      string   `json:"utime"`
 
 	// 点赞之类的信息
 	LikeCnt    int64 `json:"likeCnt"`
@@ -76,8 +76,9 @@ type ArticlePubVo struct {
 	Author     AuthorVo `json:"author"`
 	Ctime      string   `json:"ctime"`
 	Utime      string   `json:"utime"`
-	// 互动数据
-	ReadCnt    int64 `json:"readCnt"`
-	LikeCnt    int64 `json:"likeCnt"`
-	CollectCnt int64 `json:"collectCnt"`
+	ReadCnt    int64    `json:"readCnt"`
+	LikeCnt    int64    `json:"likeCnt"`
+	CollectCnt int64    `json:"collectCnt"`
+	Liked      bool     `json:"liked"`
+	Collected  bool     `json:"collected"`
 }

@@ -49,7 +49,7 @@ export const interactiveApi = {
   
   // 点赞
   like: (biz: string, biz_id: number, uid: number) => {
-    return post('/interactive/like', { biz, biz_id, uid })
+    return post('/articles/like', { biz, biz_id, uid })
   },
   
   // 取消点赞

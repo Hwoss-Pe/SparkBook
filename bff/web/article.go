@@ -9,13 +9,14 @@ import (
 	"Webook/pkg/ginx"
 	"Webook/pkg/logger"
 	"fmt"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/ecodeclub/ekit/slice"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 type ArticleHandler struct {
@@ -51,13 +52,15 @@ func (a *ArticleHandler) RegisterRoute(s *gin.Engine) {
 	g.POST("/withdraw", a.Withdraw)
 	pub := g.Group("/pub")
 	pub.GET("/:id", ginx.WrapClaims(a.PubDetail))
-	// 推荐文章列表（首页使用）
+	// 推荐文章列表（首页使用，匿名可访问）
 	pub.POST("/list", ginx.WrapReq[ListPubReq](a.ListPub))
 	pub.POST("/like", ginx.WrapClaimsAndReq[LikeReq](a.Like))
+	pub.POST("/cancelLike", ginx.WrapClaimsAndReq[LikeReq](a.CancelLike))
 	pub.POST("/collect", ginx.WrapClaimsAndReq[CollectReq](a.Collect))
+	pub.POST("/cancelCollect", ginx.WrapClaimsAndReq[CollectReq](a.CancelCollect))
 	// 打赏
 	pub.POST("/reward", ginx.WrapClaimsAndReq[RewardReq](a.Reward))
-	// 热榜
+	// 热榜（匿名可访问）
 	pub.GET("/ranking", ginx.WrapReq[RankingReq](a.Ranking))
 	// 手动触发热榜计算
 	pub.POST("/ranking/trigger", ginx.WrapReq[TriggerRankingReq](a.TriggerRanking))
@@ -277,15 +280,7 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (ginx.R
 		return Result{Data: nil}, nil
 	}
 
-	go func() {
-		_, err = a.intrSvc.IncrReadCnt(ctx, &intrv1.IncrReadCntRequest{
-			Biz:   "article",
-			BizId: art.Id,
-		})
-		if err != nil {
-			a.l.Error("增加文章阅读数失败", logger.Error(err))
-		}
-	}()
+	// 阅读量不在BFF直接递增，统一走事件驱动链路
 	intr := intrResp.Intr
 	return Result{
 		Data: ArticleVo{
@@ -294,8 +289,7 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (ginx.R
 			Status:     art.Status,
 			Content:    art.Content,
 			CoverImage: art.CoverImage,
-			// 要把作者信息带出去
-			Author:     art.Author.Name,
+			Author:     AuthorVo{Id: art.Author.GetId(), Name: art.Author.GetName(), Avatar: art.Author.GetAvatar()},
 			Ctime:      art.Ctime.AsTime().Format(time.DateTime),
 			Utime:      art.Utime.AsTime().Format(time.DateTime),
 			ReadCnt:    intr.ReadCnt,
@@ -358,6 +352,24 @@ func (a *ArticleHandler) ListPub(ctx *gin.Context, req ListPubReq) (ginx.Result,
 		intrMap = intrResp.GetIntrs()
 	}
 
+	type userIntr struct{ liked, collected bool }
+	userMap := make(map[int64]userIntr, len(ids))
+	var uid int64
+	if raw, ok := ctx.Get("user"); ok {
+		if claims, ok2 := raw.(ginx.UserClaims); ok2 {
+			uid = claims.Id
+		}
+	}
+	if uid > 0 {
+		for _, id := range ids {
+			resp, er := a.intrSvc.Get(ctx, &intrv1.GetRequest{Biz: a.biz, BizId: id, Uid: uid})
+			if er != nil || resp == nil || resp.Intr == nil {
+				continue
+			}
+			userMap[id] = userIntr{liked: resp.Intr.Liked, collected: resp.Intr.Collected}
+		}
+	}
+
 	// 组装返回数据
 	result := make([]ArticlePubVo, 0, len(articles))
 	for _, art := range articles {
@@ -369,18 +381,17 @@ func (a *ArticleHandler) ListPub(ctx *gin.Context, req ListPubReq) (ginx.Result,
 			Ctime:      art.Ctime.AsTime().Format(time.DateTime),
 			Utime:      art.Utime.AsTime().Format(time.DateTime),
 		}
-		// 设置作者信息
 		if art.Author != nil {
-			vo.Author = AuthorVo{
-				Id:   art.Author.Id,
-				Name: art.Author.Name,
-			}
+			vo.Author = AuthorVo{Id: art.Author.Id, Name: art.Author.Name, Avatar: art.Author.Avatar}
 		}
-		// 设置互动数据
 		if intr, ok := intrMap[art.Id]; ok {
 			vo.ReadCnt = intr.ReadCnt
 			vo.LikeCnt = intr.LikeCnt
 			vo.CollectCnt = intr.CollectCnt
+		}
+		if u, ok := userMap[art.Id]; ok {
+			vo.Liked = u.liked
+			vo.Collected = u.collected
 		}
 		result = append(result, vo)
 	}
@@ -388,6 +399,14 @@ func (a *ArticleHandler) ListPub(ctx *gin.Context, req ListPubReq) (ginx.Result,
 	return ginx.Result{
 		Data: result,
 	}, nil
+}
+
+func (a *ArticleHandler) CancelLike(ctx *gin.Context, req LikeReq, uc ginx.UserClaims) (ginx.Result, error) {
+	_, err := a.intrSvc.CancelLike(ctx, &intrv1.CancelLikeRequest{Biz: a.biz, BizId: req.Id, Uid: uc.Id})
+	if err != nil {
+		return Result{Code: 5, Msg: "系统错误"}, err
+	}
+	return Result{Msg: "OK"}, nil
 }
 
 func (a *ArticleHandler) Like(ctx *gin.Context, req LikeReq, uc ginx.UserClaims) (ginx.Result, error) {
@@ -420,6 +439,16 @@ func (a *ArticleHandler) Collect(ctx *gin.Context, req CollectReq, uc ginx.UserC
 			Code: 5,
 			Msg:  "系统错误",
 		}, err
+	}
+	return Result{Msg: "OK"}, nil
+}
+
+func (a *ArticleHandler) CancelCollect(ctx *gin.Context, req CollectReq, uc ginx.UserClaims) (ginx.Result, error) {
+	_, err := a.intrSvc.CancelCollect(ctx, &intrv1.CancelCollectRequest{
+		Biz: a.biz, BizId: req.Id, Uid: uc.Id, Cid: req.Cid,
+	})
+	if err != nil {
+		return Result{Code: 5, Msg: "系统错误"}, err
 	}
 	return Result{Msg: "OK"}, nil
 }
@@ -547,29 +576,45 @@ func (a *ArticleHandler) Ranking(ctx *gin.Context, req RankingReq) (ginx.Result,
 		intrMap = intrResp.GetIntrs()
 	}
 
+	type userIntr struct{ liked, collected bool }
+	userMap := make(map[int64]userIntr, len(ids))
+	var uid int64
+	if raw, ok := ctx.Get("user"); ok {
+		if claims, ok2 := raw.(ginx.UserClaims); ok2 {
+			uid = claims.Id
+		}
+	}
+	if uid > 0 {
+		for _, id := range ids {
+			resp, er := a.intrSvc.Get(ctx, &intrv1.GetRequest{Biz: a.biz, BizId: id, Uid: uid})
+			if er != nil || resp == nil || resp.Intr == nil {
+				continue
+			}
+			userMap[id] = userIntr{liked: resp.Intr.Liked, collected: resp.Intr.Collected}
+		}
+	}
+
 	// 组装返回数据
 	result := make([]ArticlePubVo, 0, len(articles))
 	for _, art := range articles {
 		vo := ArticlePubVo{
-			Id:    art.Id,
-			Title: art.Title,
-			//Abstract:   art.,
+			Id:         art.Id,
+			Title:      art.Title,
 			CoverImage: art.CoverImage,
 			Ctime:      art.Ctime.AsTime().Format(time.DateTime),
 			Utime:      art.Utime.AsTime().Format(time.DateTime),
 		}
-		// 设置作者信息
 		if art.Author != nil {
-			vo.Author = AuthorVo{
-				Id:   art.Author.Id,
-				Name: art.Author.Name,
-			}
+			vo.Author = AuthorVo{Id: art.Author.Id, Name: art.Author.Name}
 		}
-		// 设置互动数据
 		if intr, ok := intrMap[art.Id]; ok {
 			vo.ReadCnt = intr.ReadCnt
 			vo.LikeCnt = intr.LikeCnt
 			vo.CollectCnt = intr.CollectCnt
+		}
+		if u, ok := userMap[art.Id]; ok {
+			vo.Liked = u.liked
+			vo.Collected = u.collected
 		}
 		result = append(result, vo)
 	}

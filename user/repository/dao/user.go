@@ -22,6 +22,7 @@ type UserDAO interface {
 	FindByEmail(ctx context.Context, email string) (User, error)
 	FindByWechat(ctx context.Context, openId string) (User, error)
 	FindById(ctx context.Context, id int64) (User, error)
+	FindRandom(ctx context.Context, limit int) ([]User, error)
 }
 
 type GORMUserDAO struct {
@@ -70,6 +71,12 @@ func (G *GORMUserDAO) FindById(ctx context.Context, id int64) (User, error) {
 	var u User
 	err := G.db.WithContext(ctx).First(&u, "id = ?", id).Error
 	return u, err
+}
+
+func (G *GORMUserDAO) FindRandom(ctx context.Context, limit int) ([]User, error) {
+	var users []User
+	err := G.db.WithContext(ctx).Order("RAND()").Limit(limit).Find(&users).Error
+	return users, err
 }
 
 func NewGORMUserDAO(db *gorm.DB) UserDAO {

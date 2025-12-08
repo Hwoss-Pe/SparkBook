@@ -36,6 +36,11 @@ func (i *InteractiveLocalAdapter) Collect(ctx context.Context, in *intrv1.Collec
 	return &intrv1.CollectResponse{}, err
 }
 
+func (i *InteractiveLocalAdapter) CancelCollect(ctx context.Context, in *intrv1.CancelCollectRequest, opts ...grpc.CallOption) (*intrv1.CancelCollectResponse, error) {
+	err := i.svc.CancelCollect(ctx, in.GetBiz(), in.GetBizId(), in.GetCid(), in.GetUid())
+	return &intrv1.CancelCollectResponse{}, err
+}
+
 func (i *InteractiveLocalAdapter) Get(ctx context.Context, in *intrv1.GetRequest, opts ...grpc.CallOption) (*intrv1.GetResponse, error) {
 	res, err := i.svc.Get(ctx, in.GetBiz(), in.GetBizId(), in.GetUid())
 	if err != nil {

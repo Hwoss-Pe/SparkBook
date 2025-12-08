@@ -1,6 +1,7 @@
 db:
   src:
-    dsn: "root:root@tcp(localhost:13316)/webook"
+    dsn: "root:root@tcp(localhost:13316)/webook_intr"
+#    这里后续如果想测试表数据迁移可以走这里webook就行
   dst:
     dsn : "root:root@tcp(localhost:13316)/webook_intr"
 redis:

@@ -24,6 +24,7 @@ type UserService interface {
 	FindOrCreate(ctx context.Context, phone string) (domain.User, error)
 	// FindOrCreateByWechat 当用户第一次扫码登录的时候判断是要注册还是登录
 	FindOrCreateByWechat(ctx context.Context, info domain.WechatInfo) (domain.User, error)
+	RecommendAuthors(ctx context.Context, limit int) ([]domain.User, error)
 }
 
 type userService struct {
@@ -105,4 +106,8 @@ func (u *userService) FindOrCreateByWechat(ctx context.Context,
 	})
 	zap.L().Info("该微信用户为注册，自动注册新用户")
 	return u.repo.FindByWechat(ctx, info.OpenId)
+}
+
+func (u *userService) RecommendAuthors(ctx context.Context, limit int) ([]domain.User, error) {
+	return u.repo.FindRandom(ctx, limit)
 }

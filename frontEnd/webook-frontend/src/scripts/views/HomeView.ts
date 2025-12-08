@@ -12,10 +12,15 @@ interface HomeArticle {
   author: {
     id: number
     name: string
+    avatar: string
   }
   readCount: number
   likeCount: number
   collectCount: number
+  isLiked?: boolean
+  isFavorited?: boolean
+  isLikeAnimating?: boolean
+  isFavAnimating?: boolean
 }
 
 export default function useHomeView() {
@@ -61,10 +66,11 @@ export default function useHomeView() {
       const response = await rankingApi.getRanking({ offset: 0, limit: 8 })
       
       // if (response.code === 0 && response.data) {
-        hotRankings.value = response.map((article: { id: any; title: any; author: { name: any }; readCnt: any }) => ({
+        hotRankings.value = response.map((article: { id: any; title: any; author: { name: any }; readCnt: any;}) => ({
           id: article.id,
           title: article.title,
           author: { name: article.author.name || '匿名用户' },
+          avatar:{ name: article.author.name || '匿名用户' },
           readCount: article.readCnt || 0
         }))
       // }
@@ -75,30 +81,35 @@ export default function useHomeView() {
     }
   }
 
-  // 模拟推荐作者数据
-  const recommendedAuthors = ref([
-    {
-      id: 201,
-      name: '美食探店家',
-      avatar: 'https://picsum.photos/id/1062/100/100',
-      description: '探索城市里的美食秘境',
-      isFollowed: false
-    },
-    {
-      id: 202,
-      name: '旅行摄影师',
-      avatar: 'https://picsum.photos/id/1074/100/100',
-      description: '用镜头记录世界的美',
-      isFollowed: true
-    },
-    {
-      id: 203,
-      name: '生活方式指导',
-      avatar: 'https://picsum.photos/id/1025/100/100',
-      description: '让生活更有品质的小贴士',
-      isFollowed: false
+  // 推荐作者数据（真实接口）
+  const recommendedAuthors = ref<Array<{
+    id: number
+    name: string
+    avatar?: string
+    description?: string
+    isFollowed: boolean
+  }>>([])
+
+  // 获取推荐作者
+  const fetchRecommendedAuthors = async () => {
+    try {
+      const { userApi } = await import('@/api/user')
+      const authors = await userApi.getRecommendAuthors(6)
+      recommendedAuthors.value = (authors || []).map(a => ({
+        id: a.id,
+        name: a.name || '匿名作者',
+        avatar: a.avatar || 'https://picsum.photos/seed/avatar/100/100',
+        description: (() => {
+          const desc = a.description || ''
+          return desc.length > 10 ? desc.slice(0, 10) + '...' : desc
+        })(),
+        isFollowed: false
+      }))
+    } catch (error) {
+      console.error('获取推荐作者失败:', error)
+      recommendedAuthors.value = []
     }
-  ])
+  }
 
   const hasMoreArticles = ref(true)
 
@@ -126,11 +137,14 @@ export default function useHomeView() {
       coverImage: article.coverImage || `https://picsum.photos/id/${400 + article.id}/400/300`,
       author: {
         id: article.author?.id || 0,
-        name: article.author?.name || '匿名用户'
+        name: article.author?.name || '匿名用户',
+        avatar: article.author?.avatar || 'https://picsum.photos/seed/avatar/100/100'
       },
       readCount: article.readCnt || 0,
       likeCount: article.likeCnt || 0,
-      collectCount: article.collectCnt || 0
+      collectCount: article.collectCnt || 0,
+      isLiked: !!article.liked,
+      isFavorited: !!article.collected
     }
   }
 
@@ -164,6 +178,43 @@ export default function useHomeView() {
     fetchArticles(true)
   }
 
+  const toggleArticleLike = async (article: HomeArticle) => {
+    try {
+      if (article.isLiked) {
+        await articleApi.cancelLike(article.id)
+        article.isLiked = false
+        article.likeCount = Math.max(0, (article.likeCount || 0) - 1)
+      } else {
+        await articleApi.like(article.id)
+        article.isLiked = true
+        article.likeCount = (article.likeCount || 0) + 1
+      }
+      article.isLikeAnimating = true
+      setTimeout(() => { article.isLikeAnimating = false }, 300)
+    } catch (error) {
+      console.error('首页点赞操作失败:', error)
+    }
+  }
+
+  const toggleArticleFavorite = async (article: HomeArticle) => {
+    try {
+      const defaultCid = 1
+      if (article.isFavorited) {
+        await articleApi.cancelCollect(article.id, defaultCid)
+        article.isFavorited = false
+        article.collectCount = Math.max(0, (article.collectCount || 0) - 1)
+      } else {
+        await articleApi.collect(article.id, defaultCid)
+        article.isFavorited = true
+        article.collectCount = (article.collectCount || 0) + 1
+      }
+      article.isFavAnimating = true
+      setTimeout(() => { article.isFavAnimating = false }, 300)
+    } catch (error) {
+      console.error('首页收藏操作失败:', error)
+    }
+  }
+
   // 关注作者
   const followAuthor = (authorId: number) => {
     // 这里应该调用关注API
@@ -179,6 +230,8 @@ export default function useHomeView() {
     fetchArticles()
     // 获取热榜数据
     fetchHotRankings()
+    // 获取推荐作者
+    fetchRecommendedAuthors()
   })
 
   return {
@@ -190,6 +243,8 @@ export default function useHomeView() {
     formatNumber,
     viewArticle,
     loadMoreArticles,
-    followAuthor
+    followAuthor,
+    toggleArticleLike,
+    toggleArticleFavorite
   }
 }

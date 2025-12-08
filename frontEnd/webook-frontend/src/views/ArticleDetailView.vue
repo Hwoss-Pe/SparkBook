@@ -59,7 +59,9 @@
         
         <div class="article-actions">
           <div class="action-item" @click="toggleLike">
-            <el-icon :class="{ active: article.isLiked }"><ThumbsUp /></el-icon>
+            <svg class="icon-svg" :class="{ active: article.isLiked }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+            </svg>
             <span>{{ formatNumber(article.likeCount) }}</span>
           </div>
           <div class="action-item" @click="toggleFavorite">
@@ -113,7 +115,9 @@
               <div class="comment-content">{{ comment.content }}</div>
               <div class="comment-actions">
                 <span class="comment-like" @click="likeComment(comment)">
-                  <el-icon :class="{ active: comment.isLiked }"><ThumbsUp /></el-icon>
+                  <svg class="icon-svg" :class="{ active: comment.isLiked }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                  </svg>
                   <span>{{ formatNumber(comment.likeCount) }}</span>
                 </span>
                 <span class="comment-reply" @click="replyToComment(comment)">回复</span>
@@ -138,7 +142,9 @@
                   <div class="comment-content">{{ reply.content }}</div>
                   <div class="comment-actions">
                     <span class="comment-like" @click="likeComment(reply)">
-                      <el-icon :class="{ active: reply.isLiked }"><ThumbsUp /></el-icon>
+                      <svg class="icon-svg" :class="{ active: reply.isLiked }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                      </svg>
                       <span>{{ formatNumber(reply.likeCount) }}</span>
                     </span>
                     <span class="comment-reply" @click="replyToComment(reply, comment)">回复</span>
@@ -187,7 +193,6 @@
 <script setup lang="ts">
 import MainLayout from '@/components/layout/MainLayout.vue'
 import { View, ChatDotRound, Star, Share } from '@element-plus/icons-vue'
-import { Star as ThumbsUp } from '@element-plus/icons-vue'
 import useArticleDetailView from '@/scripts/views/ArticleDetailView'
 
 const {

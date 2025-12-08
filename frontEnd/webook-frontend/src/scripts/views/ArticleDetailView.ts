@@ -2,7 +2,6 @@ import { ref, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { articleApi, type ArticleDetail } from '@/api/article'
-import { interactiveApi } from '@/api/interactive'
 import { commentApi, type Comment } from '@/api/comment'
 
 // 定义类型接口
@@ -154,18 +153,14 @@ export default function useArticleDetailView() {
   // 点赞/取消点赞
   const toggleLike = async () => {
     try {
-      const currentUserId = 101 // 实际应该从用户状态中获取
-      
       if (article.value.isLiked) {
-        // 取消点赞
-        await interactiveApi.cancelLike('article', article.value.id, currentUserId)
+        await articleApi.cancelLike(article.value.id)
         article.value.isLiked = false
-        article.value.likeCount--
+        article.value.likeCount = Math.max(0, article.value.likeCount - 1)
       } else {
-        // 点赞
-        await interactiveApi.like('article', article.value.id, currentUserId)
+        await articleApi.like(article.value.id)
         article.value.isLiked = true
-        article.value.likeCount++
+        article.value.likeCount += 1
       }
       
       ElMessage.success(article.value.isLiked ? '已点赞' : '已取消点赞')
@@ -178,15 +173,16 @@ export default function useArticleDetailView() {
   // 收藏/取消收藏
   const toggleFavorite = async () => {
     try {
-      const currentUserId = 101 // 实际应该从用户状态中获取
-      
-      // 这里应该调用收藏/取消收藏API
-      if (!article.value.isFavorited) {
-        await interactiveApi.collect('article', article.value.id, currentUserId, 1) // 1是默认收藏夹ID
+      const defaultCid = 1
+      if (article.value.isFavorited) {
+        await articleApi.cancelCollect(article.value.id, defaultCid)
+        article.value.isFavorited = false
+        article.value.favoriteCount = Math.max(0, article.value.favoriteCount - 1)
+      } else {
+        await articleApi.collect(article.value.id, defaultCid)
+        article.value.isFavorited = true
+        article.value.favoriteCount += 1
       }
-      
-      article.value.isFavorited = !article.value.isFavorited
-      article.value.favoriteCount += article.value.isFavorited ? 1 : -1
       
       ElMessage.success(article.value.isFavorited ? '已收藏' : '已取消收藏')
     } catch (error) {
@@ -255,7 +251,7 @@ export default function useArticleDetailView() {
         author: {
           id: articleDetail.author.id,
           name: articleDetail.author.name,
-          avatar: '' // 移除假的头像，使用默认头像
+          avatar: articleDetail.author.avatar || 'https://picsum.photos/seed/avatar/100/100'
         },
         tags: [] // 移除假标签，等待后端支持标签功能
       }

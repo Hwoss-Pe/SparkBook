@@ -28,6 +28,7 @@ type UsersServiceClient interface {
 	Profile(ctx context.Context, in *ProfileRequest, opts ...grpc.CallOption) (*ProfileResponse, error)
 	UpdateNonSensitiveInfo(ctx context.Context, in *UpdateNonSensitiveInfoRequest, opts ...grpc.CallOption) (*UpdateNonSensitiveInfoResponse, error)
 	FindOrCreateByWechat(ctx context.Context, in *FindOrCreateByWechatRequest, opts ...grpc.CallOption) (*FindOrCreateByWechatResponse, error)
+	RecommendAuthors(ctx context.Context, in *RecommendAuthorsRequest, opts ...grpc.CallOption) (*RecommendAuthorsResponse, error)
 }
 
 type usersServiceClient struct {
@@ -92,6 +93,15 @@ func (c *usersServiceClient) FindOrCreateByWechat(ctx context.Context, in *FindO
 	return out, nil
 }
 
+func (c *usersServiceClient) RecommendAuthors(ctx context.Context, in *RecommendAuthorsRequest, opts ...grpc.CallOption) (*RecommendAuthorsResponse, error) {
+	out := new(RecommendAuthorsResponse)
+	err := c.cc.Invoke(ctx, "/user.v1.UsersService/RecommendAuthors", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UsersServiceServer is the server API for UsersService service.
 // All implementations must embed UnimplementedUsersServiceServer
 // for forward compatibility
@@ -102,6 +112,7 @@ type UsersServiceServer interface {
 	Profile(context.Context, *ProfileRequest) (*ProfileResponse, error)
 	UpdateNonSensitiveInfo(context.Context, *UpdateNonSensitiveInfoRequest) (*UpdateNonSensitiveInfoResponse, error)
 	FindOrCreateByWechat(context.Context, *FindOrCreateByWechatRequest) (*FindOrCreateByWechatResponse, error)
+	RecommendAuthors(context.Context, *RecommendAuthorsRequest) (*RecommendAuthorsResponse, error)
 	mustEmbedUnimplementedUsersServiceServer()
 }
 
@@ -126,6 +137,9 @@ func (UnimplementedUsersServiceServer) UpdateNonSensitiveInfo(context.Context, *
 }
 func (UnimplementedUsersServiceServer) FindOrCreateByWechat(context.Context, *FindOrCreateByWechatRequest) (*FindOrCreateByWechatResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindOrCreateByWechat not implemented")
+}
+func (UnimplementedUsersServiceServer) RecommendAuthors(context.Context, *RecommendAuthorsRequest) (*RecommendAuthorsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RecommendAuthors not implemented")
 }
 func (UnimplementedUsersServiceServer) mustEmbedUnimplementedUsersServiceServer() {}
 
@@ -248,6 +262,24 @@ func _UsersService_FindOrCreateByWechat_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UsersService_RecommendAuthors_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecommendAuthorsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UsersServiceServer).RecommendAuthors(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/user.v1.UsersService/RecommendAuthors",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UsersServiceServer).RecommendAuthors(ctx, req.(*RecommendAuthorsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UsersService_ServiceDesc is the grpc.ServiceDesc for UsersService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -278,6 +310,10 @@ var UsersService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "FindOrCreateByWechat",
 			Handler:    _UsersService_FindOrCreateByWechat_Handler,
+		},
+		{
+			MethodName: "RecommendAuthors",
+			Handler:    _UsersService_RecommendAuthors_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

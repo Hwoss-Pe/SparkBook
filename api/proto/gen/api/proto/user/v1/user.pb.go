@@ -622,6 +622,94 @@ func (*UpdateNonSensitiveInfoResponse) Descriptor() ([]byte, []int) {
 	return file_api_proto_user_v1_user_proto_rawDescGZIP(), []int{11}
 }
 
+type RecommendAuthorsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Limit         int32                  `protobuf:"varint,1,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RecommendAuthorsRequest) Reset() {
+	*x = RecommendAuthorsRequest{}
+	mi := &file_api_proto_user_v1_user_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RecommendAuthorsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RecommendAuthorsRequest) ProtoMessage() {}
+
+func (x *RecommendAuthorsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_user_v1_user_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RecommendAuthorsRequest.ProtoReflect.Descriptor instead.
+func (*RecommendAuthorsRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_user_v1_user_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *RecommendAuthorsRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type RecommendAuthorsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Users         []*User                `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RecommendAuthorsResponse) Reset() {
+	*x = RecommendAuthorsResponse{}
+	mi := &file_api_proto_user_v1_user_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RecommendAuthorsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RecommendAuthorsResponse) ProtoMessage() {}
+
+func (x *RecommendAuthorsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_user_v1_user_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RecommendAuthorsResponse.ProtoReflect.Descriptor instead.
+func (*RecommendAuthorsResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_user_v1_user_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *RecommendAuthorsResponse) GetUsers() []*User {
+	if x != nil {
+		return x.Users
+	}
+	return nil
+}
+
 type FindOrCreateByWechatRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Info          *WechatInfo            `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
@@ -631,7 +719,7 @@ type FindOrCreateByWechatRequest struct {
 
 func (x *FindOrCreateByWechatRequest) Reset() {
 	*x = FindOrCreateByWechatRequest{}
-	mi := &file_api_proto_user_v1_user_proto_msgTypes[12]
+	mi := &file_api_proto_user_v1_user_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -643,7 +731,7 @@ func (x *FindOrCreateByWechatRequest) String() string {
 func (*FindOrCreateByWechatRequest) ProtoMessage() {}
 
 func (x *FindOrCreateByWechatRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_user_v1_user_proto_msgTypes[12]
+	mi := &file_api_proto_user_v1_user_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -656,7 +744,7 @@ func (x *FindOrCreateByWechatRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FindOrCreateByWechatRequest.ProtoReflect.Descriptor instead.
 func (*FindOrCreateByWechatRequest) Descriptor() ([]byte, []int) {
-	return file_api_proto_user_v1_user_proto_rawDescGZIP(), []int{12}
+	return file_api_proto_user_v1_user_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *FindOrCreateByWechatRequest) GetInfo() *WechatInfo {
@@ -675,7 +763,7 @@ type FindOrCreateByWechatResponse struct {
 
 func (x *FindOrCreateByWechatResponse) Reset() {
 	*x = FindOrCreateByWechatResponse{}
-	mi := &file_api_proto_user_v1_user_proto_msgTypes[13]
+	mi := &file_api_proto_user_v1_user_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -687,7 +775,7 @@ func (x *FindOrCreateByWechatResponse) String() string {
 func (*FindOrCreateByWechatResponse) ProtoMessage() {}
 
 func (x *FindOrCreateByWechatResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_user_v1_user_proto_msgTypes[13]
+	mi := &file_api_proto_user_v1_user_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -700,7 +788,7 @@ func (x *FindOrCreateByWechatResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FindOrCreateByWechatResponse.ProtoReflect.Descriptor instead.
 func (*FindOrCreateByWechatResponse) Descriptor() ([]byte, []int) {
-	return file_api_proto_user_v1_user_proto_rawDescGZIP(), []int{13}
+	return file_api_proto_user_v1_user_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *FindOrCreateByWechatResponse) GetUser() *User {
@@ -751,18 +839,23 @@ const file_api_proto_user_v1_user_proto_rawDesc = "" +
 	"\x04user\x18\x01 \x01(\v2\r.user.v1.UserR\x04user\"B\n" +
 	"\x1dUpdateNonSensitiveInfoRequest\x12!\n" +
 	"\x04user\x18\x01 \x01(\v2\r.user.v1.UserR\x04user\" \n" +
-	"\x1eUpdateNonSensitiveInfoResponse\"F\n" +
+	"\x1eUpdateNonSensitiveInfoResponse\"/\n" +
+	"\x17RecommendAuthorsRequest\x12\x14\n" +
+	"\x05limit\x18\x01 \x01(\x05R\x05limit\"?\n" +
+	"\x18RecommendAuthorsResponse\x12#\n" +
+	"\x05users\x18\x01 \x03(\v2\r.user.v1.UserR\x05users\"F\n" +
 	"\x1bFindOrCreateByWechatRequest\x12'\n" +
 	"\x04info\x18\x01 \x01(\v2\x13.user.v1.WechatInfoR\x04info\"A\n" +
 	"\x1cFindOrCreateByWechatResponse\x12!\n" +
-	"\x04user\x18\x01 \x01(\v2\r.user.v1.UserR\x04user2\xdc\x03\n" +
+	"\x04user\x18\x01 \x01(\v2\r.user.v1.UserR\x04user2\xb5\x04\n" +
 	"\fUsersService\x129\n" +
 	"\x06Signup\x12\x16.user.v1.SignupRequest\x1a\x17.user.v1.SignupResponse\x12K\n" +
 	"\fFindOrCreate\x12\x1c.user.v1.FindOrCreateRequest\x1a\x1d.user.v1.FindOrCreateResponse\x126\n" +
 	"\x05Login\x12\x15.user.v1.LoginRequest\x1a\x16.user.v1.LoginResponse\x12<\n" +
 	"\aProfile\x12\x17.user.v1.ProfileRequest\x1a\x18.user.v1.ProfileResponse\x12i\n" +
 	"\x16UpdateNonSensitiveInfo\x12&.user.v1.UpdateNonSensitiveInfoRequest\x1a'.user.v1.UpdateNonSensitiveInfoResponse\x12c\n" +
-	"\x14FindOrCreateByWechat\x12$.user.v1.FindOrCreateByWechatRequest\x1a%.user.v1.FindOrCreateByWechatResponseB\x82\x01\n" +
+	"\x14FindOrCreateByWechat\x12$.user.v1.FindOrCreateByWechatRequest\x1a%.user.v1.FindOrCreateByWechatResponse\x12W\n" +
+	"\x10RecommendAuthors\x12 .user.v1.RecommendAuthorsRequest\x1a!.user.v1.RecommendAuthorsResponseB\x82\x01\n" +
 	"\vcom.user.v1B\tUserProtoP\x01Z+ecodepub/pkg/model/api/proto/user/v1;userv1\xa2\x02\x03UXX\xaa\x02\aUser.V1\xca\x02\aUser\\V1\xe2\x02\x13User\\V1\\GPBMetadata\xea\x02\bUser::V1b\x06proto3"
 
 var (
@@ -777,7 +870,7 @@ func file_api_proto_user_v1_user_proto_rawDescGZIP() []byte {
 	return file_api_proto_user_v1_user_proto_rawDescData
 }
 
-var file_api_proto_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_api_proto_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_api_proto_user_v1_user_proto_goTypes = []any{
 	(*User)(nil),                           // 0: user.v1.User
 	(*WechatInfo)(nil),                     // 1: user.v1.WechatInfo
@@ -791,38 +884,43 @@ var file_api_proto_user_v1_user_proto_goTypes = []any{
 	(*ProfileResponse)(nil),                // 9: user.v1.ProfileResponse
 	(*UpdateNonSensitiveInfoRequest)(nil),  // 10: user.v1.UpdateNonSensitiveInfoRequest
 	(*UpdateNonSensitiveInfoResponse)(nil), // 11: user.v1.UpdateNonSensitiveInfoResponse
-	(*FindOrCreateByWechatRequest)(nil),    // 12: user.v1.FindOrCreateByWechatRequest
-	(*FindOrCreateByWechatResponse)(nil),   // 13: user.v1.FindOrCreateByWechatResponse
-	(*timestamppb.Timestamp)(nil),          // 14: google.protobuf.Timestamp
+	(*RecommendAuthorsRequest)(nil),        // 12: user.v1.RecommendAuthorsRequest
+	(*RecommendAuthorsResponse)(nil),       // 13: user.v1.RecommendAuthorsResponse
+	(*FindOrCreateByWechatRequest)(nil),    // 14: user.v1.FindOrCreateByWechatRequest
+	(*FindOrCreateByWechatResponse)(nil),   // 15: user.v1.FindOrCreateByWechatResponse
+	(*timestamppb.Timestamp)(nil),          // 16: google.protobuf.Timestamp
 }
 var file_api_proto_user_v1_user_proto_depIdxs = []int32{
-	14, // 0: user.v1.User.ctime:type_name -> google.protobuf.Timestamp
-	14, // 1: user.v1.User.birthday:type_name -> google.protobuf.Timestamp
+	16, // 0: user.v1.User.ctime:type_name -> google.protobuf.Timestamp
+	16, // 1: user.v1.User.birthday:type_name -> google.protobuf.Timestamp
 	1,  // 2: user.v1.User.wechatInfo:type_name -> user.v1.WechatInfo
 	0,  // 3: user.v1.SignupRequest.user:type_name -> user.v1.User
 	0,  // 4: user.v1.FindOrCreateResponse.user:type_name -> user.v1.User
 	0,  // 5: user.v1.LoginResponse.user:type_name -> user.v1.User
 	0,  // 6: user.v1.ProfileResponse.user:type_name -> user.v1.User
 	0,  // 7: user.v1.UpdateNonSensitiveInfoRequest.user:type_name -> user.v1.User
-	1,  // 8: user.v1.FindOrCreateByWechatRequest.info:type_name -> user.v1.WechatInfo
-	0,  // 9: user.v1.FindOrCreateByWechatResponse.user:type_name -> user.v1.User
-	2,  // 10: user.v1.UsersService.Signup:input_type -> user.v1.SignupRequest
-	4,  // 11: user.v1.UsersService.FindOrCreate:input_type -> user.v1.FindOrCreateRequest
-	6,  // 12: user.v1.UsersService.Login:input_type -> user.v1.LoginRequest
-	8,  // 13: user.v1.UsersService.Profile:input_type -> user.v1.ProfileRequest
-	10, // 14: user.v1.UsersService.UpdateNonSensitiveInfo:input_type -> user.v1.UpdateNonSensitiveInfoRequest
-	12, // 15: user.v1.UsersService.FindOrCreateByWechat:input_type -> user.v1.FindOrCreateByWechatRequest
-	3,  // 16: user.v1.UsersService.Signup:output_type -> user.v1.SignupResponse
-	5,  // 17: user.v1.UsersService.FindOrCreate:output_type -> user.v1.FindOrCreateResponse
-	7,  // 18: user.v1.UsersService.Login:output_type -> user.v1.LoginResponse
-	9,  // 19: user.v1.UsersService.Profile:output_type -> user.v1.ProfileResponse
-	11, // 20: user.v1.UsersService.UpdateNonSensitiveInfo:output_type -> user.v1.UpdateNonSensitiveInfoResponse
-	13, // 21: user.v1.UsersService.FindOrCreateByWechat:output_type -> user.v1.FindOrCreateByWechatResponse
-	16, // [16:22] is the sub-list for method output_type
-	10, // [10:16] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	0,  // 8: user.v1.RecommendAuthorsResponse.users:type_name -> user.v1.User
+	1,  // 9: user.v1.FindOrCreateByWechatRequest.info:type_name -> user.v1.WechatInfo
+	0,  // 10: user.v1.FindOrCreateByWechatResponse.user:type_name -> user.v1.User
+	2,  // 11: user.v1.UsersService.Signup:input_type -> user.v1.SignupRequest
+	4,  // 12: user.v1.UsersService.FindOrCreate:input_type -> user.v1.FindOrCreateRequest
+	6,  // 13: user.v1.UsersService.Login:input_type -> user.v1.LoginRequest
+	8,  // 14: user.v1.UsersService.Profile:input_type -> user.v1.ProfileRequest
+	10, // 15: user.v1.UsersService.UpdateNonSensitiveInfo:input_type -> user.v1.UpdateNonSensitiveInfoRequest
+	14, // 16: user.v1.UsersService.FindOrCreateByWechat:input_type -> user.v1.FindOrCreateByWechatRequest
+	12, // 17: user.v1.UsersService.RecommendAuthors:input_type -> user.v1.RecommendAuthorsRequest
+	3,  // 18: user.v1.UsersService.Signup:output_type -> user.v1.SignupResponse
+	5,  // 19: user.v1.UsersService.FindOrCreate:output_type -> user.v1.FindOrCreateResponse
+	7,  // 20: user.v1.UsersService.Login:output_type -> user.v1.LoginResponse
+	9,  // 21: user.v1.UsersService.Profile:output_type -> user.v1.ProfileResponse
+	11, // 22: user.v1.UsersService.UpdateNonSensitiveInfo:output_type -> user.v1.UpdateNonSensitiveInfoResponse
+	15, // 23: user.v1.UsersService.FindOrCreateByWechat:output_type -> user.v1.FindOrCreateByWechatResponse
+	13, // 24: user.v1.UsersService.RecommendAuthors:output_type -> user.v1.RecommendAuthorsResponse
+	18, // [18:25] is the sub-list for method output_type
+	11, // [11:18] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_api_proto_user_v1_user_proto_init() }
@@ -836,7 +934,7 @@ func file_api_proto_user_v1_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_user_v1_user_proto_rawDesc), len(file_api_proto_user_v1_user_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

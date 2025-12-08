@@ -6,6 +6,9 @@ import (
 	jwt2 "Webook/bff/web/jwt"
 	"Webook/pkg/ginx"
 	"Webook/user/errs"
+	"net/http"
+	"time"
+
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -13,8 +16,6 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"net/http"
-	"time"
 )
 
 const (
@@ -45,6 +46,7 @@ func (c *UserHandler) RegisterRoute(server *gin.Engine) {
 	ug.POST("/login_sms/code/send", c.SendSMSLoginCode)
 	ug.POST("/login_sms", c.LoginSMS)
 	ug.POST("/refresh_token", c.RefreshToken)
+	ug.POST("/recommend_authors", ginx.WrapReq[RecommendAuthorsReq](c.RecommendAuthors))
 }
 
 func (c *UserHandler) Signup(ctx *gin.Context, req SignUpReq) (ginx.Result, error) {
@@ -143,6 +145,17 @@ type SignUpReq struct {
 	Email           string `json:"email"`
 	Password        string `json:"password"`
 	ConfirmPassword string `json:"confirmPassword"`
+}
+
+type RecommendAuthorsReq struct {
+	Limit int32 `json:"limit"`
+}
+
+type AuthorSummary struct {
+	Id          int64  `json:"id"`
+	Name        string `json:"name"`
+	Avatar      string `json:"avatar"`
+	Description string `json:"description"`
 }
 
 // Login 这个用的是session机制
@@ -364,4 +377,20 @@ func (c *UserHandler) RefreshToken(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, Result{Msg: "刷新成功"})
+}
+
+func (c *UserHandler) RecommendAuthors(ctx *gin.Context, req RecommendAuthorsReq) (ginx.Result, error) {
+	if req.Limit <= 0 || req.Limit > 100 {
+		req.Limit = 10
+	}
+	resp, err := c.userSvc.RecommendAuthors(ctx, &userv1.RecommendAuthorsRequest{Limit: req.Limit})
+	if err != nil {
+		return ginx.Result{Code: 5, Msg: "系统错误"}, err
+	}
+	users := resp.GetUsers()
+	res := make([]AuthorSummary, 0, len(users))
+	for _, u := range users {
+		res = append(res, AuthorSummary{Id: u.Id, Name: u.Nickname, Avatar: u.Avatar, Description: u.AboutMe})
+	}
+	return ginx.Result{Data: res}, nil
 }
