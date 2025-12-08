@@ -1,0 +1,145 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.login-header {
+  padding: 30px 0;
+  text-align: center;
+  background-color: #fff;
+}
+
+.login-logo {
+  font-size: 28px;
+  font-weight: bold;
+  color: #ff2442;
+  margin: 0;
+}
+
+.login-subtitle {
+  font-size: 14px;
+  color: #999;
+  margin-top: 5px;
+}
+
+.login-tabs {
+  margin-bottom: 0;
+}
+
+.login-form {
+  padding: 20px 30px 30px;
+}
+
+.login-form .el-form-item:last-child {
+  margin-bottom: 0;
+}
+
+.login-button {
+  width: 100%;
+}
+
+.form-footer {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.form-footer-text {
+  font-size: 14px;
+  color: #999;
+}
+
+.form-footer-link {
+  color: #ff2442;
+  cursor: pointer;
+}
+
+.form-footer-link:hover {
+  text-decoration: underline;
+}
+
+.remember-me {
+  margin-bottom: 20px;
+}
+
+.third-party-login {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.third-party-title {
+  position: relative;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #999;
+}
+
+.third-party-title::before,
+.third-party-title::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 80px;
+  height: 1px;
+  background-color: #eee;
+}
+
+.third-party-title::before {
+  left: 50px;
+}
+
+.third-party-title::after {
+  right: 50px;
+}
+
+.third-party-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.third-party-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.third-party-button:hover {
+  transform: translateY(-3px);
+}
+
+.wechat-button {
+  background-color: #07c160;
+  color: #fff;
+}
+
+.qq-button {
+  background-color: #12b7f5;
+  color: #fff;
+}
+
+.weibo-button {
+  background-color: #e6162d;
+  color: #fff;
+}
+
+.verification-code-button {
+  width: 100%;
+}
