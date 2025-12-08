@@ -24,6 +24,7 @@ export interface RankingRequest {
 }
 
 export interface RankingResponse {
+  map(arg0: (article: { id: any; title: any; author: { name: any }; readCnt: any }) => { id: any; title: any; author: { name: any }; readCount: any }): { id: number; title: string; author: { name: string }; readCount: number }[] | { id: number; title: string; author: { name: string }; readCount: number }[]
   code: number
   msg: string
   data: RankingArticle[]

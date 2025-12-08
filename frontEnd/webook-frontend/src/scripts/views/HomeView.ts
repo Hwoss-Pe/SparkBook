@@ -60,14 +60,14 @@ export default function useHomeView() {
       const { rankingApi } = await import('@/api/ranking')
       const response = await rankingApi.getRanking({ offset: 0, limit: 8 })
       
-      if (response.code === 0 && response.data) {
-        hotRankings.value = response.data.map(article => ({
+      // if (response.code === 0 && response.data) {
+        hotRankings.value = response.map((article: { id: any; title: any; author: { name: any }; readCnt: any }) => ({
           id: article.id,
           title: article.title,
           author: { name: article.author.name || '匿名用户' },
           readCount: article.readCnt || 0
         }))
-      }
+      // }
     } catch (error) {
       console.error('获取热榜数据失败:', error)
       // 如果获取失败，保持空数组

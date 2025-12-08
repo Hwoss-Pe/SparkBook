@@ -98,9 +98,9 @@ export default function useHotView() {
       // 调用热榜API获取热门文章
       const response = await rankingApi.getRanking({ offset: 0, limit: 20 })
       
-      if (response.code === 0 && response.data) {
+      // if (response.code === 0 && response.data) {
         // 构建热门文章列表
-        const articles: Article[] = response.data.map((article: RankingArticle) => {
+        const articles: Article[] = response.map((article: RankingArticle) => {
           return {
             id: article.id,
             title: article.title,
@@ -120,9 +120,7 @@ export default function useHotView() {
         
         hotArticles.value = articles
         hasMoreArticles.value = articles.length >= 20
-      } else {
-        throw new Error(response.msg || '获取热榜数据失败')
-      }
+      
     } catch (error) {
       console.error('获取热门文章失败:', error)
       ElMessage.error('获取热榜数据失败，请稍后重试')
