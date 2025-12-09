@@ -4,11 +4,13 @@ import { get, post } from './http'
 export interface Comment {
   id: number
   uid: number
+  name?: string
+  avatar?: string
   biz: string
   bizid: number
   content: string
-  root_comment?: Comment
-  parent_comment?: Comment
+  root_comment?: Comment & { name?: string; avatar?: string }
+  parent_comment?: Comment & { name?: string; avatar?: string }
   children?: Comment[]
   ctime: string
   utime: string

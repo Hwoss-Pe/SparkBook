@@ -5,9 +5,10 @@ import (
 	"Webook/comment/repository/dao"
 	"Webook/pkg/logger"
 	"database/sql"
+	"time"
+
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
-	"time"
 )
 
 type CommentRepository interface {
@@ -121,6 +122,9 @@ func (c *CachedCommentRepo) toDomain(dc dao.Comment) domain.Comment {
 	if dc.PID.Valid {
 		val.ParentComment = &domain.Comment{
 			Id: dc.PID.Int64,
+		}
+		if dc.ParentComment != nil {
+			val.ParentComment.Commentator = domain.User{ID: dc.ParentComment.Uid}
 		}
 	}
 

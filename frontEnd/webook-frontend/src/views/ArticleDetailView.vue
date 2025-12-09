@@ -94,10 +94,6 @@
               maxlength="500"
               show-word-limit
             />
-            <div v-if="replyTarget" class="reply-target" style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
-              <el-tag type="info" effect="plain">正在回复 {{ replyTarget.userName }}</el-tag>
-              <el-button size="small" text @click="replyTarget = null">取消</el-button>
-            </div>
             <div class="comment-submit">
               <el-button type="primary" @click="submitComment" :disabled="!commentContent.trim()">
                 发表评论
@@ -119,7 +115,7 @@
               <div class="comment-content">{{ comment.content }}</div>
               <div class="comment-actions">
                 <span class="comment-like" @click="likeComment(comment)">
-                  <svg class="icon-svg" :class="{ active: comment.isLiked }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg class="icon-svg" :class="{ active: comment.isLiked, animating: comment.isLikeAnimating }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
                   </svg>
                   <span>{{ formatNumber(comment.likeCount) }}</span>
@@ -146,7 +142,7 @@
                   <div class="comment-content">{{ reply.content }}</div>
                   <div class="comment-actions">
                     <span class="comment-like" @click="likeComment(reply)">
-                      <svg class="icon-svg" :class="{ active: reply.isLiked }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <svg class="icon-svg" :class="{ active: reply.isLiked, animating: reply.isLikeAnimating }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
                       </svg>
                       <span>{{ formatNumber(reply.likeCount) }}</span>
@@ -154,8 +150,8 @@
                     <span class="comment-reply" @click="replyToComment(reply, comment)">回复</span>
                   </div>
                 </div>
-                <div class="load-more" style="margin-top: 8px;">
-                  <el-button size="small" @click="loadMoreRepliesFor(comment.id)">查看更多回复</el-button>
+                <div class="more-replies" v-if="hasMoreRepliesMap[comment.id]">
+                  <el-button size="small" text @click="openThreadModal(comment.id)">查看更多回复</el-button>
                 </div>
               </div>
             </div>
@@ -195,6 +191,37 @@
       </template>
     </div>
   </MainLayout>
+  <el-dialog v-model="threadModal.visible" title="楼中楼回复" width="640px" class="thread-dialog" @close="closeThreadModal">
+    <div class="thread-list" v-if="threadModal.visible">
+      <div v-for="item in getThreadView(threadModal.rootId)" :key="item.reply.id" class="thread-item" :style="{ marginLeft: (item.depth - 2) * 20 + 'px' }">
+        <div class="comment-user">
+          <el-avatar :size="24" :src="item.reply.user.avatar">
+            {{ item.reply.user.name ? item.reply.user.name.substring(0, 1) : '匿' }}
+          </el-avatar>
+          <div class="comment-user-info">
+            <div class="comment-user-name">
+              {{ item.reply.user.name }}
+              <span class="reply-to" v-if="item.reply.replyTo">回复 {{ item.reply.replyTo.name }}</span>
+            </div>
+            <div class="comment-time">{{ formatDateTime(item.reply.createTime) }}</div>
+          </div>
+        </div>
+        <div class="comment-content">{{ item.reply.content }}</div>
+        <div class="comment-actions">
+          <span class="comment-like" @click="likeComment(item.reply)">
+            <svg class="icon-svg" :class="{ active: item.reply.isLiked, animating: item.reply.isLikeAnimating }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+            </svg>
+            <span>{{ formatNumber(item.reply.likeCount) }}</span>
+          </span>
+          <span class="comment-reply" @click="replyToComment(item.reply)">回复</span>
+        </div>
+      </div>
+      <div class="load-more" v-if="hasMoreRepliesMap[threadModal.rootId]">
+        <el-button @click="loadMoreRepliesFor(threadModal.rootId)">加载更多回复</el-button>
+      </div>
+    </div>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -210,7 +237,6 @@ const {
   comments,
   hasMoreComments,
   commentContent,
-  replyTarget,
   commentsSection,
   relatedArticles,
   formatNumber,
@@ -225,8 +251,13 @@ const {
   submitComment,
   likeComment,
   replyToComment,
-  loadMoreComments,
-  loadMoreRepliesFor
+  hasMoreRepliesMap,
+  loadMoreRepliesFor,
+  threadModal,
+  getThreadView,
+  openThreadModal,
+  closeThreadModal,
+  loadMoreComments
 } = useArticleDetailView()
 </script>
 

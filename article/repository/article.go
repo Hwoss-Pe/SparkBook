@@ -6,9 +6,10 @@ import (
 	"Webook/article/repository/dao"
 	"Webook/pkg/logger"
 	"context"
+	"time"
+
 	"github.com/ecodeclub/ekit/slice"
 	"gorm.io/gorm"
-	"time"
 )
 
 //go:generate mockgen -source=./type.go -package=repomocks -destination=mocks/article.mock.go ArticleRepository
@@ -115,6 +116,9 @@ func (c *CachedArticleRepository) List(ctx context.Context, author int64, offset
 
 func (c *CachedArticleRepository) Sync(ctx context.Context, art domain.Article) (int64, error) {
 	// 调用 DAO 层的 Sync 方法，实现制作库到线上库的同步
+	now := time.Now()
+	art.Ctime = now
+	art.Utime = now
 	id, err := c.dao.Sync(ctx, c.toEntity(art))
 	if err != nil {
 		return 0, err
@@ -167,7 +171,24 @@ func (c *CachedArticleRepository) GetById(ctx context.Context, id int64) (domain
 func (c *CachedArticleRepository) GetPublishedById(ctx context.Context, id int64) (domain.Article, error) {
 	res, err := c.cache.GetPub(ctx, id)
 	if err == nil {
-		return res, err
+		if res.Ctime.IsZero() || res.Utime.IsZero() || res.Author.Id == 0 {
+			art, derr := c.dao.GetPubById(ctx, id)
+			if derr != nil {
+				return res, nil
+			}
+			res = domain.Article{
+				Id:         art.Id,
+				Title:      art.Title,
+				Status:     domain.ArticleStatus(art.Status),
+				Content:    art.Content,
+				CoverImage: art.CoverImage,
+				Author:     domain.Author{Id: art.AuthorId},
+				Ctime:      time.UnixMilli(art.Ctime),
+				Utime:      time.UnixMilli(art.Utime),
+			}
+			go func() { _ = c.cache.SetPub(ctx, res) }()
+		}
+		return res, nil
 	}
 	art, err := c.dao.GetPubById(ctx, id)
 	if err != nil {
@@ -179,14 +200,11 @@ func (c *CachedArticleRepository) GetPublishedById(ctx context.Context, id int64
 		Status:     domain.ArticleStatus(art.Status),
 		Content:    art.Content,
 		CoverImage: art.CoverImage,
+		Author:     domain.Author{Id: art.AuthorId},
+		Ctime:      time.UnixMilli(art.Ctime),
+		Utime:      time.UnixMilli(art.Utime),
 	}
-	//	异步设置缓存 也可以同步
-	go func() {
-		if err = c.cache.SetPub(ctx, res); err != nil {
-			c.l.Error("缓存已发表文章失败",
-				logger.Error(err), logger.Int64("aid", res.Id))
-		}
-	}()
+	go func() { _ = c.cache.SetPub(ctx, res) }()
 	return res, nil
 }
 

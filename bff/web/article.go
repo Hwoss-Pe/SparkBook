@@ -116,8 +116,8 @@ func (a *ArticleHandler) Detail(ctx *gin.Context) {
 			Status:     art.Status,
 			Content:    art.Content,
 			CoverImage: art.CoverImage,
-			Ctime:      art.Ctime.AsTime().Format(time.DateTime),
-			Utime:      art.Utime.AsTime().Format(time.DateTime),
+			Ctime:      formatProtoTime(art.Ctime),
+			Utime:      formatProtoTime(art.Utime),
 		},
 	})
 }
@@ -159,11 +159,22 @@ func (a *ArticleHandler) List(ctx *gin.Context, req ListReq, usr ginx.UserClaims
 					Abstract:   src.Abstract,
 					CoverImage: src.CoverImage,
 					Status:     src.Status,
-					Ctime:      src.Ctime.AsTime().Format(time.DateTime),
-					Utime:      src.Utime.AsTime().Format(time.DateTime),
+					Ctime:      formatProtoTime(src.Ctime),
+					Utime:      formatProtoTime(src.Utime),
 				}
 			}),
 	}, nil
+}
+
+func formatProtoTime(ts *timestamppb.Timestamp) string {
+	if ts == nil {
+		return "-"
+	}
+	t := ts.AsTime()
+	if t.IsZero() || t.Year() < 1971 {
+		return "-"
+	}
+	return t.Format(time.DateTime)
 }
 
 func (a *ArticleHandler) Edit(ctx *gin.Context) {
@@ -290,8 +301,8 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (ginx.R
 			Content:    art.Content,
 			CoverImage: art.CoverImage,
 			Author:     AuthorVo{Id: art.Author.GetId(), Name: art.Author.GetName(), Avatar: art.Author.GetAvatar()},
-			Ctime:      art.Ctime.AsTime().Format(time.DateTime),
-			Utime:      art.Utime.AsTime().Format(time.DateTime),
+			Ctime:      formatProtoTime(art.Ctime),
+			Utime:      formatProtoTime(art.Utime),
 			ReadCnt:    intr.ReadCnt,
 			CollectCnt: intr.CollectCnt,
 			LikeCnt:    intr.LikeCnt,

@@ -1,4 +1,4 @@
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { articleApi, type ArticleDetail } from '@/api/article'
@@ -33,6 +33,7 @@ interface CommentData {
   createTime: Date;
   likeCount: number;
   isLiked: boolean;
+  isLikeAnimating?: boolean;
   user: {
     id: number;
     name: string;
@@ -47,6 +48,7 @@ interface ReplyData {
   createTime: Date;
   likeCount: number;
   isLiked: boolean;
+  isLikeAnimating?: boolean;
   user: {
     id: number;
     name: string;
@@ -107,6 +109,8 @@ export default function useArticleDetailView() {
   const userStore = useUserStore()
   const replyMaxId = ref<Record<number, number>>({})
   const hasMoreRepliesMap = ref<Record<number, boolean>>({})
+  const repliesFirstLoadDone = ref<Record<number, boolean>>({})
+  const threadModal = ref<{ visible: boolean; rootId: number }>({ visible: false, rootId: 0 })
 
   // 格式化数字，例如1200显示为1.2k
   const formatNumber = (num: number): string => {
@@ -120,7 +124,10 @@ export default function useArticleDetailView() {
 
   // 格式化日期时间
   const formatDateTime = (date: Date | string): string => {
-    const d = new Date(date)
+    const d = typeof date === 'string' ? new Date(date.replace(' ', 'T')) : new Date(date)
+    if (isNaN(d.getTime()) || d.getFullYear() < 1971) {
+      return '-'
+    }
     return d.toLocaleString('zh-CN', {
       year: 'numeric',
       month: '2-digit',
@@ -169,7 +176,7 @@ export default function useArticleDetailView() {
         article.value.isLiked = true
         article.value.likeCount += 1
       }
-      
+
       ElMessage.success(article.value.isLiked ? '已点赞' : '已取消点赞')
     } catch (error) {
       console.error('点赞操作失败:', error)
@@ -190,7 +197,7 @@ export default function useArticleDetailView() {
         article.value.isFavorited = true
         article.value.favoriteCount += 1
       }
-      
+
       ElMessage.success(article.value.isFavorited ? '已收藏' : '已取消收藏')
     } catch (error) {
       console.error('收藏操作失败:', error)
@@ -207,32 +214,114 @@ export default function useArticleDetailView() {
     })
   }
 
+  const toReplyData = (r: Comment): ReplyData => ({
+    id: r.id,
+    content: r.content,
+    createTime: typeof r.ctime === 'string' ? new Date(r.ctime.replace(' ', 'T')) : new Date(r.ctime),
+    likeCount: 0,
+    isLiked: false,
+    isLikeAnimating: false,
+    user: {
+      id: r.uid,
+      name: r.name || `用户#${r.uid}`,
+      avatar: r.avatar || `https://picsum.photos/id/${1000 + r.uid}/100/100`
+    },
+    replyTo: r.parent_comment?.id
+      ? { id: r.parent_comment.id, name: r.parent_comment?.name || (r.parent_comment?.uid ? `用户#${r.parent_comment.uid}` : `用户#${r.parent_comment.id}`) }
+      : undefined
+  })
+
+  const flattenReplies = (items: Comment[]): ReplyData[] => {
+    const out: ReplyData[] = []
+    const stack: Comment[] = [...items]
+    while (stack.length) {
+      const cur = stack.shift() as Comment
+      out.push(toReplyData(cur))
+      if (cur.children && cur.children.length) {
+        stack.push(...cur.children)
+      }
+    }
+    return out
+  }
+
+  const threadOrder = (replies: ReplyData[], rootId: number): ReplyData[] => {
+    const seconds = replies.filter(r => r.replyTo?.id === rootId)
+      .sort((a, b) => b.createTime.getTime() - a.createTime.getTime())
+    const rest = replies.filter(r => r.replyTo?.id !== rootId)
+    const childrenMap = new Map<number, ReplyData[]>()
+    for (const r of rest) {
+      const pid = r.replyTo?.id
+      if (pid == null) continue
+      const arr = childrenMap.get(pid) || []
+      arr.push(r)
+      childrenMap.set(pid, arr)
+    }
+    for (const [k, arr] of childrenMap.entries()) {
+      arr.sort((a, b) => b.createTime.getTime() - a.createTime.getTime())
+      childrenMap.set(k, arr)
+    }
+    const out: ReplyData[] = []
+    const emitChildren = (pid: number) => {
+      const list = childrenMap.get(pid) || []
+      for (const child of list) {
+        out.push(child)
+        emitChildren(child.id)
+      }
+    }
+    for (const s of seconds) {
+      out.push(s)
+      emitChildren(s.id)
+    }
+    const emitted = new Set(out.map(r => r.id))
+    const remain = replies.filter(r => !emitted.has(r.id))
+      .sort((a, b) => b.createTime.getTime() - a.createTime.getTime())
+    return [...out, ...remain]
+  }
+
+  const calcDepth = (r: ReplyData, rootId: number, parentOf: Map<number, number>): number => {
+    let depth = 2
+    let pid = r.replyTo?.id
+    const guard = new Set<number>()
+    while (pid && pid !== rootId && !guard.has(pid)) {
+      guard.add(pid)
+      depth += 1
+      pid = parentOf.get(pid)
+    }
+    return depth
+  }
+
+  const getThreadView = (rootId: number): Array<{ reply: ReplyData; depth: number }> => {
+    const c = comments.value.find(x => x.id === rootId)
+    if (!c) return []
+    const flat = (c.replies || []).slice().sort((a, b) => b.createTime.getTime() - a.createTime.getTime())
+    return flat.map(r => ({ reply: r, depth: 2 }))
+  }
+
+  const openThreadModal = async (rootId: number) => {
+    threadModal.value.visible = true
+    threadModal.value.rootId = rootId
+    if (!repliesFirstLoadDone.value[rootId]) {
+      await loadMoreRepliesFor(rootId)
+    }
+  }
+
+  const closeThreadModal = () => {
+    threadModal.value.visible = false
+  }
+
   const mapComment = (c: Comment): CommentData => {
-    const replies: ReplyData[] = (c.children || []).map((r) => ({
-      id: r.id,
-      content: r.content,
-      createTime: new Date(r.ctime),
-      likeCount: 0,
-      isLiked: false,
-      user: {
-        id: r.uid,
-        name: `用户#${r.uid}`,
-        avatar: `https://picsum.photos/id/${1000 + r.uid}/100/100`
-      },
-      replyTo: r.parent_comment?.id
-        ? { id: r.parent_comment.id, name: `用户#${r.parent_comment.uid}` }
-        : undefined
-    }))
+    const replies: ReplyData[] = threadOrder(flattenReplies(c.children || []), c.id)
     return {
       id: c.id,
       content: c.content,
-      createTime: new Date(c.ctime),
+      createTime: typeof c.ctime === 'string' ? new Date(c.ctime.replace(' ', 'T')) : new Date(c.ctime),
       likeCount: 0,
       isLiked: false,
+      isLikeAnimating: false,
       user: {
         id: c.uid,
-        name: `用户#${c.uid}`,
-        avatar: `https://picsum.photos/id/${1000 + c.uid}/100/100`
+        name: c.name || `用户#${c.uid}`,
+        avatar: c.avatar || `https://picsum.photos/id/${1000 + c.uid}/100/100`
       },
       replies
     }
@@ -251,20 +340,19 @@ export default function useArticleDetailView() {
         comments.value = list
         // 初始化每个根评论的回复分页游标为当前已展示的最小ID
         list.forEach(c => {
-          if (c.replies && c.replies.length > 0) {
-            replyMaxId.value[c.id] = Math.min(...c.replies.map(r => r.id))
-            hasMoreRepliesMap.value[c.id] = true
-          } else {
-            replyMaxId.value[c.id] = Number.MAX_SAFE_INTEGER
-            hasMoreRepliesMap.value[c.id] = false
-          }
+          const direct = (res.comments || []).find(rc => rc.id === c.id)?.children || []
+          replyMaxId.value[c.id] = Number.MAX_SAFE_INTEGER
+          hasMoreRepliesMap.value[c.id] = direct.length >= 3
+          repliesFirstLoadDone.value[c.id] = false
         })
       } else {
         comments.value = [...comments.value, ...list]
         list.forEach(c => {
           if (!(c.id in replyMaxId.value)) {
+            const direct = (res.comments || []).find(rc => rc.id === c.id)?.children || []
             replyMaxId.value[c.id] = Number.MAX_SAFE_INTEGER
-            hasMoreRepliesMap.value[c.id] = (c.replies && c.replies.length >= 3)
+            hasMoreRepliesMap.value[c.id] = direct.length >= 3
+            repliesFirstLoadDone.value[c.id] = false
           }
         })
       }
@@ -312,6 +400,7 @@ export default function useArticleDetailView() {
 
   // 点赞评论（暂时禁用）
   const likeComment = async (comment: CommentData | ReplyData) => {
+    comment.isLikeAnimating = true
     if (comment.isLiked) {
       comment.isLiked = false
       comment.likeCount = Math.max(0, comment.likeCount - 1)
@@ -319,6 +408,9 @@ export default function useArticleDetailView() {
       comment.isLiked = true
       comment.likeCount += 1
     }
+    setTimeout(() => {
+      comment.isLikeAnimating = false
+    }, 300)
   }
 
   // 回复评论（暂时禁用）
@@ -335,27 +427,16 @@ export default function useArticleDetailView() {
     await fetchComments(false)
   }
 
-  const mapReply = (r: Comment): ReplyData => ({
-    id: r.id,
-    content: r.content,
-    createTime: new Date(r.ctime),
-    likeCount: 0,
-    isLiked: false,
-    user: {
-      id: r.uid,
-      name: `用户#${r.uid}`,
-      avatar: `https://picsum.photos/id/${1000 + r.uid}/100/100`
-    },
-    replyTo: r.parent_comment?.id
-      ? { id: r.parent_comment.id, name: `用户#${r.parent_comment.uid}` }
-      : undefined
-  })
+  const mapReply = (r: Comment): ReplyData => toReplyData(r)
 
   const loadMoreRepliesFor = async (rootId: number) => {
     try {
-      const maxId = replyMaxId.value[rootId] ?? Number.MAX_SAFE_INTEGER
-      const res = await commentApi.getMoreReplies({ rid: rootId, max_id: maxId, limit: 10 })
-      const fetched = (res.replies || []).map(mapReply)
+      const isFirstLoad = !repliesFirstLoadDone.value[rootId]
+      const maxId = isFirstLoad ? Number.MAX_SAFE_INTEGER : (replyMaxId.value[rootId] ?? Number.MAX_SAFE_INTEGER)
+      const pageLimit = 10
+      const res = await commentApi.getMoreReplies({ rid: rootId, max_id: maxId, limit: pageLimit })
+      const fetched = flattenReplies(res.replies || [])
+      repliesFirstLoadDone.value[rootId] = true
       const idx = comments.value.findIndex(c => c.id === rootId)
       if (idx < 0) return
       const existingIds = new Set(comments.value[idx].replies.map(r => r.id))
@@ -364,11 +445,17 @@ export default function useArticleDetailView() {
         comments.value[idx].replies = [...comments.value[idx].replies, ...add]
         // 更新游标为当前已加载的最小ID，确保下一页只拿更旧的数据
         const currentMin = replyMaxId.value[rootId] ?? Number.MAX_SAFE_INTEGER
-        replyMaxId.value[rootId] = Math.min(currentMin, ...add.map(r => r.id))
-        hasMoreRepliesMap.value[rootId] = true
+        const rootIds = (res.replies || []).map(r => r.id)
+        const nextMin = rootIds.length > 0 ? Math.min(...rootIds) : currentMin
+        replyMaxId.value[rootId] = Math.min(currentMin, nextMin)
+        hasMoreRepliesMap.value[rootId] = (res.replies || []).length === pageLimit
       } else {
         // 没有更多数据，隐藏按钮
-        hasMoreRepliesMap.value[rootId] = false
+        const currentMin = replyMaxId.value[rootId] ?? Number.MAX_SAFE_INTEGER
+        const rootIds = (res.replies || []).map(r => r.id)
+        const nextMin = rootIds.length > 0 ? Math.min(...rootIds) : currentMin
+        replyMaxId.value[rootId] = Math.min(currentMin, nextMin)
+        hasMoreRepliesMap.value[rootId] = (res.replies || []).length === pageLimit
       }
     } catch (error) {
       console.error('加载更多回复失败:', error)
@@ -380,12 +467,12 @@ export default function useArticleDetailView() {
   const fetchArticleDetail = async () => {
     loading.value = true
     error.value = ''
-    
+
     try {
       // 调用API获取文章详情（包含交互数据）
       // 后端会自动处理阅读计数增加，前端无需调用
       const articleDetail = await articleApi.getPublishedArticleById(articleId.value)
-      
+
       // 构建文章数据（直接使用API返回的交互数据）
       article.value = {
         id: articleDetail.id,
@@ -407,13 +494,13 @@ export default function useArticleDetailView() {
         },
         tags: [] // 移除假标签，等待后端支持标签功能
       }
-      
+
       await fetchComments(true)
-      
+
       // 获取相关文章
       // TODO: 实际项目中应该有相关文章的API
       relatedArticles.value = [] // 暂时为空，等待相关文章API
-      
+
       loading.value = false
     } catch (err) {
       console.error('Failed to load article:', err)
@@ -437,6 +524,10 @@ export default function useArticleDetailView() {
     replyTarget,
     loadMoreRepliesFor,
     hasMoreRepliesMap,
+    threadModal,
+    getThreadView,
+    openThreadModal,
+    closeThreadModal,
     commentsSection,
     relatedArticles,
     formatNumber,

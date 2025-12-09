@@ -93,7 +93,7 @@ func (G *GORMCommentDAO) FindCommentList(ctx context.Context, u Comment) ([]Comm
 
 func (G *GORMCommentDAO) FindRepliesByPid(ctx context.Context, pid int64, offset, limit int) ([]Comment, error) {
 	var res []Comment
-	err := G.db.WithContext(ctx).Where("pid = ?", pid).
+	err := G.db.WithContext(ctx).Preload("ParentComment").Where("pid = ?", pid).
 		Order("id DESC").
 		Offset(offset).Limit(limit).Find(&res).Error
 	return res, err
@@ -116,7 +116,7 @@ func (G *GORMCommentDAO) FindOneByIDs(ctx context.Context, ids []int64) ([]Comme
 
 func (G *GORMCommentDAO) FindRepliesByRid(ctx context.Context, rid int64, id int64, limit int64) ([]Comment, error) {
 	var res []Comment
-	err := G.db.WithContext(ctx).
+	err := G.db.WithContext(ctx).Preload("ParentComment").
 		Where("root_id = ? AND id < ?", rid, id).
 		Order("id DESC").
 		Limit(int(limit)).Find(&res).Error

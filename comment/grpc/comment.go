@@ -4,10 +4,11 @@ import (
 	commentv1 "Webook/api/proto/gen/api/proto/comment/v1"
 	"Webook/comment/domain"
 	"Webook/comment/service"
+	"math"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"math"
 )
 
 type CommentServiceServer struct {
@@ -61,37 +62,39 @@ func (c *CommentServiceServer) GetMoreReplies(ctx context.Context, request *comm
 // 这个方法主要是对返回一个数组，但是如果想要往上查找父评论的话需要走递归
 func (c *CommentServiceServer) toDTO(domainComments []domain.Comment) []*commentv1.Comment {
 	rpcComments := make([]*commentv1.Comment, 0, len(domainComments))
-	//拿这个进行快速选择id进行填充
-	rpcCommentMap := make(map[int64]*commentv1.Comment, len(domainComments))
-	for _, domainComment := range domainComments {
-		//需要一个目的映射的map
-		rpcCommentMap[domainComment.Id] = &commentv1.Comment{
-			Id:      domainComment.Id,
-			Uid:     domainComment.Commentator.ID,
-			Biz:     domainComment.Biz,
-			Bizid:   domainComment.BizId,
-			Content: domainComment.Content,
-			Ctime:   timestamppb.New(domainComment.CTime),
-			Utime:   timestamppb.New(domainComment.UTime),
+	for _, dc := range domainComments {
+		root := &commentv1.Comment{
+			Id:      dc.Id,
+			Uid:     dc.Commentator.ID,
+			Biz:     dc.Biz,
+			Bizid:   dc.BizId,
+			Content: dc.Content,
+			Ctime:   timestamppb.New(dc.CTime),
+			Utime:   timestamppb.New(dc.UTime),
 		}
-	}
-	for _, domainComment := range domainComments {
-		rpcComment := &commentv1.Comment{
-			Id:      domainComment.Id,
-			Uid:     domainComment.Commentator.ID,
-			Biz:     domainComment.Biz,
-			Bizid:   domainComment.BizId,
-			Content: domainComment.Content,
-			Ctime:   timestamppb.New(domainComment.CTime),
-			Utime:   timestamppb.New(domainComment.UTime),
+		if dc.RootComment != nil {
+			root.RootComment = &commentv1.Comment{Id: dc.RootComment.Id}
 		}
-		if domainComment.RootComment != nil {
-			rpcComment.RootComment = rpcCommentMap[domainComment.RootComment.Id]
+		if dc.ParentComment != nil {
+			root.ParentComment = &commentv1.Comment{Id: dc.ParentComment.Id, Uid: dc.ParentComment.Commentator.ID}
 		}
-		if domainComment.ParentComment != nil {
-			rpcComment.ParentComment = rpcCommentMap[domainComment.ParentComment.Id]
+		rpcComments = append(rpcComments, root)
+		for _, ch := range dc.Children {
+			rc := &commentv1.Comment{
+				Id:      ch.Id,
+				Uid:     ch.Commentator.ID,
+				Biz:     ch.Biz,
+				Bizid:   ch.BizId,
+				Content: ch.Content,
+				Ctime:   timestamppb.New(ch.CTime),
+				Utime:   timestamppb.New(ch.UTime),
+			}
+			rc.RootComment = &commentv1.Comment{Id: dc.Id}
+			if ch.ParentComment != nil {
+				rc.ParentComment = &commentv1.Comment{Id: ch.ParentComment.Id, Uid: ch.ParentComment.Commentator.ID}
+			}
+			rpcComments = append(rpcComments, rc)
 		}
-		rpcComments = append(rpcComments, rpcComment)
 	}
 	return rpcComments
 
