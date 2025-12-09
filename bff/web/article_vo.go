@@ -82,3 +82,12 @@ type ArticlePubVo struct {
 	Liked      bool     `json:"liked"`
 	Collected  bool     `json:"collected"`
 }
+
+type AuthorStatsVo struct {
+	PublishedCount int64 `json:"publishedCount"`
+	DraftCount     int64 `json:"draftCount"`
+	TotalReadCount int64 `json:"totalReadCount"`
+	TotalLikeCount int64 `json:"totalLikeCount"`
+	FollowingCount int64 `json:"followingCount"`
+	FollowerCount  int64 `json:"followerCount"`
+}

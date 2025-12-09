@@ -54,7 +54,7 @@ func (j *JWTLoginMiddlewareBuilder) Build() gin.HandlerFunc {
 		// ctx.Set("user", jwt2.UserClaims{Id: 1})
 		// return
 		// 公开路径支持前缀匹配，例如 /articles/pub/:id
-		if j.publicPaths.Exist(ctx.Request.URL.Path) || strings.HasPrefix(ctx.Request.URL.Path, "/articles/pub/") {
+		if j.publicPaths.Exist(ctx.Request.URL.Path) || strings.HasPrefix(ctx.Request.URL.Path, "/articles/pub/") || strings.HasPrefix(ctx.Request.URL.Path, "/articles/author/") {
 			// 公开路径也尝试解析 JWT，但不强制要求
 			tokenStr := j.ExtractTokenString(ctx)
 			if tokenStr != "" {

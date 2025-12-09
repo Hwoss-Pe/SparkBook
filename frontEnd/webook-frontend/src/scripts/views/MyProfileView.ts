@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type UploadFile } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { userApi, type User } from '@/api/user'
+import { articleApi } from '@/api/article'
 
 export default function useMyProfileView() {
   const router = useRouter()
@@ -143,16 +144,16 @@ export default function useMyProfileView() {
     }
   }
   
-  // 获取统计数据
   const fetchStats = async () => {
     try {
-      // 这里应该调用相应的API获取统计数据
-      // 暂时使用模拟数据
+      userStore.initUserState()
+      const uid = userStore.user?.id || userInfo.value.id || 0
+      const s = await articleApi.getAuthorStats(uid)
       stats.value = {
-        articleCount: 12,
-        draftCount: 3,
-        followerCount: 156,
-        followingCount: 89
+        articleCount: s.publishedCount || 0,
+        draftCount: s.draftCount || 0,
+        followerCount: s.followerCount || 0,
+        followingCount: s.followingCount || 0
       }
     } catch (error) {
       console.error('获取统计数据失败:', error)

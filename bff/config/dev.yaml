@@ -19,3 +19,5 @@ grpc:
       target: "etcd:///service/ranking"
     comment:
       target: "etcd:///service/comment"
+    follow:
+      target: "etcd:///service/follow"

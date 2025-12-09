@@ -2,6 +2,7 @@ package ioc
 
 import (
 	articlev1 "Webook/api/proto/gen/api/proto/article/v1"
+	followv1 "Webook/api/proto/gen/api/proto/follow/v1"
 	intrv1 "Webook/api/proto/gen/api/proto/intr/v1"
 	rankingv1 "Webook/api/proto/gen/api/proto/ranking/v1"
 	rewardv1 "Webook/api/proto/gen/api/proto/reward/v1"
@@ -43,6 +44,7 @@ func NewArticleHandler(artSvc articlev1.ArticleServiceClient,
 	intrSvc intrv1.InteractiveServiceClient,
 	rankingSvc rankingv1.RankingServiceClient,
 	rewardSvc rewardv1.RewardServiceClient,
-	l logger.Logger) *web.ArticleHandler {
-	return web.NewArticleHandler(artSvc, intrSvc, rankingSvc, rewardSvc, l)
+	l logger.Logger,
+	followSvc followv1.FollowServiceClient) *web.ArticleHandler {
+	return web.NewArticleHandler(artSvc, intrSvc, rankingSvc, rewardSvc, l, followSvc)
 }

@@ -48,6 +48,15 @@ export interface ArticleDetail extends Article {
   collected: boolean
 }
 
+export interface AuthorStats {
+  publishedCount: number
+  draftCount: number
+  totalReadCount: number
+  totalLikeCount: number
+  followingCount: number
+  followerCount: number
+}
+
 // 列表接口返回的是文章数组
 export type ListResponse = Article[]
 
@@ -116,5 +125,9 @@ export const articleApi = {
   },
   cancelCollect: (id: number, cid: number) => {
     return post('/articles/pub/cancelCollect', { id, cid })
+  },
+
+  getAuthorStats: (authorId: number) => {
+    return get<AuthorStats>(`/articles/author/${authorId}/stats`)
   }
 }

@@ -93,6 +93,6 @@ func (f *FollowServiceServer) convertToView(relation domain.FollowRelation) *fol
 func (f *FollowServiceServer) convertToViewStatic(relation domain.FollowStatics) *followv1.FollowStatic {
 	return &followv1.FollowStatic{
 		Followers: relation.Followers,
-		Followees: relation.Followers,
+		Followees: relation.Followees,
 	}
 }

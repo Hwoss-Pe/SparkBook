@@ -3,7 +3,7 @@ db:
 
 grpc:
   server:
-    port: 8092
+    port: 8099
     etcdAddr: "localhost:12379"
     etcdTTL: 60
 redis:

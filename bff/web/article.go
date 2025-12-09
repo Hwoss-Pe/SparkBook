@@ -2,6 +2,7 @@ package web
 
 import (
 	articlev1 "Webook/api/proto/gen/api/proto/article/v1"
+	followv1 "Webook/api/proto/gen/api/proto/follow/v1"
 	intrv1 "Webook/api/proto/gen/api/proto/intr/v1"
 	rankingv1 "Webook/api/proto/gen/api/proto/ranking/v1"
 	rewardv1 "Webook/api/proto/gen/api/proto/reward/v1"
@@ -22,6 +23,7 @@ import (
 type ArticleHandler struct {
 	svc        articlev1.ArticleServiceClient
 	intrSvc    intrv1.InteractiveServiceClient
+	followSvc  followv1.FollowServiceClient
 	rankingSvc rankingv1.RankingServiceClient
 	reward     rewardv1.RewardServiceClient
 	l          logger.Logger
@@ -32,7 +34,8 @@ func NewArticleHandler(svc articlev1.ArticleServiceClient,
 	intrSvc intrv1.InteractiveServiceClient,
 	rankingSvc rankingv1.RankingServiceClient,
 	reward rewardv1.RewardServiceClient,
-	l logger.Logger) *ArticleHandler {
+	l logger.Logger,
+	followSvc followv1.FollowServiceClient) *ArticleHandler {
 	return &ArticleHandler{
 		svc:        svc,
 		l:          l,
@@ -40,6 +43,7 @@ func NewArticleHandler(svc articlev1.ArticleServiceClient,
 		biz:        "article",
 		intrSvc:    intrSvc,
 		rankingSvc: rankingSvc,
+		followSvc:  followSvc,
 	}
 }
 
@@ -51,6 +55,7 @@ func (a *ArticleHandler) RegisterRoute(s *gin.Engine) {
 	g.POST("/publish", a.Publish)
 	g.POST("/withdraw", a.Withdraw)
 	g.POST("/unpublish", a.Unpublish)
+	g.GET("/author/:id/stats", a.AuthorStats)
 	pub := g.Group("/pub")
 	pub.GET("/:id", ginx.WrapClaims(a.PubDetail))
 	// 推荐文章列表（首页使用，匿名可访问）
@@ -65,6 +70,77 @@ func (a *ArticleHandler) RegisterRoute(s *gin.Engine) {
 	pub.GET("/ranking", ginx.WrapReq[RankingReq](a.Ranking))
 	// 手动触发热榜计算
 	pub.POST("/ranking/trigger", ginx.WrapReq[TriggerRankingReq](a.TriggerRanking))
+}
+
+func (a *ArticleHandler) AuthorStats(ctx *gin.Context) {
+	idstr := ctx.Param("id")
+	id, err := strconv.ParseInt(idstr, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "参数错误"})
+		return
+	}
+	var publishedIds []int64
+	var publishedCount int64
+	var draftCount int64
+	const pageSize int32 = 100
+	for offset := int32(0); ; offset += pageSize {
+		resp, er := a.svc.List(ctx, &articlev1.ListRequest{Author: id, Offset: offset, Limit: pageSize})
+		if er != nil {
+			ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统错误"})
+			return
+		}
+		arts := resp.GetArticles()
+		if len(arts) == 0 {
+			break
+		}
+		for _, art := range arts {
+			if art.Status == 2 || art.Status == 3 {
+				publishedCount++
+				publishedIds = append(publishedIds, art.Id)
+			} else {
+				draftCount++
+			}
+		}
+		if len(arts) < int(pageSize) {
+			break
+		}
+	}
+	var totalRead int64
+	var totalLike int64
+	for i := 0; i < len(publishedIds); i += 50 {
+		end := i + 50
+		if end > len(publishedIds) {
+			end = len(publishedIds)
+		}
+		batch := publishedIds[i:end]
+		intrResp, er := a.intrSvc.GetByIds(ctx, &intrv1.GetByIdsRequest{Biz: a.biz, Ids: batch})
+		if er != nil || intrResp == nil {
+			continue
+		}
+		for _, intr := range intrResp.GetIntrs() {
+			if intr != nil {
+				totalRead += intr.ReadCnt
+				totalLike += intr.LikeCnt
+			}
+		}
+	}
+	var followingCount int64
+	var followerCount int64
+	if a.followSvc != nil {
+		fsResp, er := a.followSvc.GetFollowStatics(ctx, &followv1.GetFollowStaticRequest{Followee: id})
+		if er == nil && fsResp != nil && fsResp.FollowStatic != nil {
+			followerCount = fsResp.FollowStatic.Followers
+			followingCount = fsResp.FollowStatic.Followees
+		}
+	}
+	ctx.JSON(http.StatusOK, Result{Data: AuthorStatsVo{
+		PublishedCount: publishedCount,
+		DraftCount:     draftCount,
+		TotalReadCount: totalRead,
+		TotalLikeCount: totalLike,
+		FollowingCount: followingCount,
+		FollowerCount:  followerCount,
+	}})
 }
 
 func (a *ArticleHandler) Detail(ctx *gin.Context) {

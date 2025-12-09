@@ -291,16 +291,16 @@ export default function useCreatorCenterView() {
     }
   }
   
-  // 获取统计数据
   const loadStats = async () => {
     try {
-      // 这里应该调用统计API
-      // 暂时使用模拟数据
+      userStore.initUserState()
+      const uid = userStore.user?.id || 0
+      const s = await articleApi.getAuthorStats(uid)
       stats.value = {
-        publishedCount: 15,
-        draftCount: 3,
-        totalViews: 12580,
-        totalLikes: 1024
+        publishedCount: s.publishedCount || 0,
+        draftCount: s.draftCount || 0,
+        totalViews: s.totalReadCount || 0,
+        totalLikes: s.totalLikeCount || 0
       }
     } catch (error) {
       console.error('获取统计数据失败:', error)

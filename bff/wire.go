@@ -24,6 +24,7 @@ func InitApp() *wego.App {
 
 		ioc.InitUserClient,
 		ioc.InitIntrClient,
+		ioc.InitFollowClient,
 		ioc.InitRewardClient,
 		ioc.InitRankingClient,
 		ioc.InitCodeClient,
