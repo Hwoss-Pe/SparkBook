@@ -80,19 +80,19 @@ func (c *CachedArticleRepository) List(ctx context.Context, author int64, offset
 	// 只有第一页才走缓存，并且假定一页只有 100 条
 	// 也就是说，如果前端允许创作者调整页的大小
 	// 那么只有 100 这个页大小这个默认情况下，会走索引
-	if offset == 0 && limit <= 100 {
-		page, err := c.cache.GetFirstPage(ctx, author)
-		//这是走缓存的快路径
-		if err == nil {
-			//如果他是这样 就提前准备缓存
-			if err == nil {
-				go func() {
-					c.preCache(ctx, page)
-				}()
-				return page, nil
-			}
-		}
-	}
+	//if offset == 0 && limit <= 100 {
+	//	page, err := c.cache.GetFirstPage(ctx, author)
+	//	//这是走缓存的快路径
+	//	if err == nil {
+	//		//如果他是这样 就提前准备缓存
+	//		if err == nil {
+	//			go func() {
+	//				c.preCache(ctx, page)
+	//			}()
+	//			return page, nil
+	//		}
+	//	}
+	//}
 	// 慢路径
 	arts, err := c.dao.GetByAuthor(ctx, author, offset, limit)
 	if err != nil {

@@ -50,6 +50,7 @@ func (a *ArticleHandler) RegisterRoute(s *gin.Engine) {
 	g.POST("/edit", a.Edit)
 	g.POST("/publish", a.Publish)
 	g.POST("/withdraw", a.Withdraw)
+	g.POST("/unpublish", a.Unpublish)
 	pub := g.Group("/pub")
 	pub.GET("/:id", ginx.WrapClaims(a.PubDetail))
 	// 推荐文章列表（首页使用，匿名可访问）
@@ -150,20 +151,41 @@ func (a *ArticleHandler) List(ctx *gin.Context, req ListReq, usr ginx.UserClaims
 			Msg:  "系统错误",
 		}, nil
 	}
-	return ginx.Result{
-		Data: slice.Map[*articlev1.Article, ArticleVo](arts.Articles,
-			func(idx int, src *articlev1.Article) ArticleVo {
-				return ArticleVo{
-					Id:         src.Id,
-					Title:      src.Title,
-					Abstract:   src.Abstract,
-					CoverImage: src.CoverImage,
-					Status:     src.Status,
-					Ctime:      formatProtoTime(src.Ctime),
-					Utime:      formatProtoTime(src.Utime),
-				}
-			}),
-	}, nil
+	// 批量获取互动数据（阅读、点赞、收藏）
+	ids := make([]int64, 0, len(arts.Articles))
+	for _, art := range arts.Articles {
+		ids = append(ids, art.Id)
+	}
+	intrMap := make(map[int64]*intrv1.Interactive)
+	if len(ids) > 0 {
+		intrResp, er := a.intrSvc.GetByIds(ctx, &intrv1.GetByIdsRequest{Biz: a.biz, Ids: ids})
+		if er != nil {
+			a.l.Error("获取互动数据失败", logger.Error(er))
+		} else if intrResp != nil {
+			intrMap = intrResp.GetIntrs()
+		}
+	}
+
+	// 组装返回，合并互动统计
+	data := slice.Map[*articlev1.Article, ArticleVo](arts.Articles,
+		func(idx int, src *articlev1.Article) ArticleVo {
+			vo := ArticleVo{
+				Id:         src.Id,
+				Title:      src.Title,
+				Abstract:   src.Abstract,
+				CoverImage: src.CoverImage,
+				Status:     src.Status,
+				Ctime:      formatProtoTime(src.Ctime),
+				Utime:      formatProtoTime(src.Utime),
+			}
+			if intr, ok := intrMap[src.Id]; ok && intr != nil {
+				vo.ReadCnt = intr.ReadCnt
+				vo.LikeCnt = intr.LikeCnt
+				vo.CollectCnt = intr.CollectCnt
+			}
+			return vo
+		})
+	return ginx.Result{Data: data}, nil
 }
 
 func formatProtoTime(ts *timestamppb.Timestamp) string {
@@ -313,7 +335,57 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (ginx.R
 }
 
 func (a *ArticleHandler) Withdraw(ctx *gin.Context) {
+	var req struct {
+		Id  int64 `json:"id"`
+		Uid int64 `json:"uid"`
+	}
+	if err := ctx.Bind(&req); err != nil {
+		a.l.Error("反序列化请求失败", logger.Error(err))
+		return
+	}
+	usr, ok := ctx.MustGet("user").(jwt.UserClaims)
+	if !ok {
+		ctx.JSON(http.StatusOK, Result{
+			Code: 5,
+			Msg:  "系统错误",
+		})
+		a.l.Error("获得用户会话信息失败")
+		return
+	}
+	_, err := a.svc.Withdraw(ctx, &articlev1.WithdrawRequest{Id: req.Id, Uid: usr.Id})
+	if err != nil {
+		ctx.JSON(http.StatusOK, Result{
+			Code: 5,
+			Msg:  "系统错误",
+		})
+		a.l.Error("撤回失败", logger.Error(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, Result{Msg: "OK"})
+}
 
+func (a *ArticleHandler) Unpublish(ctx *gin.Context) {
+	var req struct {
+		Id  int64 `json:"id"`
+		Uid int64 `json:"uid"`
+	}
+	if err := ctx.Bind(&req); err != nil {
+		a.l.Error("反序列化请求失败", logger.Error(err))
+		return
+	}
+	usr, ok := ctx.MustGet("user").(jwt.UserClaims)
+	if !ok {
+		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统错误"})
+		a.l.Error("获得用户会话信息失败")
+		return
+	}
+	_, err := a.svc.Unpublish(ctx, &articlev1.UnpublishRequest{Id: req.Id, Uid: usr.Id})
+	if err != nil {
+		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统错误"})
+		a.l.Error("撤回为草稿失败", logger.Error(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, Result{Msg: "OK"})
 }
 
 // ListPub 获取推荐文章列表（首页使用，按时间排序）

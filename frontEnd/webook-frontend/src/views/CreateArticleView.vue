@@ -21,16 +21,7 @@
               />
             </el-form-item>
             
-            <el-form-item label="文章摘要" prop="abstract">
-              <el-input
-                v-model="articleForm.abstract"
-                type="textarea"
-                placeholder="请输入文章摘要"
-                maxlength="200"
-                show-word-limit
-                :rows="3"
-              />
-            </el-form-item>
+            
             
             <el-form-item label="封面图" prop="coverImage">
               <el-upload
@@ -73,9 +64,7 @@
                   </el-radio-group>
                 </el-form-item>
                 
-                <el-form-item label="允许评论">
-                  <el-switch v-model="articleForm.allowComment" />
-                </el-form-item>
+                
                 
                 <el-form-item label="标签">
                   <el-tag

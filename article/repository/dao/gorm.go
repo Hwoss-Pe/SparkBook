@@ -118,7 +118,7 @@ func (G *GORMArticleDAO) SyncStatus(ctx context.Context, author, id int64, statu
 	return G.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		res := tx.Model(&Article{}).
 			Where("id = ? and author_id = ?", id, author).
-			Update("status = ?", status)
+			Update("status", status)
 
 		if res.Error != nil {
 			return res.Error
@@ -129,7 +129,7 @@ func (G *GORMArticleDAO) SyncStatus(ctx context.Context, author, id int64, statu
 		//	线上库也要进行同步
 		res = tx.Model(&PublishedArticle{}).
 			Where("id = ? and author_id = ?", id, author).
-			Update("status = ?", status)
+			Update("status", status)
 
 		if res.Error != nil {
 			return res.Error

@@ -90,6 +90,9 @@
                       <h3 class="article-title" @click="viewArticle(article.id)">
                         {{ article.title }}
                       </h3>
+                      <div class="article-flags">
+                        <el-tag v-if="article.status === 3" type="warning" size="small">仅自己可见</el-tag>
+                      </div>
                       <p class="article-abstract">{{ article.abstract }}</p>
                       <div class="article-meta">
                         <span class="publish-time">{{ formatDate(article.publishTime) }}</span>
@@ -104,7 +107,7 @@
                           </span>
                           <span class="stat-item">
                             <el-icon><ChatDotRound /></el-icon>
-                            {{ formatNumber(article.commentCount) }}
+                            {{ formatNumber(article.collectCount) }}
                           </span>
                         </div>
                       </div>
@@ -118,14 +121,18 @@
                           <el-dropdown-menu>
                             <el-dropdown-item @click="editArticle(article.id)">编辑</el-dropdown-item>
                             <el-dropdown-item @click="viewArticle(article.id)">查看</el-dropdown-item>
-                            <el-dropdown-item @click="withdrawArticle(article.id)" divided>
-                              撤回发布
+                            <el-dropdown-item v-if="article.status !== 3" @click="withdrawArticle(article.id)" divided>
+                              仅自己可见
+                            </el-dropdown-item>
+                            <el-dropdown-item @click="unpublishArticle(article.id)" divided>
+                              撤回发布（变为草稿）
                             </el-dropdown-item>
                           </el-dropdown-menu>
                         </template>
                       </el-dropdown>
                     </div>
                   </div>
+                  <div ref="publishedLoadMoreRef" style="height: 1px;"></div>
                 </div>
                 <div v-else class="empty-state">
                   <el-empty description="暂无已发布文章">
@@ -150,7 +157,7 @@
                       <h3 class="article-title" @click="editDraft(draft.id)">
                         {{ draft.title || '无标题草稿' }}
                       </h3>
-                      <p class="article-abstract">{{ draft.abstract || '暂无摘要' }}</p>
+                      
                       <div class="article-meta">
                         <span class="update-time">{{ formatDate(draft.updateTime) }}</span>
                         <span class="word-count">{{ draft.wordCount || 0 }} 字</span>
@@ -192,15 +199,15 @@
     <!-- 撤回确认弹窗 -->
     <el-dialog
       v-model="showWithdrawDialog"
-      title="撤回发布"
+      title="仅自己可见"
       width="400px"
     >
-      <p>确定要撤回这篇文章吗？撤回后文章将变为草稿状态。</p>
+      <p>设置仅自己可见后文章只有自己可见噢。</p>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="showWithdrawDialog = false">取消</el-button>
           <el-button type="primary" @click="confirmWithdraw" :loading="withdrawing">
-            确定撤回
+            确定
           </el-button>
         </span>
       </template>
@@ -245,6 +252,7 @@ const {
   sortBy,
   publishedArticles,
   draftArticles,
+  publishedLoadMoreRef,
   showWithdrawDialog,
   showDeleteDialog,
   withdrawing,
@@ -263,7 +271,8 @@ const {
   duplicateDraft,
   deleteDraft,
   confirmWithdraw,
-  confirmDelete
+  confirmDelete,
+  unpublishArticle
 } = useCreatorCenterView()
 </script>
 

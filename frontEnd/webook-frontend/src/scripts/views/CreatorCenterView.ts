@@ -1,4 +1,4 @@
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
@@ -20,7 +20,7 @@ interface PublishedArticle {
   publishTime: string
   readCount: number
   likeCount: number
-  commentCount: number
+  collectCount: number
   status: number
 }
 
@@ -53,6 +53,12 @@ export default function useCreatorCenterView() {
   const publishedArticles = ref<PublishedArticle[]>([])
   const draftArticles = ref<DraftArticle[]>([])
   const allPublishedArticles = ref<PublishedArticle[]>([])
+  const publishedOffset = ref(0)
+  const publishedLimit = 10
+  const hasMorePublished = ref(true)
+  const loadingPublished = ref(false)
+  const publishedLoadMoreRef = ref<HTMLElement | null>(null)
+  let publishedObserver: IntersectionObserver | null = null
   
   // 弹窗状态
   const showWithdrawDialog = ref(false)
@@ -127,7 +133,8 @@ export default function useCreatorCenterView() {
   const handleTabChange = (tabName: string) => {
     activeTab.value = tabName
     if (tabName === 'published') {
-      loadPublishedArticles()
+      loadPublishedArticles(true)
+      setupPublishedObserver()
     } else if (tabName === 'drafts') {
       loadDraftArticles()
     }
@@ -168,7 +175,7 @@ export default function useCreatorCenterView() {
     currentArticleId.value = id
     showWithdrawDialog.value = true
   }
-  
+
   // 确认撤回
   const confirmWithdraw = async () => {
     if (!currentArticleId.value) return
@@ -176,26 +183,14 @@ export default function useCreatorCenterView() {
     withdrawing.value = true
     try {
       await articleApi.withdrawArticle(currentArticleId.value, userStore.user?.id || 0)
-      
-      // 从已发布列表中移除
-      publishedArticles.value = publishedArticles.value.filter(
-        article => article.id !== currentArticleId.value
+      publishedArticles.value = publishedArticles.value.map(a =>
+        a.id === currentArticleId.value ? { ...a, status: 3 } : a
       )
-      allPublishedArticles.value = allPublishedArticles.value.filter(
-        article => article.id !== currentArticleId.value
+      allPublishedArticles.value = allPublishedArticles.value.map(a =>
+        a.id === currentArticleId.value ? { ...a, status: 3 } : a
       )
-      
-      // 更新统计数据
-      stats.value.publishedCount--
-      stats.value.draftCount++
-      
-      ElMessage.success('文章已撤回')
+      ElMessage.success('已设为仅自己可见')
       showWithdrawDialog.value = false
-      
-      // 重新加载草稿列表
-      if (activeTab.value === 'drafts') {
-        loadDraftArticles()
-      }
     } catch (error) {
       console.error('撤回文章失败:', error)
       ElMessage.error('撤回失败，请重试')
@@ -203,24 +198,40 @@ export default function useCreatorCenterView() {
       withdrawing.value = false
     }
   }
+
+  const unpublishArticle = async (id: number) => {
+    try {
+      await ElMessageBox.confirm('撤回发布后文章将变为草稿，确认继续？', '撤回发布', {
+        type: 'warning'
+      })
+      await articleApi.unpublishArticle(id, userStore.user?.id || 0)
+      publishedArticles.value = publishedArticles.value.filter(a => a.id !== id)
+      allPublishedArticles.value = allPublishedArticles.value.filter(a => a.id !== id)
+      stats.value.publishedCount--
+      stats.value.draftCount++
+      ElMessage.success('已撤回为草稿')
+      if (activeTab.value === 'drafts') {
+        loadDraftArticles()
+      }
+    } catch (error: any) {
+      if (error !== 'cancel') {
+        console.error('撤回发布失败:', error)
+        ElMessage.error('撤回失败，请重试')
+      }
+    }
+  }
   
   // 发布草稿
   const publishDraft = async (id: number) => {
     try {
-      await articleApi.publishArticle({ id })
-      
-      // 从草稿列表中移除
+      const detail = await articleApi.getArticleById(id)
+      await articleApi.publishArticle({ id, title: detail.title, content: detail.content })
       draftArticles.value = draftArticles.value.filter(draft => draft.id !== id)
-      
-      // 更新统计数据
       stats.value.draftCount--
       stats.value.publishedCount++
-      
       ElMessage.success('草稿已发布')
-      
-      // 重新加载已发布列表
       if (activeTab.value === 'published') {
-        loadPublishedArticles()
+        loadPublishedArticles(true)
       }
     } catch (error) {
       console.error('发布草稿失败:', error)
@@ -231,21 +242,15 @@ export default function useCreatorCenterView() {
   // 复制草稿
   const duplicateDraft = async (id: number) => {
     try {
-      const draft = draftArticles.value.find(d => d.id === id)
-      if (!draft) return
-      
-      // 创建新草稿
-      const newDraft = {
-        title: `${draft.title} - 副本`,
-        abstract: draft.abstract,
-        content: '', // 需要从API获取完整内容
-        status: 0
-      }
-      
-      const response = await articleApi.saveArticle(newDraft)
+      const detail = await articleApi.getArticleById(id)
+      const response = await articleApi.saveArticle({
+        title: `${detail.title} - 副本`,
+        abstract: detail.abstract,
+        content: detail.content,
+        coverImage: detail.coverImage,
+        status: 1
+      })
       ElMessage.success('草稿已复制')
-      
-      // 重新加载草稿列表
       loadDraftArticles()
     } catch (error) {
       console.error('复制草稿失败:', error)
@@ -303,90 +308,73 @@ export default function useCreatorCenterView() {
   }
   
   // 加载已发布文章
-  const loadPublishedArticles = async () => {
+  const loadPublishedArticles = async (reset = false) => {
     try {
-      // 这里应该调用API获取已发布文章
-      // 暂时使用模拟数据
-      const mockArticles: PublishedArticle[] = [
-        {
-          id: 1,
-          title: '如何在家制作完美的提拉米苏',
-          abstract: '提拉米苏是一道经典的意大利甜点，本文将分享专业大厨的独家秘方...',
-          coverImage: 'https://picsum.photos/id/431/300/200',
-          publishTime: '2024-12-06T10:30:00',
-          readCount: 1250,
-          likeCount: 89,
-          commentCount: 23,
-          status: 1
-        },
-        {
-          id: 2,
-          title: '极简主义生活方式探索',
-          abstract: '在这个物质丰富的时代，越来越多的人开始追求极简主义生活方式...',
-          coverImage: 'https://picsum.photos/id/432/300/200',
-          publishTime: '2024-12-05T14:20:00',
-          readCount: 890,
-          likeCount: 67,
-          commentCount: 15,
-          status: 1
-        },
-        {
-          id: 3,
-          title: '2025年旅行计划制定指南',
-          abstract: '新的一年即将到来，是时候开始规划你的旅行计划了...',
-          coverImage: 'https://picsum.photos/id/433/300/200',
-          publishTime: '2024-12-04T09:15:00',
-          readCount: 2100,
-          likeCount: 156,
-          commentCount: 42,
-          status: 1
-        }
-      ]
-      
-      allPublishedArticles.value = mockArticles
+      userStore.initUserState()
+      const uid = userStore.user?.id || 0
+      const currentOffset = reset ? 0 : publishedOffset.value
+      const resp = await articleApi.getList({ offset: currentOffset, limit: publishedLimit })
+      const pubs = resp.filter(a => a.status === 2 || a.status === 3)
+      const list: PublishedArticle[] = pubs.map(a => ({
+        id: a.id,
+        title: a.title,
+        abstract: a.abstract,
+        coverImage: a.coverImage || '',
+        publishTime: a.ctime,
+        readCount: a.readCnt || 0,
+        likeCount: a.likeCnt || 0,
+        collectCount: a.collectCnt || 0,
+        status: a.status
+      }))
+      allPublishedArticles.value = reset ? list : [...allPublishedArticles.value, ...list]
       publishedArticles.value = filteredPublishedArticles.value
+      publishedOffset.value = currentOffset + resp.length
+      hasMorePublished.value = resp.length >= publishedLimit
     } catch (error) {
       console.error('获取已发布文章失败:', error)
       ElMessage.error('获取文章列表失败')
     }
   }
+
+  const loadMorePublishedArticles = async () => {
+    if (loadingPublished.value || !hasMorePublished.value || activeTab.value !== 'published') return
+    loadingPublished.value = true
+    await loadPublishedArticles(false)
+    loadingPublished.value = false
+  }
+
+  const setupPublishedObserver = () => {
+    if (publishedObserver) publishedObserver.disconnect()
+    publishedObserver = new IntersectionObserver((entries) => {
+      if (entries.some(e => e.isIntersecting)) {
+        loadMorePublishedArticles()
+      }
+    })
+    nextTick(() => {
+      if (publishedLoadMoreRef.value) {
+        publishedObserver?.observe(publishedLoadMoreRef.value)
+      }
+    })
+  }
   
   // 加载草稿文章
   const loadDraftArticles = async () => {
     try {
-      // 这里应该调用API获取草稿
-      // 暂时使用模拟数据
-      const mockDrafts: DraftArticle[] = [
-        {
-          id: 4,
-          title: '春季护肤心得分享',
-          abstract: '春天来了，皮肤护理也要跟着季节调整...',
-          coverImage: 'https://picsum.photos/id/434/300/200',
-          updateTime: '2024-12-07T16:45:00',
-          wordCount: 1200,
-          status: 0
-        },
-        {
-          id: 5,
-          title: '无标题草稿',
-          abstract: '',
-          coverImage: '',
-          updateTime: '2024-12-06T20:30:00',
-          wordCount: 350,
-          status: 0
-        },
-        {
-          id: 6,
-          title: '健身新手入门指南',
-          abstract: '对于刚开始健身的朋友来说，制定合适的计划很重要...',
-          coverImage: 'https://picsum.photos/id/435/300/200',
-          updateTime: '2024-12-05T11:20:00',
-          wordCount: 800,
-          status: 0
-        }
-      ]
-      
-      draftArticles.value = mockDrafts
+      userStore.initUserState()
+      const uid = userStore.user?.id || 0
+      const resp = await articleApi.getList({ offset: 0, limit: 100 })
+      const rawDrafts = resp.filter(a => a.status === 1)
+      const details = await Promise.all(rawDrafts.map(a => articleApi.getArticleById(a.id).catch(() => null)))
+      const valid = details.filter(d => d)
+      draftArticles.value = valid.map(d => ({
+        id: d!.id,
+        title: d!.title,
+        abstract: '',
+        coverImage: d!.coverImage || '',
+        updateTime: d!.utime,
+        wordCount: (d!.content || '').length,
+        status: 1
+      }))
     } catch (error) {
       console.error('获取草稿失败:', error)
       ElMessage.error('获取草稿列表失败')
@@ -396,7 +384,12 @@ export default function useCreatorCenterView() {
   // 初始化
   onMounted(() => {
     loadStats()
-    loadPublishedArticles()
+    loadPublishedArticles(true)
+    setupPublishedObserver()
+  })
+
+  onUnmounted(() => {
+    publishedObserver?.disconnect()
   })
   
   return {
@@ -406,6 +399,9 @@ export default function useCreatorCenterView() {
     sortBy,
     publishedArticles,
     draftArticles,
+    hasMorePublished,
+    loadingPublished,
+    publishedLoadMoreRef,
     showWithdrawDialog,
     showDeleteDialog,
     withdrawing,
@@ -424,6 +420,7 @@ export default function useCreatorCenterView() {
     duplicateDraft,
     deleteDraft,
     confirmWithdraw,
-    confirmDelete
+    confirmDelete,
+    unpublishArticle
   }
 }

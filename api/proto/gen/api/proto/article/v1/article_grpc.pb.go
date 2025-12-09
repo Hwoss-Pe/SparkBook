@@ -25,6 +25,7 @@ type ArticleServiceClient interface {
 	Save(ctx context.Context, in *SaveRequest, opts ...grpc.CallOption) (*SaveResponse, error)
 	Publish(ctx context.Context, in *PublishRequest, opts ...grpc.CallOption) (*PublishResponse, error)
 	Withdraw(ctx context.Context, in *WithdrawRequest, opts ...grpc.CallOption) (*WithdrawResponse, error)
+	Unpublish(ctx context.Context, in *UnpublishRequest, opts ...grpc.CallOption) (*UnpublishResponse, error)
 	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
 	GetById(ctx context.Context, in *GetByIdRequest, opts ...grpc.CallOption) (*GetByIdResponse, error)
 	GetPublishedById(ctx context.Context, in *GetPublishedByIdRequest, opts ...grpc.CallOption) (*GetPublishedByIdResponse, error)
@@ -60,6 +61,15 @@ func (c *articleServiceClient) Publish(ctx context.Context, in *PublishRequest, 
 func (c *articleServiceClient) Withdraw(ctx context.Context, in *WithdrawRequest, opts ...grpc.CallOption) (*WithdrawResponse, error) {
 	out := new(WithdrawResponse)
 	err := c.cc.Invoke(ctx, "/article.v1.ArticleService/Withdraw", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *articleServiceClient) Unpublish(ctx context.Context, in *UnpublishRequest, opts ...grpc.CallOption) (*UnpublishResponse, error) {
+	out := new(UnpublishResponse)
+	err := c.cc.Invoke(ctx, "/article.v1.ArticleService/Unpublish", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -109,6 +119,7 @@ type ArticleServiceServer interface {
 	Save(context.Context, *SaveRequest) (*SaveResponse, error)
 	Publish(context.Context, *PublishRequest) (*PublishResponse, error)
 	Withdraw(context.Context, *WithdrawRequest) (*WithdrawResponse, error)
+	Unpublish(context.Context, *UnpublishRequest) (*UnpublishResponse, error)
 	List(context.Context, *ListRequest) (*ListResponse, error)
 	GetById(context.Context, *GetByIdRequest) (*GetByIdResponse, error)
 	GetPublishedById(context.Context, *GetPublishedByIdRequest) (*GetPublishedByIdResponse, error)
@@ -128,6 +139,9 @@ func (UnimplementedArticleServiceServer) Publish(context.Context, *PublishReques
 }
 func (UnimplementedArticleServiceServer) Withdraw(context.Context, *WithdrawRequest) (*WithdrawResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Withdraw not implemented")
+}
+func (UnimplementedArticleServiceServer) Unpublish(context.Context, *UnpublishRequest) (*UnpublishResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Unpublish not implemented")
 }
 func (UnimplementedArticleServiceServer) List(context.Context, *ListRequest) (*ListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
@@ -204,6 +218,24 @@ func _ArticleService_Withdraw_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ArticleServiceServer).Withdraw(ctx, req.(*WithdrawRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ArticleService_Unpublish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnpublishRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ArticleServiceServer).Unpublish(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/article.v1.ArticleService/Unpublish",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ArticleServiceServer).Unpublish(ctx, req.(*UnpublishRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -298,6 +330,10 @@ var ArticleService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Withdraw",
 			Handler:    _ArticleService_Withdraw_Handler,
+		},
+		{
+			MethodName: "Unpublish",
+			Handler:    _ArticleService_Unpublish_Handler,
 		},
 		{
 			MethodName: "List",

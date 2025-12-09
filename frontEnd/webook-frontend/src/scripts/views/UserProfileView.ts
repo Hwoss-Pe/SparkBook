@@ -323,29 +323,24 @@ export default function useUserProfileView() {
   // 加载更多文章
   const loadMoreArticles = async () => {
     try {
-      // 调用API加载更多文章
-      const response = await articleApi.getList({
-        author: userProfile.value.id,
-        offset: userArticles.value.length,
-        limit: 10
-      })
-      
-      // 将API返回的数据转换为我们需要的格式
-      const moreArticles: Article[] = response.articles.map(article => ({
+      const pubs = await articleApi.getRecommendList({ offset: 0, limit: 50 })
+      const filtered = pubs.filter(p => p.author?.id === userProfile.value.id)
+      const slice = filtered.slice(userArticles.value.length, userArticles.value.length + 10)
+      const moreArticles: Article[] = slice.map(article => ({
         id: article.id,
         title: article.title,
         abstract: article.abstract,
-        coverImage: `https://picsum.photos/id/${400 + article.id}/400/300`,
+        coverImage: article.coverImage || `https://picsum.photos/id/${400 + article.id}/400/300`,
         createTime: article.ctime,
-        readCount: Math.floor(Math.random() * 20000),
-        likeCount: Math.floor(Math.random() * 5000),
-        commentCount: Math.floor(Math.random() * 500)
+        readCount: article.readCnt || 0,
+        likeCount: article.likeCnt || 0,
+        commentCount: 0
       }))
       
       userArticles.value = [...userArticles.value, ...moreArticles]
       
       // 如果返回的文章数量小于请求的数量，说明没有更多文章了
-      if (response.articles.length < 10) {
+      if (moreArticles.length < 10) {
         hasMoreArticles.value = false
       }
     } catch (error) {
@@ -453,27 +448,19 @@ export default function useUserProfileView() {
   // 获取用户文章
   const fetchUserArticles = async (userId: number) => {
     try {
-      // 调用API获取用户文章
-      const response = await articleApi.getList({
-        author: userId,
-        offset: 0,
-        limit: 10
-      })
-      
-      // 将API返回的数据转换为我们需要的格式
-      userArticles.value = response.articles.map(article => ({
+      const pubs = await articleApi.getRecommendList({ offset: 0, limit: 100 })
+      const filtered = pubs.filter(p => p.author?.id === userId)
+      userArticles.value = filtered.slice(0, 10).map(article => ({
         id: article.id,
         title: article.title,
         abstract: article.abstract,
-        coverImage: `https://picsum.photos/id/${400 + article.id}/400/300`, // 实际项目中应该从文章信息中获取
+        coverImage: article.coverImage || `https://picsum.photos/id/${400 + article.id}/400/300`,
         createTime: article.ctime,
-        readCount: Math.floor(Math.random() * 20000), // 实际项目中应该从API获取
-        likeCount: Math.floor(Math.random() * 5000),
-        commentCount: Math.floor(Math.random() * 500)
+        readCount: article.readCnt || 0,
+        likeCount: article.likeCnt || 0,
+        commentCount: 0
       }))
-      
-      // 如果返回的文章数量小于请求的数量，说明没有更多文章了
-      if (response.articles.length < 10) {
+      if (userArticles.value.length < 10) {
         hasMoreArticles.value = false
       }
     } catch (error) {

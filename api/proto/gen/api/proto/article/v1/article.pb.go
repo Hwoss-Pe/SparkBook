@@ -454,6 +454,94 @@ func (*WithdrawResponse) Descriptor() ([]byte, []int) {
 	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{7}
 }
 
+type UnpublishRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Uid           int64                  `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	Id            int64                  `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnpublishRequest) Reset() {
+	*x = UnpublishRequest{}
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnpublishRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnpublishRequest) ProtoMessage() {}
+
+func (x *UnpublishRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnpublishRequest.ProtoReflect.Descriptor instead.
+func (*UnpublishRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *UnpublishRequest) GetUid() int64 {
+	if x != nil {
+		return x.Uid
+	}
+	return 0
+}
+
+func (x *UnpublishRequest) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+type UnpublishResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnpublishResponse) Reset() {
+	*x = UnpublishResponse{}
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnpublishResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnpublishResponse) ProtoMessage() {}
+
+func (x *UnpublishResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnpublishResponse.ProtoReflect.Descriptor instead.
+func (*UnpublishResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{9}
+}
+
 type GetByIdRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -463,7 +551,7 @@ type GetByIdRequest struct {
 
 func (x *GetByIdRequest) Reset() {
 	*x = GetByIdRequest{}
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[8]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -475,7 +563,7 @@ func (x *GetByIdRequest) String() string {
 func (*GetByIdRequest) ProtoMessage() {}
 
 func (x *GetByIdRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[8]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -488,7 +576,7 @@ func (x *GetByIdRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetByIdRequest.ProtoReflect.Descriptor instead.
 func (*GetByIdRequest) Descriptor() ([]byte, []int) {
-	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{8}
+	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetByIdRequest) GetId() int64 {
@@ -507,7 +595,7 @@ type GetByIdResponse struct {
 
 func (x *GetByIdResponse) Reset() {
 	*x = GetByIdResponse{}
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[9]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -519,7 +607,7 @@ func (x *GetByIdResponse) String() string {
 func (*GetByIdResponse) ProtoMessage() {}
 
 func (x *GetByIdResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[9]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -532,7 +620,7 @@ func (x *GetByIdResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetByIdResponse.ProtoReflect.Descriptor instead.
 func (*GetByIdResponse) Descriptor() ([]byte, []int) {
-	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{9}
+	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetByIdResponse) GetArticle() *Article {
@@ -552,7 +640,7 @@ type GetPublishedByIdRequest struct {
 
 func (x *GetPublishedByIdRequest) Reset() {
 	*x = GetPublishedByIdRequest{}
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[10]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -564,7 +652,7 @@ func (x *GetPublishedByIdRequest) String() string {
 func (*GetPublishedByIdRequest) ProtoMessage() {}
 
 func (x *GetPublishedByIdRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[10]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -577,7 +665,7 @@ func (x *GetPublishedByIdRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPublishedByIdRequest.ProtoReflect.Descriptor instead.
 func (*GetPublishedByIdRequest) Descriptor() ([]byte, []int) {
-	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{10}
+	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetPublishedByIdRequest) GetId() int64 {
@@ -603,7 +691,7 @@ type GetPublishedByIdResponse struct {
 
 func (x *GetPublishedByIdResponse) Reset() {
 	*x = GetPublishedByIdResponse{}
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[11]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -615,7 +703,7 @@ func (x *GetPublishedByIdResponse) String() string {
 func (*GetPublishedByIdResponse) ProtoMessage() {}
 
 func (x *GetPublishedByIdResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[11]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -628,7 +716,7 @@ func (x *GetPublishedByIdResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPublishedByIdResponse.ProtoReflect.Descriptor instead.
 func (*GetPublishedByIdResponse) Descriptor() ([]byte, []int) {
-	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{11}
+	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *GetPublishedByIdResponse) GetArticle() *Article {
@@ -649,7 +737,7 @@ type ListPubRequest struct {
 
 func (x *ListPubRequest) Reset() {
 	*x = ListPubRequest{}
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[12]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -661,7 +749,7 @@ func (x *ListPubRequest) String() string {
 func (*ListPubRequest) ProtoMessage() {}
 
 func (x *ListPubRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[12]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -674,7 +762,7 @@ func (x *ListPubRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPubRequest.ProtoReflect.Descriptor instead.
 func (*ListPubRequest) Descriptor() ([]byte, []int) {
-	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{12}
+	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ListPubRequest) GetStartTime() *timestamppb.Timestamp {
@@ -707,7 +795,7 @@ type ListPubResponse struct {
 
 func (x *ListPubResponse) Reset() {
 	*x = ListPubResponse{}
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[13]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -719,7 +807,7 @@ func (x *ListPubResponse) String() string {
 func (*ListPubResponse) ProtoMessage() {}
 
 func (x *ListPubResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[13]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -732,7 +820,7 @@ func (x *ListPubResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPubResponse.ProtoReflect.Descriptor instead.
 func (*ListPubResponse) Descriptor() ([]byte, []int) {
-	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{13}
+	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ListPubResponse) GetArticles() []*Article {
@@ -753,7 +841,7 @@ type ListRequest struct {
 
 func (x *ListRequest) Reset() {
 	*x = ListRequest{}
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[14]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -765,7 +853,7 @@ func (x *ListRequest) String() string {
 func (*ListRequest) ProtoMessage() {}
 
 func (x *ListRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[14]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -778,7 +866,7 @@ func (x *ListRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRequest.ProtoReflect.Descriptor instead.
 func (*ListRequest) Descriptor() ([]byte, []int) {
-	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{14}
+	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ListRequest) GetAuthor() int64 {
@@ -811,7 +899,7 @@ type ListResponse struct {
 
 func (x *ListResponse) Reset() {
 	*x = ListResponse{}
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[15]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -823,7 +911,7 @@ func (x *ListResponse) String() string {
 func (*ListResponse) ProtoMessage() {}
 
 func (x *ListResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[15]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -836,7 +924,7 @@ func (x *ListResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListResponse.ProtoReflect.Descriptor instead.
 func (*ListResponse) Descriptor() ([]byte, []int) {
-	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{15}
+	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ListResponse) GetArticles() []*Article {
@@ -855,7 +943,7 @@ type PublishV1Request struct {
 
 func (x *PublishV1Request) Reset() {
 	*x = PublishV1Request{}
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[16]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -867,7 +955,7 @@ func (x *PublishV1Request) String() string {
 func (*PublishV1Request) ProtoMessage() {}
 
 func (x *PublishV1Request) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[16]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -880,7 +968,7 @@ func (x *PublishV1Request) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishV1Request.ProtoReflect.Descriptor instead.
 func (*PublishV1Request) Descriptor() ([]byte, []int) {
-	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{16}
+	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *PublishV1Request) GetArticle() *Article {
@@ -899,7 +987,7 @@ type PublishV1Response struct {
 
 func (x *PublishV1Response) Reset() {
 	*x = PublishV1Response{}
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[17]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -911,7 +999,7 @@ func (x *PublishV1Response) String() string {
 func (*PublishV1Response) ProtoMessage() {}
 
 func (x *PublishV1Response) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_article_v1_article_proto_msgTypes[17]
+	mi := &file_api_proto_article_v1_article_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -924,7 +1012,7 @@ func (x *PublishV1Response) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishV1Response.ProtoReflect.Descriptor instead.
 func (*PublishV1Response) Descriptor() ([]byte, []int) {
-	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{17}
+	return file_api_proto_article_v1_article_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *PublishV1Response) GetId() int64 {
@@ -966,7 +1054,11 @@ const file_api_proto_article_v1_article_proto_rawDesc = "" +
 	"\x0fWithdrawRequest\x12\x10\n" +
 	"\x03uid\x18\x01 \x01(\x03R\x03uid\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\x03R\x02id\"\x12\n" +
-	"\x10WithdrawResponse\" \n" +
+	"\x10WithdrawResponse\"4\n" +
+	"\x10UnpublishRequest\x12\x10\n" +
+	"\x03uid\x18\x01 \x01(\x03R\x03uid\x12\x0e\n" +
+	"\x02id\x18\x02 \x01(\x03R\x02id\"\x13\n" +
+	"\x11UnpublishResponse\" \n" +
 	"\x0eGetByIdRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\"@\n" +
 	"\x0fGetByIdResponse\x12-\n" +
@@ -992,11 +1084,12 @@ const file_api_proto_article_v1_article_proto_rawDesc = "" +
 	"\x10PublishV1Request\x12-\n" +
 	"\aarticle\x18\x01 \x01(\v2\x13.article.v1.ArticleR\aarticle\"#\n" +
 	"\x11PublishV1Response\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id2\xf8\x03\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id2\xc2\x04\n" +
 	"\x0eArticleService\x129\n" +
 	"\x04Save\x12\x17.article.v1.SaveRequest\x1a\x18.article.v1.SaveResponse\x12B\n" +
 	"\aPublish\x12\x1a.article.v1.PublishRequest\x1a\x1b.article.v1.PublishResponse\x12E\n" +
-	"\bWithdraw\x12\x1b.article.v1.WithdrawRequest\x1a\x1c.article.v1.WithdrawResponse\x129\n" +
+	"\bWithdraw\x12\x1b.article.v1.WithdrawRequest\x1a\x1c.article.v1.WithdrawResponse\x12H\n" +
+	"\tUnpublish\x12\x1c.article.v1.UnpublishRequest\x1a\x1d.article.v1.UnpublishResponse\x129\n" +
 	"\x04List\x12\x17.article.v1.ListRequest\x1a\x18.article.v1.ListResponse\x12B\n" +
 	"\aGetById\x12\x1a.article.v1.GetByIdRequest\x1a\x1b.article.v1.GetByIdResponse\x12]\n" +
 	"\x10GetPublishedById\x12#.article.v1.GetPublishedByIdRequest\x1a$.article.v1.GetPublishedByIdResponse\x12B\n" +
@@ -1017,7 +1110,7 @@ func file_api_proto_article_v1_article_proto_rawDescGZIP() []byte {
 	return file_api_proto_article_v1_article_proto_rawDescData
 }
 
-var file_api_proto_article_v1_article_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_api_proto_article_v1_article_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_api_proto_article_v1_article_proto_goTypes = []any{
 	(*Article)(nil),                  // 0: article.v1.Article
 	(*Author)(nil),                   // 1: article.v1.Author
@@ -1027,46 +1120,50 @@ var file_api_proto_article_v1_article_proto_goTypes = []any{
 	(*PublishResponse)(nil),          // 5: article.v1.PublishResponse
 	(*WithdrawRequest)(nil),          // 6: article.v1.WithdrawRequest
 	(*WithdrawResponse)(nil),         // 7: article.v1.WithdrawResponse
-	(*GetByIdRequest)(nil),           // 8: article.v1.GetByIdRequest
-	(*GetByIdResponse)(nil),          // 9: article.v1.GetByIdResponse
-	(*GetPublishedByIdRequest)(nil),  // 10: article.v1.GetPublishedByIdRequest
-	(*GetPublishedByIdResponse)(nil), // 11: article.v1.GetPublishedByIdResponse
-	(*ListPubRequest)(nil),           // 12: article.v1.ListPubRequest
-	(*ListPubResponse)(nil),          // 13: article.v1.ListPubResponse
-	(*ListRequest)(nil),              // 14: article.v1.ListRequest
-	(*ListResponse)(nil),             // 15: article.v1.ListResponse
-	(*PublishV1Request)(nil),         // 16: article.v1.PublishV1Request
-	(*PublishV1Response)(nil),        // 17: article.v1.PublishV1Response
-	(*timestamppb.Timestamp)(nil),    // 18: google.protobuf.Timestamp
+	(*UnpublishRequest)(nil),         // 8: article.v1.UnpublishRequest
+	(*UnpublishResponse)(nil),        // 9: article.v1.UnpublishResponse
+	(*GetByIdRequest)(nil),           // 10: article.v1.GetByIdRequest
+	(*GetByIdResponse)(nil),          // 11: article.v1.GetByIdResponse
+	(*GetPublishedByIdRequest)(nil),  // 12: article.v1.GetPublishedByIdRequest
+	(*GetPublishedByIdResponse)(nil), // 13: article.v1.GetPublishedByIdResponse
+	(*ListPubRequest)(nil),           // 14: article.v1.ListPubRequest
+	(*ListPubResponse)(nil),          // 15: article.v1.ListPubResponse
+	(*ListRequest)(nil),              // 16: article.v1.ListRequest
+	(*ListResponse)(nil),             // 17: article.v1.ListResponse
+	(*PublishV1Request)(nil),         // 18: article.v1.PublishV1Request
+	(*PublishV1Response)(nil),        // 19: article.v1.PublishV1Response
+	(*timestamppb.Timestamp)(nil),    // 20: google.protobuf.Timestamp
 }
 var file_api_proto_article_v1_article_proto_depIdxs = []int32{
 	1,  // 0: article.v1.Article.author:type_name -> article.v1.Author
-	18, // 1: article.v1.Article.ctime:type_name -> google.protobuf.Timestamp
-	18, // 2: article.v1.Article.utime:type_name -> google.protobuf.Timestamp
+	20, // 1: article.v1.Article.ctime:type_name -> google.protobuf.Timestamp
+	20, // 2: article.v1.Article.utime:type_name -> google.protobuf.Timestamp
 	0,  // 3: article.v1.SaveRequest.article:type_name -> article.v1.Article
 	0,  // 4: article.v1.PublishRequest.article:type_name -> article.v1.Article
 	0,  // 5: article.v1.GetByIdResponse.article:type_name -> article.v1.Article
 	0,  // 6: article.v1.GetPublishedByIdResponse.article:type_name -> article.v1.Article
-	18, // 7: article.v1.ListPubRequest.start_time:type_name -> google.protobuf.Timestamp
+	20, // 7: article.v1.ListPubRequest.start_time:type_name -> google.protobuf.Timestamp
 	0,  // 8: article.v1.ListPubResponse.articles:type_name -> article.v1.Article
 	0,  // 9: article.v1.ListResponse.articles:type_name -> article.v1.Article
 	0,  // 10: article.v1.PublishV1Request.article:type_name -> article.v1.Article
 	2,  // 11: article.v1.ArticleService.Save:input_type -> article.v1.SaveRequest
 	4,  // 12: article.v1.ArticleService.Publish:input_type -> article.v1.PublishRequest
 	6,  // 13: article.v1.ArticleService.Withdraw:input_type -> article.v1.WithdrawRequest
-	14, // 14: article.v1.ArticleService.List:input_type -> article.v1.ListRequest
-	8,  // 15: article.v1.ArticleService.GetById:input_type -> article.v1.GetByIdRequest
-	10, // 16: article.v1.ArticleService.GetPublishedById:input_type -> article.v1.GetPublishedByIdRequest
-	12, // 17: article.v1.ArticleService.ListPub:input_type -> article.v1.ListPubRequest
-	3,  // 18: article.v1.ArticleService.Save:output_type -> article.v1.SaveResponse
-	5,  // 19: article.v1.ArticleService.Publish:output_type -> article.v1.PublishResponse
-	7,  // 20: article.v1.ArticleService.Withdraw:output_type -> article.v1.WithdrawResponse
-	15, // 21: article.v1.ArticleService.List:output_type -> article.v1.ListResponse
-	9,  // 22: article.v1.ArticleService.GetById:output_type -> article.v1.GetByIdResponse
-	11, // 23: article.v1.ArticleService.GetPublishedById:output_type -> article.v1.GetPublishedByIdResponse
-	13, // 24: article.v1.ArticleService.ListPub:output_type -> article.v1.ListPubResponse
-	18, // [18:25] is the sub-list for method output_type
-	11, // [11:18] is the sub-list for method input_type
+	8,  // 14: article.v1.ArticleService.Unpublish:input_type -> article.v1.UnpublishRequest
+	16, // 15: article.v1.ArticleService.List:input_type -> article.v1.ListRequest
+	10, // 16: article.v1.ArticleService.GetById:input_type -> article.v1.GetByIdRequest
+	12, // 17: article.v1.ArticleService.GetPublishedById:input_type -> article.v1.GetPublishedByIdRequest
+	14, // 18: article.v1.ArticleService.ListPub:input_type -> article.v1.ListPubRequest
+	3,  // 19: article.v1.ArticleService.Save:output_type -> article.v1.SaveResponse
+	5,  // 20: article.v1.ArticleService.Publish:output_type -> article.v1.PublishResponse
+	7,  // 21: article.v1.ArticleService.Withdraw:output_type -> article.v1.WithdrawResponse
+	9,  // 22: article.v1.ArticleService.Unpublish:output_type -> article.v1.UnpublishResponse
+	17, // 23: article.v1.ArticleService.List:output_type -> article.v1.ListResponse
+	11, // 24: article.v1.ArticleService.GetById:output_type -> article.v1.GetByIdResponse
+	13, // 25: article.v1.ArticleService.GetPublishedById:output_type -> article.v1.GetPublishedByIdResponse
+	15, // 26: article.v1.ArticleService.ListPub:output_type -> article.v1.ListPubResponse
+	19, // [19:27] is the sub-list for method output_type
+	11, // [11:19] is the sub-list for method input_type
 	11, // [11:11] is the sub-list for extension type_name
 	11, // [11:11] is the sub-list for extension extendee
 	0,  // [0:11] is the sub-list for field type_name
@@ -1083,7 +1180,7 @@ func file_api_proto_article_v1_article_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_article_v1_article_proto_rawDesc), len(file_api_proto_article_v1_article_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

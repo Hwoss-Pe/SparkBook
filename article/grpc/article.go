@@ -47,6 +47,11 @@ func (a *ArticleServiceServer) Withdraw(ctx context.Context, request *articlev1.
 	return &articlev1.WithdrawResponse{}, err
 }
 
+func (a *ArticleServiceServer) Unpublish(ctx context.Context, request *articlev1.UnpublishRequest) (*articlev1.UnpublishResponse, error) {
+	err := a.service.Unpublish(ctx, request.GetUid(), request.GetId())
+	return &articlev1.UnpublishResponse{}, err
+}
+
 func (a *ArticleServiceServer) List(ctx context.Context, request *articlev1.ListRequest) (*articlev1.ListResponse, error) {
 	articleList, err := a.service.List(ctx, request.GetAuthor(), int(request.GetOffset()), int(request.GetLimit()))
 	if err != nil {

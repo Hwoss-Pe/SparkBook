@@ -18,6 +18,9 @@ export interface Article {
   status: number
   ctime: string
   utime: string
+  readCnt?: number
+  likeCnt?: number
+  collectCnt?: number
 }
 
 // 推荐文章（首页使用）
@@ -45,9 +48,8 @@ export interface ArticleDetail extends Article {
   collected: boolean
 }
 
-export interface ListResponse {
-  articles: Article[]
-}
+// 列表接口返回的是文章数组
+export type ListResponse = Article[]
 
 export interface ListRequest {
   offset: number
@@ -62,8 +64,8 @@ export interface PublishedListRequest {
 // 文章相关API
 export const articleApi = {
   // 获取文章列表（作者视角）
-  getList: (params: ListRequest & { author: number }) => {
-    return get<ListResponse>('/articles/list', params)
+  getList: (params: ListRequest) => {
+    return post<ListResponse>('/articles/list', params)
   },
   
   // 获取推荐文章列表（首页使用，按时间排序）
@@ -94,6 +96,10 @@ export const articleApi = {
   // 撤回文章
   withdrawArticle: (id: number, uid: number) => {
     return post('/articles/withdraw', { id, uid })
+  },
+  
+  unpublishArticle: (id: number, uid: number) => {
+    return post('/articles/unpublish', { id, uid })
   },
   
   // 点赞
