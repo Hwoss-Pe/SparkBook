@@ -242,6 +242,8 @@ export default function useCreateArticleView() {
           title: d!.title,
           updateTime: d!.utime
         }))
+        .sort((a, b) => new Date(b.updateTime).getTime() - new Date(a.updateTime).getTime())
+        .slice(0, 5)
       draftList.value = drafts
     } catch (error) {
       console.error('获取草稿列表失败:', error)
@@ -262,6 +264,55 @@ export default function useCreateArticleView() {
           updateTime: '2024-11-20T16:40:00'
         }
       ]
+    }
+  }
+
+  // 删除草稿
+  const onDeleteDraft = async (id: number) => {
+    try {
+      userStore.initUserState()
+      const uid = userStore.user?.id ?? 0
+      if (!uid) {
+        ElMessage.error('请先登录再操作')
+        return
+      }
+      await articleApi.deleteDraft(id, uid)
+      ElMessage.success('草稿已删除')
+      // 如果当前编辑的草稿被删除，清空表单
+      if (articleForm.value.id === id) {
+        articleForm.value = {
+          id: 0,
+          title: '',
+          abstract: '',
+          content: '',
+          coverImage: '',
+          visibility: 1,
+          tags: []
+        }
+      }
+      loadDraftList()
+    } catch (error) {
+      console.error('删除草稿失败:', error)
+      ElMessage.error('删除草稿失败，请稍后重试')
+    }
+  }
+
+  // 草稿下拉菜单命令
+  const onDraftCommand = (payload: any) => {
+    try {
+      if (!payload || typeof payload !== 'object') return
+      const { type, id } = payload as { type: 'edit' | 'delete'; id: number }
+      if (type === 'edit') {
+        const d = draftList.value.find(x => x.id === id)
+        if (d) {
+          // 复用现有的加载草稿逻辑
+          loadDraft(d)
+        }
+      } else if (type === 'delete') {
+        onDeleteDraft(id)
+      }
+    } catch (e) {
+      console.error('处理草稿菜单命令失败:', e)
     }
   }
 
@@ -361,6 +412,8 @@ export default function useCreateArticleView() {
     publishArticle,
     confirmPublish,
     loadDraft,
+    onDeleteDraft,
+    onDraftCommand,
     formatDate
   }
 }

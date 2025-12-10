@@ -27,6 +27,8 @@ type ArticleRepository interface {
 
 	GetPublishedById(ctx context.Context, id int64) (domain.Article, error)
 	ListPub(ctx context.Context, utime time.Time, offset int, limit int) ([]domain.Article, error)
+	// DeleteDraft 仅删除草稿（未发布）文章
+	DeleteDraft(ctx context.Context, uid, id int64) error
 }
 
 type CachedArticleRepository struct {
@@ -216,6 +218,19 @@ func (c *CachedArticleRepository) ListPub(ctx context.Context, utime time.Time, 
 	return slice.Map[dao.PublishedArticle, domain.Article](articles, func(idx int, src dao.PublishedArticle) domain.Article {
 		return c.ToDomain(dao.Article(src))
 	}), nil
+}
+
+func (c *CachedArticleRepository) DeleteDraft(ctx context.Context, uid, id int64) error {
+	err := c.dao.DeleteDraft(ctx, uid, id)
+	if err != nil {
+		return err
+	}
+	// 删除作者第一页缓存
+	if derr := c.cache.DelFirstPage(ctx, uid); derr != nil {
+		c.l.Error("删除缓存失败",
+			logger.Int64("author", uid), logger.Error(derr))
+	}
+	return nil
 }
 
 func (c *CachedArticleRepository) ToDomain(art dao.Article) domain.Article {

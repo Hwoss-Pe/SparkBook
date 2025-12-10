@@ -4,6 +4,7 @@ import (
 	"Webook/article/domain"
 	"Webook/article/events"
 	"Webook/article/repository"
+	"Webook/article/repository/dao"
 	"Webook/pkg/logger"
 	"context"
 	"time"
@@ -71,6 +72,22 @@ func (a *articleService) Withdraw(ctx context.Context, uid, id int64) error {
 }
 
 func (a *articleService) Unpublish(ctx context.Context, uid, id int64) error {
+	art, err := a.repo.GetById(ctx, id)
+	if err != nil {
+		return err
+	}
+	if art.Author.Id != uid {
+		return dao.ErrPossibleIncorrectAuthor
+	}
+	if art.Status == domain.ArticleStatusUnpublished {
+		err = a.repo.DeleteDraft(ctx, uid, id)
+		if err == nil {
+			go func() {
+				_, _ = a.repo.List(ctx, uid, 0, 100)
+			}()
+		}
+		return err
+	}
 	return a.repo.SyncStatus(ctx, uid, id, domain.ArticleStatusUnpublished)
 }
 

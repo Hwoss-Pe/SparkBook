@@ -111,6 +111,10 @@ export const articleApi = {
     return post('/articles/unpublish', { id, uid })
   },
   
+  deleteDraft: (id: number, uid: number) => {
+    return post('/articles/unpublish', { id, uid })
+  },
+  
   // 点赞
   like: (id: number) => {
     return post('/articles/pub/like', { id, like: true })

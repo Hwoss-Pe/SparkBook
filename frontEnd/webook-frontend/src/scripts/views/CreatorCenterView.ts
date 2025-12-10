@@ -270,8 +270,9 @@ export default function useCreatorCenterView() {
     
     deleting.value = true
     try {
-      // 这里应该调用删除API
-      // await articleApi.deleteArticle(currentArticleId.value)
+      userStore.initUserState()
+      const uid = userStore.user?.id || 0
+      await articleApi.deleteDraft(currentArticleId.value, uid)
       
       // 从草稿列表中移除
       draftArticles.value = draftArticles.value.filter(

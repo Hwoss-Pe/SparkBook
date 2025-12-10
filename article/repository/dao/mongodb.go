@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"Webook/article/domain"
 	"errors"
 	"github.com/bwmarrin/snowflake"
 	"go.mongodb.org/mongo-driver/bson"
@@ -137,6 +138,18 @@ func (m *MongoDBDAO) SyncStatus(ctx context.Context, author, id int64, status ui
 		return err
 	}
 	if res.ModifiedCount != 1 {
+		return ErrPossibleIncorrectAuthor
+	}
+	return nil
+}
+
+func (m *MongoDBDAO) DeleteDraft(ctx context.Context, author, id int64) error {
+	filter := bson.D{bson.E{Key: "id", Value: id}, bson.E{Key: "author_id", Value: author}, bson.E{Key: "status", Value: domain.ArticleStatusUnpublished.ToUint8()}}
+	res, err := m.col.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if res.DeletedCount != 1 {
 		return ErrPossibleIncorrectAuthor
 	}
 	return nil

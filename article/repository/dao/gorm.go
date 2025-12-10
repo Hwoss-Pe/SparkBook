@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"Webook/article/domain"
 	"context"
 	"errors"
 	"gorm.io/gorm"
@@ -149,6 +150,17 @@ func (G *GORMArticleDAO) ListPubByUtime(ctx context.Context, utime time.Time, of
 		Where("utime < ? ", utime.UnixMilli()).
 		Limit(limit).Offset(offset).Find(&res).Error
 	return res, err
+}
+
+func (G *GORMArticleDAO) DeleteDraft(ctx context.Context, author, id int64) error {
+	res := G.db.WithContext(ctx).Where("id = ? AND author_id = ? AND status = ?", id, author, domain.ArticleStatusUnpublished.ToUint8()).Delete(&Article{})
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected != 1 {
+		return ErrPossibleIncorrectAuthor
+	}
+	return nil
 }
 
 func NewGORMArticleDAO(db *gorm.DB) ArticleDAO {

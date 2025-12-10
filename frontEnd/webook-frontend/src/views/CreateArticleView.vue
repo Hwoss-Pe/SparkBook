@@ -101,10 +101,11 @@
                   v-for="draft in draftList"
                   :key="draft.id"
                   class="draft-item"
-                  @click="loadDraft(draft)"
                 >
-                  <div class="draft-title">{{ draft.title || '无标题草稿' }}</div>
+                  <div class="draft-title" @click="loadDraft(draft)">{{ draft.title || '无标题草稿' }}</div>
                   <div class="draft-time">{{ formatDate(draft.updateTime) }}</div>
+                  <div class="draft-actions">
+                  </div>
                 </div>
               </div>
               <div v-else class="empty-draft">
@@ -137,7 +138,7 @@
 
 <script setup lang="ts">
 import MainLayout from '@/components/layout/MainLayout.vue'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, More } from '@element-plus/icons-vue'
 import useCreateArticleView from '@/scripts/views/CreateArticleView'
 
 const {
@@ -157,6 +158,7 @@ const {
   publishArticle,
   confirmPublish,
   loadDraft,
+  onDeleteDraft,
   formatDate
 } = useCreateArticleView()
 </script>
