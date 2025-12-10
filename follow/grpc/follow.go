@@ -4,8 +4,10 @@ import (
 	followv1 "Webook/api/proto/gen/api/proto/follow/v1"
 	"Webook/follow/domain"
 	"Webook/follow/service"
+	"errors"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"gorm.io/gorm"
 )
 
 type FollowServiceServer struct {
@@ -50,6 +52,10 @@ func (f *FollowServiceServer) GetFollowee(ctx context.Context, request *followv1
 func (f *FollowServiceServer) FollowInfo(ctx context.Context, request *followv1.FollowInfoRequest) (*followv1.FollowInfoResponse, error) {
 	info, err := f.svc.FollowInfo(ctx, request.Follower, request.Followee)
 	if err != nil {
+		// 未关注场景：查询不到记录
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &followv1.FollowInfoResponse{FollowRelation: nil}, nil
+		}
 		return nil, err
 	}
 	return &followv1.FollowInfoResponse{

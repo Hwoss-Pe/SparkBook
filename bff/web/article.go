@@ -60,6 +60,10 @@ func (a *ArticleHandler) RegisterRoute(s *gin.Engine) {
 	pub.GET("/:id", ginx.WrapClaims(a.PubDetail))
 	// 推荐文章列表（首页使用，匿名可访问）
 	pub.POST("/list", ginx.WrapReq[ListPubReq](a.ListPub))
+	// 作者的已发布文章列表（匿名可访问）
+	pub.GET("/author/:id/list", ginx.WrapReq[AuthorPubListReq](a.ListPubByAuthor))
+	// 获取用户收藏的文章列表（需要登录）
+	pub.GET("/collected/list", ginx.WrapClaimsAndReq[CollectedListReq](a.ListCollected))
 	pub.POST("/like", ginx.WrapClaimsAndReq[LikeReq](a.Like))
 	pub.POST("/cancelLike", ginx.WrapClaimsAndReq[LikeReq](a.CancelLike))
 	pub.POST("/collect", ginx.WrapClaimsAndReq[CollectReq](a.Collect))
@@ -208,6 +212,18 @@ type ListReq struct {
 type ListPubReq struct {
 	Offset int32 `json:"offset"`
 	Limit  int32 `json:"limit"`
+}
+
+// AuthorPubListReq 作者已发布文章列表请求
+type AuthorPubListReq struct {
+	Offset int32 `json:"offset" form:"offset"`
+	Limit  int32 `json:"limit" form:"limit"`
+}
+
+// CollectedListReq 用户收藏文章列表请求
+type CollectedListReq struct {
+	Offset int32 `json:"offset" form:"offset"`
+	Limit  int32 `json:"limit" form:"limit"`
 }
 
 func (a *ArticleHandler) List(ctx *gin.Context, req ListReq, usr ginx.UserClaims) (ginx.Result, error) {
@@ -557,6 +573,185 @@ func (a *ArticleHandler) ListPub(ctx *gin.Context, req ListPubReq) (ginx.Result,
 
 	return ginx.Result{
 		Data: result,
+	}, nil
+}
+
+// ListPubByAuthor 获取某作者的已发布文章列表
+func (a *ArticleHandler) ListPubByAuthor(ctx *gin.Context, req AuthorPubListReq) (ginx.Result, error) {
+	if req.Limit > 100 || req.Limit <= 0 {
+		req.Limit = 10
+	}
+	idstr := ctx.Param("id")
+	id, err := strconv.ParseInt(idstr, 10, 64)
+	if err != nil {
+		return ginx.Result{Code: 4, Msg: "参数错误"}, nil
+	}
+
+	authorOffset := req.Offset
+	collected := make([]*articlev1.Article, 0, req.Limit)
+	cursor := int32(0)
+	const pageSize int32 = 100
+	for int32(len(collected)) < req.Limit {
+		pubResp, er := a.svc.ListPub(ctx, &articlev1.ListPubRequest{StartTime: timestamppb.Now(), Offset: cursor, Limit: pageSize})
+		if er != nil {
+			a.l.Error("获取推荐文章列表失败", logger.Error(er))
+			return ginx.Result{Code: 5, Msg: "系统错误"}, er
+		}
+		arts := pubResp.GetArticles()
+		if len(arts) == 0 {
+			break
+		}
+		for _, art := range arts {
+			if art.Author != nil && art.Author.Id == id && art.Status == 2 {
+				if authorOffset > 0 {
+					authorOffset--
+					continue
+				}
+				collected = append(collected, art)
+				if int32(len(collected)) >= req.Limit {
+					break
+				}
+			}
+		}
+		if len(arts) < int(pageSize) || int32(len(collected)) >= req.Limit {
+			break
+		}
+		cursor += pageSize
+	}
+
+	if len(collected) == 0 {
+		return ginx.Result{Data: []ArticlePubVo{}}, nil
+	}
+
+	ids := make([]int64, 0, len(collected))
+	for _, art := range collected {
+		ids = append(ids, art.Id)
+	}
+
+	intrMap := make(map[int64]*intrv1.Interactive)
+	intrResp, er := a.intrSvc.GetByIds(ctx, &intrv1.GetByIdsRequest{Biz: a.biz, Ids: ids})
+	if er == nil && intrResp != nil {
+		intrMap = intrResp.GetIntrs()
+	}
+
+	type userIntr struct{ liked, collected bool }
+	userMap := make(map[int64]userIntr, len(ids))
+	var uid int64
+	if rawUser, ok := ctx.Get("user"); ok {
+		if claims, ok2 := rawUser.(ginx.UserClaims); ok2 {
+			uid = claims.Id
+		}
+	}
+	if uid > 0 {
+		for _, aid := range ids {
+			r, e := a.intrSvc.Get(ctx, &intrv1.GetRequest{Biz: a.biz, BizId: aid, Uid: uid})
+			if e != nil || r == nil || r.Intr == nil {
+				continue
+			}
+			userMap[aid] = userIntr{liked: r.Intr.Liked, collected: r.Intr.Collected}
+		}
+	}
+
+	result := make([]ArticlePubVo, 0, len(collected))
+	for _, art := range collected {
+		vo := ArticlePubVo{
+			Id:         art.Id,
+			Title:      art.Title,
+			Abstract:   art.Abstract,
+			CoverImage: art.CoverImage,
+			Ctime:      art.Ctime.AsTime().Format(time.DateTime),
+			Utime:      art.Utime.AsTime().Format(time.DateTime),
+		}
+		if art.Author != nil {
+			vo.Author = AuthorVo{Id: art.Author.Id, Name: art.Author.Name, Avatar: art.Author.Avatar}
+		}
+		if intr, ok := intrMap[art.Id]; ok && intr != nil {
+			vo.ReadCnt = intr.ReadCnt
+			vo.LikeCnt = intr.LikeCnt
+			vo.CollectCnt = intr.CollectCnt
+		}
+		if u, ok := userMap[art.Id]; ok {
+			vo.Liked = u.liked
+			vo.Collected = u.collected
+		}
+		result = append(result, vo)
+	}
+
+	return ginx.Result{Data: result}, nil
+}
+
+// ListCollected 获取用户收藏的文章列表
+func (a *ArticleHandler) ListCollected(ctx *gin.Context, req CollectedListReq, uc ginx.UserClaims) (ginx.Result, error) {
+	if req.Limit > 100 {
+		req.Limit = 100
+	}
+
+	// 获取用户收藏的文章ID列表
+	collectedResp, err := a.intrSvc.GetCollectedBizIds(ctx, &intrv1.GetCollectedBizIdsRequest{
+		Biz:    a.biz,
+		Uid:    uc.Id,
+		Offset: req.Offset,
+		Limit:  req.Limit,
+	})
+	if err != nil {
+		a.l.Error("获取用户收藏列表失败", logger.Error(err))
+		return ginx.Result{Code: 5, Msg: "系统错误"}, err
+	}
+
+	if len(collectedResp.BizIds) == 0 {
+		return ginx.Result{Data: []ArticlePubVo{}, Msg: "OK"}, nil
+	}
+
+	// 获取文章详情（使用ListPub方法，按ID过滤）
+	articles := make([]*articlev1.Article, 0, len(collectedResp.BizIds))
+	for _, id := range collectedResp.BizIds {
+		artResp, err := a.svc.GetPublishedById(ctx, &articlev1.GetPublishedByIdRequest{Id: id})
+		if err != nil {
+			a.l.Error("获取文章详情失败", logger.Error(err), logger.Int64("articleId", id))
+			continue
+		}
+		if artResp.Article != nil && artResp.Article.Status == 2 {
+			articles = append(articles, artResp.Article)
+		}
+	}
+
+	// 获取互动数据
+	intrMap := make(map[int64]*intrv1.Interactive)
+	intrResp, err := a.intrSvc.GetByIds(ctx, &intrv1.GetByIdsRequest{Biz: a.biz, Ids: collectedResp.BizIds})
+	if err == nil && intrResp != nil {
+		intrMap = intrResp.GetIntrs()
+	}
+
+	// 构建返回结果
+	result := make([]ArticlePubVo, 0, len(articles))
+	for _, art := range articles {
+		vo := ArticlePubVo{
+			Id:         art.Id,
+			Title:      art.Title,
+			Abstract:   art.Abstract,
+			CoverImage: art.CoverImage,
+			Ctime:      art.Ctime.AsTime().Format(time.DateTime),
+			Utime:      art.Utime.AsTime().Format(time.DateTime),
+			Collected:  true, // 用户收藏的文章，肯定是已收藏状态
+		}
+
+		if art.Author != nil {
+			vo.Author = AuthorVo{Id: art.Author.Id, Name: art.Author.Name, Avatar: art.Author.Avatar}
+		}
+
+		if intr, ok := intrMap[art.Id]; ok && intr != nil {
+			vo.ReadCnt = intr.ReadCnt
+			vo.LikeCnt = intr.LikeCnt
+			vo.CollectCnt = intr.CollectCnt
+			vo.Liked = intr.Liked
+		}
+
+		result = append(result, vo)
+	}
+
+	return ginx.Result{
+		Data: result,
+		Msg:  "OK",
 	}, nil
 }
 

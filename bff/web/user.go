@@ -7,6 +7,7 @@ import (
 	"Webook/pkg/ginx"
 	"Webook/user/errs"
 	"net/http"
+	"strconv"
 	"time"
 
 	regexp "github.com/dlclark/regexp2"
@@ -43,6 +44,7 @@ func (c *UserHandler) RegisterRoute(server *gin.Engine) {
 	ug.POST("/edit", c.Edit)
 	//ug.GET("/profile", c.Profile)
 	ug.GET("/profile", c.ProfileJWT)
+	ug.GET(":id", c.GetPublicProfile)
 	ug.POST("/login_sms/code/send", c.SendSMSLoginCode)
 	ug.POST("/login_sms", c.LoginSMS)
 	ug.POST("/refresh_token", c.RefreshToken)
@@ -393,4 +395,38 @@ func (c *UserHandler) RecommendAuthors(ctx *gin.Context, req RecommendAuthorsReq
 		res = append(res, AuthorSummary{Id: u.Id, Name: u.Nickname, Avatar: u.Avatar, Description: u.AboutMe})
 	}
 	return ginx.Result{Data: res}, nil
+}
+
+// GetPublicProfile 根据用户ID获取公开的个人资料
+func (c *UserHandler) GetPublicProfile(ctx *gin.Context) {
+	type Profile struct {
+		Email    string `json:"email"`
+		Phone    string `json:"phone"`
+		Nickname string `json:"nickname"`
+		Birthday string `json:"birthday"`
+		AboutMe  string `json:"aboutMe"`
+		Avatar   string `json:"avatar"`
+	}
+	idStr := ctx.Param("id")
+	var id int64
+	if v, err := strconv.ParseInt(idStr, 10, 64); err == nil {
+		id = v
+	} else {
+		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "参数错误"})
+		return
+	}
+	resp, err := c.userSvc.Profile(ctx, &userv1.ProfileRequest{Id: id})
+	if err != nil || resp == nil || resp.User == nil {
+		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统错误"})
+		return
+	}
+	u := resp.User
+	ctx.JSON(http.StatusOK, Profile{
+		Email:    u.Email,
+		Phone:    u.Phone,
+		Nickname: u.Nickname,
+		Birthday: u.Birthday.AsTime().Format(time.DateOnly),
+		AboutMe:  u.AboutMe,
+		Avatar:   u.Avatar,
+	})
 }

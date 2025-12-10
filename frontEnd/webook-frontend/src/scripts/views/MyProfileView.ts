@@ -56,6 +56,16 @@ export default function useMyProfileView() {
   const navigateTo = (path: string) => {
     router.push(path)
   }
+
+  // 跳转到自己的个人主页
+  const navigateToMyProfile = () => {
+    const uid = userStore.user?.id || userInfo.value.id
+    if (uid) {
+      router.push(`/user/${uid}`)
+    } else {
+      router.push('/my')
+    }
+  }
   
   // 处理头像上传
   const handleAvatarChange = (file: UploadFile) => {
@@ -175,6 +185,7 @@ export default function useMyProfileView() {
     editFormRef,
     saving,
     navigateTo,
+    navigateToMyProfile,
     handleAvatarChange,
     saveProfile,
     resetEditForm

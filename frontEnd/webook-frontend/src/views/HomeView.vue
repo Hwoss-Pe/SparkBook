@@ -29,10 +29,10 @@
                 <p class="article-abstract">{{ article.abstract }}</p>
                 <div class="article-meta">
                   <div class="author-info">
-                    <el-avatar :size="32" :src="article.author.avatar">
+                    <el-avatar :size="32" :src="article.author.avatar" @click="viewUser(article.author.id)">
                       {{ article.author.name ? article.author.name.substring(0, 1) : '匿' }}
                     </el-avatar>
-                    <span class="author-name">{{ article.author.name || '匿名用户' }}</span>
+                    <span class="author-name" @click="viewUser(article.author.id)">{{ article.author.name || '匿名用户' }}</span>
                   </div>
                   <div class="interaction-info">
                     <span class="interaction-item">
@@ -90,11 +90,11 @@
             <h2 class="section-title">推荐作者</h2>
             <div class="author-list">
               <div v-for="author in recommendedAuthors" :key="author.id" class="author-item">
-                <el-avatar :size="40" :src="author.avatar">
+                <el-avatar :size="40" :src="author.avatar" @click="viewUser(author.id)">
                   {{ author.name ? author.name.substring(0, 1) : '匿' }}
                 </el-avatar>
                 <div class="author-info">
-                  <div class="author-name">{{ author.name }}</div>
+                  <div class="author-name" @click="viewUser(author.id)">{{ author.name }}</div>
                   <div class="author-desc">{{ author.description }}</div>
                 </div>
                 <el-button size="small" type="primary" plain @click="followAuthor(author.id)">
@@ -121,6 +121,7 @@ const {
   hasMoreArticles,
   formatNumber,
   viewArticle,
+  viewUser,
   loadMoreArticles,
   followAuthor,
   toggleArticleLike,

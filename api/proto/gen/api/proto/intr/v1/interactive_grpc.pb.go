@@ -32,6 +32,8 @@ type InteractiveServiceClient interface {
 	CancelCollect(ctx context.Context, in *CancelCollectRequest, opts ...grpc.CallOption) (*CancelCollectResponse, error)
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	GetByIds(ctx context.Context, in *GetByIdsRequest, opts ...grpc.CallOption) (*GetByIdsResponse, error)
+	// GetCollectedBizIds 获取用户收藏的biz_id列表
+	GetCollectedBizIds(ctx context.Context, in *GetCollectedBizIdsRequest, opts ...grpc.CallOption) (*GetCollectedBizIdsResponse, error)
 }
 
 type interactiveServiceClient struct {
@@ -105,6 +107,15 @@ func (c *interactiveServiceClient) GetByIds(ctx context.Context, in *GetByIdsReq
 	return out, nil
 }
 
+func (c *interactiveServiceClient) GetCollectedBizIds(ctx context.Context, in *GetCollectedBizIdsRequest, opts ...grpc.CallOption) (*GetCollectedBizIdsResponse, error) {
+	out := new(GetCollectedBizIdsResponse)
+	err := c.cc.Invoke(ctx, "/intr.v1.InteractiveService/GetCollectedBizIds", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InteractiveServiceServer is the server API for InteractiveService service.
 // All implementations must embed UnimplementedInteractiveServiceServer
 // for forward compatibility
@@ -119,6 +130,8 @@ type InteractiveServiceServer interface {
 	CancelCollect(context.Context, *CancelCollectRequest) (*CancelCollectResponse, error)
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	GetByIds(context.Context, *GetByIdsRequest) (*GetByIdsResponse, error)
+	// GetCollectedBizIds 获取用户收藏的biz_id列表
+	GetCollectedBizIds(context.Context, *GetCollectedBizIdsRequest) (*GetCollectedBizIdsResponse, error)
 	mustEmbedUnimplementedInteractiveServiceServer()
 }
 
@@ -146,6 +159,9 @@ func (UnimplementedInteractiveServiceServer) Get(context.Context, *GetRequest) (
 }
 func (UnimplementedInteractiveServiceServer) GetByIds(context.Context, *GetByIdsRequest) (*GetByIdsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetByIds not implemented")
+}
+func (UnimplementedInteractiveServiceServer) GetCollectedBizIds(context.Context, *GetCollectedBizIdsRequest) (*GetCollectedBizIdsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCollectedBizIds not implemented")
 }
 func (UnimplementedInteractiveServiceServer) mustEmbedUnimplementedInteractiveServiceServer() {}
 
@@ -286,6 +302,24 @@ func _InteractiveService_GetByIds_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InteractiveService_GetCollectedBizIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCollectedBizIdsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InteractiveServiceServer).GetCollectedBizIds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/intr.v1.InteractiveService/GetCollectedBizIds",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InteractiveServiceServer).GetCollectedBizIds(ctx, req.(*GetCollectedBizIdsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // InteractiveService_ServiceDesc is the grpc.ServiceDesc for InteractiveService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -320,6 +354,10 @@ var InteractiveService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetByIds",
 			Handler:    _InteractiveService_GetByIds_Handler,
+		},
+		{
+			MethodName: "GetCollectedBizIds",
+			Handler:    _InteractiveService_GetCollectedBizIds_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

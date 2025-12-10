@@ -128,6 +128,11 @@ export default function useHomeView() {
     router.push(`/article/${id}`)
   }
 
+  // 查看用户主页
+  const viewUser = (id: number) => {
+    router.push(`/user/${id}`)
+  }
+
   // 将API返回的数据转换为首页展示的数据结构
   const convertToHomeArticle = (article: ArticlePub): HomeArticle => {
     return {
@@ -242,6 +247,7 @@ export default function useHomeView() {
     hasMoreArticles,
     formatNumber,
     viewArticle,
+    viewUser,
     loadMoreArticles,
     followAuthor,
     toggleArticleLike,

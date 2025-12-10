@@ -46,7 +46,7 @@ func (g *GORMFollowRelationDAO) CreateFollowRelation(ctx context.Context, f Foll
 
 func (g *GORMFollowRelationDAO) UpdateStatus(ctx context.Context, followee int64, follower int64, status uint8) error {
 	now := time.Now().UnixMilli()
-	return g.db.WithContext(ctx).Where("follower = ? and followee = ?", follower, followee).
+	return g.db.WithContext(ctx).Model(&FollowRelation{}).Where("follower = ? and followee = ?", follower, followee).
 		Updates(map[string]any{
 			"status": status,
 			"utime":  now,
@@ -55,15 +55,17 @@ func (g *GORMFollowRelationDAO) UpdateStatus(ctx context.Context, followee int64
 
 func (g *GORMFollowRelationDAO) CntFollower(ctx context.Context, uid int64) (int64, error) {
 	var res int64
-	err := g.db.WithContext(ctx).Select("count(follower)").
-		Where("followee = ? and status = ? ", uid, FollowRelationStatusActive).Count(&res).Error
+	err := g.db.WithContext(ctx).Model(&FollowRelation{}).
+		Where("followee = ? and status = ? ", uid, FollowRelationStatusActive).
+		Count(&res).Error
 	return res, err
 }
 
 func (g *GORMFollowRelationDAO) CntFollowee(ctx context.Context, uid int64) (int64, error) {
 	var res int64
-	err := g.db.WithContext(ctx).Select("count(followee)").
-		Where("follower = ? and status = ? ", uid, FollowRelationStatusActive).Count(&res).Error
+	err := g.db.WithContext(ctx).Model(&FollowRelation{}).
+		Where("follower = ? and status = ? ", uid, FollowRelationStatusActive).
+		Count(&res).Error
 	return res, err
 }
 

@@ -37,7 +37,7 @@ func (r *RedisFollowCache) StaticsInfo(ctx context.Context, uid int64) (domain.F
 		return domain.FollowStatics{}, ErrKeyNotExist
 	}
 	followerCnt, _ := strconv.ParseInt(data[fieldFollowerCnt], 10, 64)
-	followeeCnt, _ := strconv.ParseInt(data[fieldFollowerCnt], 10, 64)
+	followeeCnt, _ := strconv.ParseInt(data[fieldFolloweeCnt], 10, 64)
 	return domain.FollowStatics{
 		Followees: followeeCnt,
 		Followers: followerCnt,

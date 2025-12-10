@@ -81,10 +81,10 @@
             <p>查看收藏的文章</p>
           </div>
           
-          <div class="action-card" @click="navigateTo('/my/settings')">
+          <div class="action-card" @click="navigateToMyProfile">
             <el-icon class="action-icon"><Setting /></el-icon>
-            <h3>设置</h3>
-            <p>账号设置，隐私设置</p>
+            <h3>个人主页</h3>
+            <p>查看自己的个人主页</p>
           </div>
         </div>
       </div>

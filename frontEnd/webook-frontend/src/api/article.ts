@@ -81,6 +81,15 @@ export const articleApi = {
   getRecommendList: (params: PublishedListRequest) => {
     return post<ArticlePub[]>('/articles/pub/list', params)
   },
+  // 按作者获取已发布文章列表（读者视角，匿名可访问）
+  getAuthorPublishedList: (authorId: number, params: PublishedListRequest) => {
+    return get<ArticlePub[]>(`/articles/pub/author/${authorId}/list`, params)
+  },
+  
+  // 获取用户收藏的文章列表（需要登录）
+  getCollectedList: (params: PublishedListRequest) => {
+    return get<ArticlePub[]>(`/articles/pub/collected/list`, params)
+  },
   
   // 获取文章详情（作者视角）
   getArticleById: (id: number) => {

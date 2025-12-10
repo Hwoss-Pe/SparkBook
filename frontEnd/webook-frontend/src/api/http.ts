@@ -4,9 +4,25 @@ import { ElMessage } from 'element-plus'
 import router from '@/router'
 
 // 创建axios实例
+const resolveBaseURL = () => {
+  const envBase = (import.meta as any).env?.VITE_API_BASE as string | undefined
+  const defaultBase = new URL('/api', window.location.origin).toString()
+  let base = envBase || defaultBase
+  try {
+    const u = new URL(base, window.location.origin)
+    if (window.location.protocol === 'https:' && u.protocol !== 'https:') {
+      u.protocol = 'https:'
+      base = u.toString()
+    }
+    return base
+  } catch {
+    return defaultBase
+  }
+}
+
 const service: AxiosInstance = axios.create({
-  baseURL: '/api', // API的base_url
-  timeout: 15000, // 请求超时时间
+  baseURL: resolveBaseURL(),
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -17,6 +33,9 @@ service.interceptors.request.use(
   (config) => {
     // 在发送请求之前做些什么
     const token = localStorage.getItem('token')
+    if (window.location.protocol !== 'https:') {
+      console.warn('当前非HTTPS环境，仍将附带Authorization头用于开发调试')
+    }
     console.log('=== HTTP 请求拦截器 ===')
     console.log('发送请求:', config.url)
     console.log('请求方法:', config.method?.toUpperCase())

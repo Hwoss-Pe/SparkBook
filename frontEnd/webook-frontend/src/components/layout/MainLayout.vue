@@ -26,7 +26,7 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item @click="navigateTo('/my')">我的</el-dropdown-item>
-                <el-dropdown-item @click="navigateTo('/user/settings')">设置</el-dropdown-item>
+                <el-dropdown-item @click="navigateToMyProfile">个人主页</el-dropdown-item>
                 <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -116,6 +116,16 @@ const handleSearch = () => {
 // 页面导航
 const navigateTo = (path: string) => {
   router.push(path)
+}
+
+// 跳转到自己的个人主页
+const navigateToMyProfile = () => {
+  const uid = userStore.user?.id
+  if (uid) {
+    router.push(`/user/${uid}`)
+  } else {
+    router.push('/my')
+  }
 }
 
 // 处理登出

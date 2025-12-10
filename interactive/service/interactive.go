@@ -5,6 +5,7 @@ import (
 	"Webook/interactive/repository"
 	"Webook/pkg/logger"
 	"context"
+
 	"golang.org/x/sync/errgroup"
 )
 
@@ -21,6 +22,7 @@ type InteractiveService interface {
 	CancelCollect(ctx context.Context, biz string, bizId, cid, uid int64) error
 	Get(ctx context.Context, biz string, bizId, uid int64) (domain.Interactive, error)
 	GetByIds(ctx context.Context, biz string, bizIds []int64) (map[int64]domain.Interactive, error)
+	GetCollectedBizIds(ctx context.Context, biz string, uid int64, offset int, limit int) ([]int64, int64, error)
 }
 
 type interactiveService struct {
@@ -93,4 +95,8 @@ func (i *interactiveService) GetByIds(ctx context.Context, biz string, bizIds []
 		res[intr.BizId] = intr
 	}
 	return res, nil
+}
+
+func (i *interactiveService) GetCollectedBizIds(ctx context.Context, biz string, uid int64, offset int, limit int) ([]int64, int64, error) {
+	return i.repo.GetCollectedBizIds(ctx, biz, uid, offset, limit)
 }

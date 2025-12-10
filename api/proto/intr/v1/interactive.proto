@@ -14,6 +14,8 @@ service InteractiveService{
   rpc CancelCollect(CancelCollectRequest) returns (CancelCollectResponse);
   rpc Get(GetRequest) returns (GetResponse);
   rpc GetByIds(GetByIdsRequest) returns (GetByIdsResponse);
+  // GetCollectedBizIds 获取用户收藏的biz_id列表
+  rpc GetCollectedBizIds(GetCollectedBizIdsRequest) returns (GetCollectedBizIdsResponse);
 
 }
 
@@ -87,4 +89,16 @@ message CancelCollectRequest {
 }
 
 message CancelCollectResponse {
+}
+
+message GetCollectedBizIdsRequest {
+  string biz = 1;
+  int64 uid = 2;
+  int32 offset = 3;
+  int32 limit = 4;
+}
+
+message GetCollectedBizIdsResponse {
+  repeated int64 biz_ids = 1;
+  int64 total = 2;
 }

@@ -7,6 +7,7 @@ import (
 	"Webook/interactive/repository/dao"
 	"Webook/pkg/logger"
 	"errors"
+
 	"github.com/ecodeclub/ekit/slice"
 	"golang.org/x/net/context"
 )
@@ -25,6 +26,7 @@ type InteractiveRepository interface {
 	Liked(ctx context.Context, biz string, id int64, uid int64) (bool, error)
 	Collected(ctx context.Context, biz string, id int64, uid int64) (bool, error)
 	GetByIds(ctx context.Context, biz string, ids []int64) ([]domain.Interactive, error)
+	GetCollectedBizIds(ctx context.Context, biz string, uid int64, offset int, limit int) ([]int64, int64, error)
 }
 
 type CachedReadCntRepository struct {
@@ -147,6 +149,10 @@ func (c *CachedReadCntRepository) GetByIds(ctx context.Context, biz string, ids 
 		func(idx int, src dao.Interactive) domain.Interactive {
 			return c.toDomain(src)
 		}), nil
+}
+
+func (c *CachedReadCntRepository) GetCollectedBizIds(ctx context.Context, biz string, uid int64, offset int, limit int) ([]int64, int64, error) {
+	return c.dao.GetCollectedBizIds(ctx, biz, uid, offset, limit)
 }
 
 func (c *CachedReadCntRepository) toDomain(intr dao.Interactive) domain.Interactive {

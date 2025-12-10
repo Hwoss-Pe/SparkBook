@@ -74,6 +74,17 @@ func (i *InteractiveServiceServer) GetByIds(ctx context.Context, request *intrv1
 	}, nil
 }
 
+func (i *InteractiveServiceServer) GetCollectedBizIds(ctx context.Context, request *intrv1.GetCollectedBizIdsRequest) (*intrv1.GetCollectedBizIdsResponse, error) {
+	bizIds, total, err := i.svc.GetCollectedBizIds(ctx, request.Biz, request.Uid, int(request.Offset), int(request.Limit))
+	if err != nil {
+		return nil, err
+	}
+	return &intrv1.GetCollectedBizIdsResponse{
+		BizIds: bizIds,
+		Total:  total,
+	}, nil
+}
+
 func (i *InteractiveServiceServer) toDTO(intr domain.Interactive) *intrv1.Interactive {
 	return &intrv1.Interactive{
 		Biz:        intr.Biz,

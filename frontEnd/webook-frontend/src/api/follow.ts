@@ -5,6 +5,9 @@ export interface FollowRelation {
   id: number
   follower: number // 关注者
   followee: number // 被关注者
+  name?: string
+  avatar?: string
+  about_me?: string
 }
 
 export interface FollowStatic {
@@ -72,8 +75,12 @@ export const followApi = {
   },
   
   // 获取关注信息
-  getFollowInfo: (params: FollowInfoRequest) => {
-    return get<FollowInfoResponse>('/follow/info', params)
+  getFollowInfo: async (params: FollowInfoRequest) => {
+    try {
+      return await get<FollowInfoResponse>('/follow/info', params)
+    } catch (e) {
+      return { follow_relation: undefined as any }
+    }
   },
   
   // 获取关注统计

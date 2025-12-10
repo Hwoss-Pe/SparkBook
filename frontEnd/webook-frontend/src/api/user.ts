@@ -81,6 +81,11 @@ export const userApi = {
       throw error
     })
   },
+
+  // 获取公开的个人资料（根据用户ID）
+  getPublicProfile: (id: number) => {
+    return get<ProfileResponse>(`/users/${id}`)
+  },
   
   // 更新用户信息
   updateProfile: (user: Partial<User>) => {

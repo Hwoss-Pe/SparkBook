@@ -16,6 +16,10 @@
           <div class="profile-details">
             <h1 class="profile-name">{{ userProfile.nickname }}</h1>
             <p class="profile-bio">{{ userProfile.aboutMe || '这个人很懒，还没有填写个人简介' }}</p>
+            <div class="profile-extra" v-if="userProfile.email || userProfile.birthday">
+              <span v-if="userProfile.email">邮箱：{{ userProfile.email }}</span>
+              <span v-if="userProfile.birthday" style="margin-left: 16px;">生日：{{ userProfile.birthday }}</span>
+            </div>
             
             <div class="profile-stats">
               <div class="stat-item">
@@ -43,9 +47,7 @@
             </el-button>
           </div>
           
-          <div class="profile-actions" v-else>
-            <el-button type="primary" @click="editProfile">编辑资料</el-button>
-          </div>
+          
         </div>
       </div>
       
@@ -73,10 +75,12 @@
                       </svg>
                       {{ formatNumber(article.likeCount) }}
                     </span>
-                      <span class="interaction-item">
-                        <el-icon><ChatDotRound /></el-icon>
-                        {{ formatNumber(article.commentCount) }}
-                      </span>
+                  <span class="interaction-item">
+                    <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    {{ formatNumber(article.collectCount) }}
+                  </span>
                     </div>
                   </div>
                 </div>
@@ -118,6 +122,12 @@
                         </svg>
                         {{ formatNumber(article.likeCount) }}
                       </span>
+                      <span class="interaction-item">
+                        <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                        {{ formatNumber(article.collectCount) }}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -140,24 +150,26 @@
       v-model="showFollowDialog"
       :title="followDialogTitle"
       width="500px"
+      @closed="onFollowDialogClosed"
+      @close="onFollowDialogClosed"
     >
       <div class="follow-dialog-content">
         <div v-if="followDialogUsers.length > 0" class="user-list">
-          <div v-for="user in followDialogUsers" :key="user.id" class="user-item">
-            <div class="user-avatar" @click="viewUser(user.id)">
+          <div v-for="user in followDialogUsers" :key="user.id" class="user-item" @click="viewUser(user.id)">
+            <div class="user-avatar">
               <el-avatar :size="40" :src="user.avatar">
                 {{ user.name ? user.name.substring(0, 1) : '匿' }}
               </el-avatar>
             </div>
-            <div class="user-info" @click="viewUser(user.id)">
+            <div class="user-info">
               <div class="user-name">{{ user.name }}</div>
               <div class="user-desc">{{ user.description }}</div>
             </div>
-            <div class="user-action" v-if="user.id !== currentUserId">
+            <div class="user-action" v-if="followDialogTitle === '关注' && isCurrentUser">
               <el-button
                 size="small"
                 :type="user.isFollowing ? 'info' : 'primary'"
-                @click="toggleFollowUser(user)"
+                @click.stop="toggleFollowUser(user)"
               >
                 {{ user.isFollowing ? '已关注' : '关注' }}
               </el-button>
@@ -170,50 +182,13 @@
       </div>
     </el-dialog>
     
-    <!-- 编辑资料弹窗 -->
-    <el-dialog
-      v-model="showEditDialog"
-      title="编辑个人资料"
-      width="500px"
-    >
-      <el-form :model="editForm" label-width="80px">
-        <el-form-item label="昵称">
-          <el-input v-model="editForm.nickname" />
-        </el-form-item>
-        <el-form-item label="个人简介">
-          <el-input
-            v-model="editForm.aboutMe"
-            type="textarea"
-            :rows="4"
-            placeholder="介绍一下自己吧"
-          />
-        </el-form-item>
-        <el-form-item label="头像">
-          <el-upload
-            class="avatar-uploader"
-            action="#"
-            :show-file-list="false"
-            :auto-upload="false"
-            :on-change="handleAvatarChange"
-          >
-            <img v-if="editForm.avatarUrl" :src="editForm.avatarUrl" class="avatar" />
-            <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-          </el-upload>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="showEditDialog = false">取消</el-button>
-          <el-button type="primary" @click="saveProfile">保存</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    
   </MainLayout>
 </template>
 
 <script setup lang="ts">
 import MainLayout from '@/components/layout/MainLayout.vue'
-import { View, ChatDotRound, Plus } from '@element-plus/icons-vue'
+import { View } from '@element-plus/icons-vue'
 import useUserProfileView from '@/scripts/views/UserProfileView'
 
 const {
@@ -228,8 +203,6 @@ const {
   followDialogTitle,
   followDialogUsers,
   followDialogEmptyText,
-  showEditDialog,
-  editForm,
   currentUserId,
   formatNumber,
   formatDate,
@@ -239,9 +212,6 @@ const {
   toggleFollowUser,
   showFollowers,
   showFollowing,
-  editProfile,
-  handleAvatarChange,
-  saveProfile,
   loadMoreArticles,
   loadMoreCollections
 } = useUserProfileView()

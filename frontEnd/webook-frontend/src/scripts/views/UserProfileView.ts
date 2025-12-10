@@ -1,4 +1,4 @@
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { userApi } from '@/api/user'
@@ -6,6 +6,7 @@ import type { User } from '@/api/user'
 import { followApi } from '@/api/follow'
 import { articleApi } from '@/api/article'
 import type { Article as ApiArticle } from '@/api/article'
+import { useUserStore } from '@/stores/user'
 
 // 定义类型接口
 interface UserProfile {
@@ -13,6 +14,8 @@ interface UserProfile {
   nickname: string;
   avatar: string;
   aboutMe: string;
+  email?: string;
+  birthday?: string;
   articleCount: number;
   followerCount: number;
   followingCount: number;
@@ -27,7 +30,7 @@ interface Article {
   createTime: string;
   readCount: number;
   likeCount: number;
-  commentCount: number;
+  collectCount: number;
 }
 
 interface Collection {
@@ -41,6 +44,7 @@ interface Collection {
   };
   readCount: number;
   likeCount: number;
+  collectCount: number;
 }
 
 interface FollowUser {
@@ -65,8 +69,9 @@ export default function useUserProfileView() {
   const router = useRouter()
   const route = useRoute()
 
-  // 当前用户ID（模拟已登录用户）
-  const currentUserId = ref(101)
+  // 当前用户ID（从用户状态中获取）
+  const userStore = useUserStore()
+  const currentUserId = ref<number>(userStore.user?.id || 0)
 
   // 用户资料
   const userProfile = ref<UserProfile>({
@@ -100,6 +105,23 @@ export default function useUserProfileView() {
   const followDialogTitle = ref('')
   const followDialogUsers = ref<FollowUser[]>([])
   const followDialogEmptyText = ref('')
+
+  const onFollowDialogClosed = async () => {
+    try {
+      const staticResponse = await followApi.getFollowStatics({ followee: userProfile.value.id })
+      const followStatic = staticResponse.followStatic
+      userProfile.value.followerCount = followStatic.followers
+      userProfile.value.followingCount = followStatic.followees
+    } catch (error) {
+      console.error('刷新关注/粉丝统计失败:', error)
+    }
+  }
+
+  watch(showFollowDialog, (visible) => {
+    if (!visible) {
+      onFollowDialogClosed()
+    }
+  })
 
   // 编辑资料弹窗
   const showEditDialog = ref(false)
@@ -136,6 +158,9 @@ export default function useUserProfileView() {
 
   // 查看用户主页
   const viewUser = (id: number) => {
+    if (showFollowDialog.value) {
+      showFollowDialog.value = false
+    }
     router.push(`/user/${id}`)
   }
 
@@ -185,20 +210,16 @@ export default function useUserProfileView() {
     followDialogEmptyText.value = '暂无粉丝'
     
     try {
-      // 调用API获取粉丝列表
       const response = await followApi.getFollower({
         followee: userProfile.value.id,
         offset: 0,
         limit: 20
       })
-      
-      // 这里需要将API返回的数据转换为我们需要的格式
-      // 实际项目中应该有更完善的处理
       followDialogUsers.value = response.follow_relations.map(relation => ({
         id: relation.follower,
-        name: `用户${relation.follower}`,
-        avatar: `https://picsum.photos/id/${1000 + relation.follower}/100/100`,
-        description: '这个人很懒，还没有填写个人简介',
+        name: relation.name || `用户${relation.follower}`,
+        avatar: relation.avatar || `https://picsum.photos/id/${1000 + relation.follower}/100/100`,
+        description: relation.about_me || '这个人很懒，还没有填写个人简介',
         isFollowing: false
       }))
     } catch (error) {
@@ -238,19 +259,16 @@ export default function useUserProfileView() {
     followDialogEmptyText.value = '暂无关注'
     
     try {
-      // 调用API获取关注列表
       const response = await followApi.getFollowee({
         follower: userProfile.value.id,
         offset: 0,
         limit: 20
       })
-      
-      // 这里需要将API返回的数据转换为我们需要的格式
       followDialogUsers.value = response.follow_relations.map(relation => ({
         id: relation.followee,
-        name: `用户${relation.followee}`,
-        avatar: `https://picsum.photos/id/${1000 + relation.followee}/100/100`,
-        description: '这个人很懒，还没有填写个人简介',
+        name: relation.name || `用户${relation.followee}`,
+        avatar: relation.avatar || `https://picsum.photos/id/${1000 + relation.followee}/100/100`,
+        description: relation.about_me || '这个人很懒，还没有填写个人简介',
         isFollowing: true
       }))
     } catch (error) {
@@ -323,10 +341,8 @@ export default function useUserProfileView() {
   // 加载更多文章
   const loadMoreArticles = async () => {
     try {
-      const pubs = await articleApi.getRecommendList({ offset: 0, limit: 50 })
-      const filtered = pubs.filter(p => p.author?.id === userProfile.value.id)
-      const slice = filtered.slice(userArticles.value.length, userArticles.value.length + 10)
-      const moreArticles: Article[] = slice.map(article => ({
+      const pubs = await articleApi.getAuthorPublishedList(userProfile.value.id, { offset: userArticles.value.length, limit: 10 })
+      const moreArticles: Article[] = pubs.map(article => ({
         id: article.id,
         title: article.title,
         abstract: article.abstract,
@@ -334,13 +350,13 @@ export default function useUserProfileView() {
         createTime: article.ctime,
         readCount: article.readCnt || 0,
         likeCount: article.likeCnt || 0,
-        commentCount: 0
+        collectCount: article.collectCnt || 0
       }))
-      
+
       userArticles.value = [...userArticles.value, ...moreArticles]
-      
+
       // 如果返回的文章数量小于请求的数量，说明没有更多文章了
-      if (moreArticles.length < 10) {
+      if (pubs.length < 10) {
         hasMoreArticles.value = false
       }
     } catch (error) {
@@ -355,7 +371,7 @@ export default function useUserProfileView() {
           createTime: '2024-11-10T10:30:00',
           readCount: 15300,
           likeCount: 4200,
-          commentCount: 215
+          collectCount: 900
         },
         {
           id: 5,
@@ -365,7 +381,7 @@ export default function useUserProfileView() {
           createTime: '2024-11-05T15:45:00',
           readCount: 7600,
           likeCount: 1800,
-          commentCount: 76
+          collectCount: 350
         }
       ]
       
@@ -375,18 +391,47 @@ export default function useUserProfileView() {
   }
 
   // 加载更多收藏
-  const loadMoreCollections = () => {
-    // 这里应该调用API加载更多收藏
-    // 模拟加载更多
-    hasMoreCollections.value = false
+  const loadMoreCollections = async () => {
+    try {
+      const params = {
+        offset: userCollections.value.length,
+        limit: 10
+      }
+      
+      const response = await articleApi.getCollectedList(params)
+      
+      if (response && response.length > 0) {
+        // 转换 ArticlePub 格式到 Collection 格式
+        const collections = response.map(article => ({
+          id: article.id,
+          title: article.title,
+          abstract: article.abstract,
+          coverImage: article.coverImage,
+          author: {
+            name: article.author.name,
+            avatar: article.author.avatar
+          },
+          readCount: article.readCnt,
+          likeCount: article.likeCnt,
+          collectCount: article.collectCnt
+        }))
+        
+        userCollections.value = [...userCollections.value, ...collections]
+        hasMoreCollections.value = response.length === 10 // 如果返回数量等于请求数量，说明可能还有更多
+      } else {
+        hasMoreCollections.value = false
+      }
+    } catch (error) {
+      console.error('加载收藏列表失败:', error)
+      hasMoreCollections.value = false
+    }
   }
 
   // 获取用户资料
   const fetchUserProfile = async (userId: number) => {
     try {
-      // 调用API获取用户信息
-      const response = await userApi.getProfile(userId)
-      const user = response.user
+      // 公开个人资料
+      const profile = await userApi.getPublicProfile(userId)
       
       // 获取关注统计
       const staticResponse = await followApi.getFollowStatics({ followee: userId })
@@ -406,12 +451,22 @@ export default function useUserProfileView() {
         }
       }
       
+      // 作者文章统计（已发布数量）
+      let publishedCount = 0
+      try {
+        const stats = await articleApi.getAuthorStats(userId)
+        publishedCount = stats.publishedCount || 0
+      } catch {}
+
+      const av = (profile.Avatar || profile.avatar || '').replace(/[`]/g, '').trim()
       userProfile.value = {
-        id: user.id,
-        nickname: user.nickname,
-        avatar: `https://picsum.photos/id/${1000 + user.id}/100/100`, // 实际项目中应该从用户信息中获取
-        aboutMe: user.aboutMe,
-        articleCount: 45, // 实际项目中应该从API获取
+        id: userId,
+        nickname: profile.Nickname || profile.nickname || '',
+        avatar: av,
+        aboutMe: profile.AboutMe || profile.aboutMe || '',
+        email: profile.Email || profile.email || '',
+        birthday: profile.Birthday || profile.birthday || '',
+        articleCount: publishedCount,
         followerCount: followStatic.followers,
         followingCount: followStatic.followees,
         isFollowing
@@ -448,9 +503,8 @@ export default function useUserProfileView() {
   // 获取用户文章
   const fetchUserArticles = async (userId: number) => {
     try {
-      const pubs = await articleApi.getRecommendList({ offset: 0, limit: 100 })
-      const filtered = pubs.filter(p => p.author?.id === userId)
-      userArticles.value = filtered.slice(0, 10).map(article => ({
+      const pubs = await articleApi.getAuthorPublishedList(userId, { offset: 0, limit: 10 })
+      userArticles.value = pubs.map(article => ({
         id: article.id,
         title: article.title,
         abstract: article.abstract,
@@ -458,9 +512,9 @@ export default function useUserProfileView() {
         createTime: article.ctime,
         readCount: article.readCnt || 0,
         likeCount: article.likeCnt || 0,
-        commentCount: 0
+        collectCount: article.collectCnt || 0
       }))
-      if (userArticles.value.length < 10) {
+      if (pubs.length < 10) {
         hasMoreArticles.value = false
       }
     } catch (error) {
@@ -475,7 +529,7 @@ export default function useUserProfileView() {
           createTime: '2024-11-28T14:20:00',
           readCount: 12500,
           likeCount: 3200,
-          commentCount: 128
+          collectCount: 640
         },
         {
           id: 2,
@@ -485,7 +539,7 @@ export default function useUserProfileView() {
           createTime: '2024-11-25T09:15:00',
           readCount: 18700,
           likeCount: 5400,
-          commentCount: 342
+          collectCount: 980
         },
         {
           id: 3,
@@ -495,42 +549,49 @@ export default function useUserProfileView() {
           createTime: '2024-11-20T16:40:00',
           readCount: 9800,
           likeCount: 2100,
-          commentCount: 98
+          collectCount: 310
         }
       ]
     }
   }
 
   // 获取用户收藏
-  const fetchUserCollections = (userId: number) => {
-    // 这里应该调用API获取用户收藏
-    // 模拟收藏数据
-    userCollections.value = [
-      {
-        id: 101,
-        title: '年轻人为什么都在做副业？',
-        abstract: '在当今社会，越来越多的年轻人开始尝试副业。这不仅是为了增加收入，更是为了寻找职业保障和自我实现...',
-        coverImage: 'https://picsum.photos/id/1/400/300',
-        author: {
-          name: '经济观察家',
-          avatar: 'https://picsum.photos/id/1005/100/100'
-        },
-        readCount: 125000,
-        likeCount: 32000
-      },
-      {
-        id: 102,
-        title: '这些小众景点比网红打卡地更值得去',
-        abstract: '厌倦了人山人海的旅游景点？这篇文章为你推荐一些鲜为人知但风景绝美的小众旅行地...',
-        coverImage: 'https://picsum.photos/id/1036/400/300',
-        author: {
-          name: '旅行达人',
-          avatar: 'https://picsum.photos/id/1012/100/100'
-        },
-        readCount: 98000,
-        likeCount: 25000
+  const fetchUserCollections = async (userId: number) => {
+    try {
+      const params = {
+        offset: 0,
+        limit: 10
       }
-    ]
+      
+      const response = await articleApi.getCollectedList(params)
+      
+      if (response && response.length > 0) {
+        // 转换 ArticlePub 格式到 Collection 格式
+        const collections = response.map(article => ({
+          id: article.id,
+          title: article.title,
+          abstract: article.abstract,
+          coverImage: article.coverImage,
+          author: {
+            name: article.author.name,
+            avatar: article.author.avatar
+          },
+          readCount: article.readCnt,
+          likeCount: article.likeCnt,
+          collectCount: article.collectCnt
+        }))
+        
+        userCollections.value = collections
+        hasMoreCollections.value = response.length === 10 // 如果返回数量等于请求数量，说明可能还有更多
+      } else {
+        userCollections.value = []
+        hasMoreCollections.value = false
+      }
+    } catch (error) {
+      console.error('获取收藏列表失败:', error)
+      userCollections.value = []
+      hasMoreCollections.value = false
+    }
   }
 
   onMounted(() => {
@@ -541,6 +602,21 @@ export default function useUserProfileView() {
     
     if (userId === currentUserId.value) {
       fetchUserCollections(userId)
+    }
+  })
+
+  watch(() => route.params.id, (newId) => {
+    const uid = parseInt(newId as string)
+    if (showFollowDialog.value) {
+      showFollowDialog.value = false
+    }
+    fetchUserProfile(uid)
+    fetchUserArticles(uid)
+    if (uid === currentUserId.value) {
+      fetchUserCollections(uid)
+    } else {
+      userCollections.value = []
+      hasMoreCollections.value = false
     }
   })
 
@@ -556,6 +632,7 @@ export default function useUserProfileView() {
     followDialogTitle,
     followDialogUsers,
     followDialogEmptyText,
+    onFollowDialogClosed,
     showEditDialog,
     editForm,
     currentUserId,

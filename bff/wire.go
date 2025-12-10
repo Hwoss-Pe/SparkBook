@@ -19,6 +19,7 @@ func InitApp() *wego.App {
 		ioc.NewArticleHandler,
 		web.NewCommentHandler,
 		web.NewUserHandler,
+		web.NewFollowHandler,
 		web.NewRewardHandler,
 		jwt.NewRedisHandler,
 

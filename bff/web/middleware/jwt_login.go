@@ -39,6 +39,7 @@ func NewJWTLoginMiddlewareBuilder(hdl jwt2.Handler) *JWTLoginMiddlewareBuilder {
 	s.Add("/users/recommend_authors")
 	s.Add("/comment/list")
 	s.Add("/comment/replies")
+	s.Add("/follow/statics")
 	return &JWTLoginMiddlewareBuilder{
 		publicPaths: s,
 		Handler:     hdl,
