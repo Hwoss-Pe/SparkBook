@@ -142,7 +142,7 @@ func (G *GORMInteractiveDAO) DeleteCollectionBiz(ctx context.Context, biz string
 	now := time.Now().UnixMilli()
 	return G.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 删除用户收藏记录
-		if err := tx.Where("biz = ? AND biz_id = ? AND uid = ? AND cid = ?", biz, bizId, uid, cid).
+		if err := tx.Where("biz = ? AND biz_id = ? AND uid = ?", biz, bizId, uid).
 			Delete(&UserCollectionBiz{}).Error; err != nil {
 			return err
 		}

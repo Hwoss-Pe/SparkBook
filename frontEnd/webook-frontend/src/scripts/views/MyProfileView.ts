@@ -59,11 +59,30 @@ export default function useMyProfileView() {
 
   // 跳转到自己的个人主页
   const navigateToMyProfile = () => {
-    const uid = userStore.user?.id || userInfo.value.id
+    console.log("跳转个人主页")
+    let uid = userStore.user?.id || userInfo.value.id
+    if (!uid) {
+      userStore.initUserState()
+      uid = userStore.user?.id || 0
+    }
     if (uid) {
       router.push(`/user/${uid}`)
     } else {
-      router.push('/my')
+      router.push({ path: '/login', query: { redirect: '/my' } })
+    }
+  }
+
+  // 跳转到个人主页的“收藏”标签并直接展示收藏
+  const navigateToMyCollections = () => {
+    let uid = userStore.user?.id || userInfo.value.id
+    if (!uid) {
+      userStore.initUserState()
+      uid = userStore.user?.id || 0
+    }
+    if (uid) {
+      router.push({ path: `/user/${uid}`, query: { tab: 'collections' } })
+    } else {
+      router.push({ path: '/login', query: { redirect: '/my' } })
     }
   }
   
@@ -142,6 +161,7 @@ export default function useMyProfileView() {
   // 获取用户信息
   const fetchUserInfo = async () => {
     try {
+      userStore.initUserState()
       if (userStore.user) {
         userInfo.value = { ...userStore.user }
       } else {
@@ -186,6 +206,7 @@ export default function useMyProfileView() {
     saving,
     navigateTo,
     navigateToMyProfile,
+    navigateToMyCollections,
     handleAvatarChange,
     saveProfile,
     resetEditForm

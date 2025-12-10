@@ -56,8 +56,9 @@
           <el-tab-pane label="文章" name="articles">
             <div v-if="userArticles.length > 0" class="article-list">
               <div v-for="article in userArticles" :key="article.id" class="article-card">
-                <div class="article-cover" v-if="article.coverImage" @click="viewArticle(article.id)">
-                  <img :src="article.coverImage" :alt="article.title" />
+                <div class="article-cover" @click="viewArticle(article.id)">
+                  <img v-if="article.coverImage" :src="article.coverImage" :alt="article.title" @error="onCoverError(article)" />
+                  <div v-else class="cover-placeholder">封面图未加载</div>
                 </div>
                 <div class="article-info">
                   <h3 class="article-title" @click="viewArticle(article.id)">{{ article.title }}</h3>
@@ -69,18 +70,32 @@
                         <el-icon><View /></el-icon>
                         {{ formatNumber(article.readCount) }}
                       </span>
-                    <span class="interaction-item">
-                      <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                      </svg>
-                      {{ formatNumber(article.likeCount) }}
-                    </span>
-                  <span class="interaction-item">
-                    <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                    </svg>
-                    {{ formatNumber(article.collectCount) }}
-                  </span>
+                      <span class="interaction-item" :class="{ liked: article.liked }">
+                        <template v-if="article.liked">
+                          <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0">
+                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                          </svg>
+                        </template>
+                        <template v-else>
+                          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                          </svg>
+                        </template>
+                        {{ formatNumber(article.likeCount) }}
+                      </span>
+                      <span class="interaction-item" :class="{ collected: article.collected }">
+                        <template v-if="article.collected">
+                          <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                          </svg>
+                        </template>
+                        <template v-else>
+                          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                          </svg>
+                        </template>
+                        {{ formatNumber(article.collectCount) }}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -98,8 +113,9 @@
           <el-tab-pane label="收藏" name="collections" v-if="isCurrentUser">
             <div v-if="userCollections.length > 0" class="article-list">
               <div v-for="article in userCollections" :key="article.id" class="article-card">
-                <div class="article-cover" v-if="article.coverImage" @click="viewArticle(article.id)">
-                  <img :src="article.coverImage" :alt="article.title" />
+                <div class="article-cover" @click="viewArticle(article.id)">
+                  <img v-if="article.coverImage" :src="article.coverImage" :alt="article.title" @error="onCoverError(article)" />
+                  <div v-else class="cover-placeholder">封面图未加载</div>
                 </div>
                 <div class="article-info">
                   <h3 class="article-title" @click="viewArticle(article.id)">{{ article.title }}</h3>
@@ -116,17 +132,24 @@
                         <el-icon><View /></el-icon>
                         {{ formatNumber(article.readCount) }}
                       </span>
-                      <span class="interaction-item">
-                        <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                        </svg>
+                      <span class="interaction-item" :class="{ liked: article.liked }">
+                        <template v-if="article.liked">
+                          <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0">
+                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                          </svg>
+                        </template>
+                        <template v-else>
+                          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                          </svg>
+                        </template>
                         {{ formatNumber(article.likeCount) }}
                       </span>
-                      <span class="interaction-item">
-                        <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <span class="interaction-item collected" title="已收藏，点击取消" @click.stop="cancelCollection(article.id)">
+                        <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0">
                           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                         </svg>
-                        {{ formatNumber(article.collectCount) }}
+                        已收藏
                       </span>
                     </div>
                   </div>
@@ -213,7 +236,9 @@ const {
   showFollowers,
   showFollowing,
   loadMoreArticles,
-  loadMoreCollections
+  loadMoreCollections,
+  onCoverError,
+  cancelCollection
 } = useUserProfileView()
 </script>
 

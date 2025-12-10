@@ -1,6 +1,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { userApi } from '@/api/user'
 import type { User } from '@/api/user'
 import { followApi } from '@/api/follow'
@@ -31,6 +31,8 @@ interface Article {
   readCount: number;
   likeCount: number;
   collectCount: number;
+  liked: boolean;
+  collected: boolean;
 }
 
 interface Collection {
@@ -45,6 +47,8 @@ interface Collection {
   readCount: number;
   likeCount: number;
   collectCount: number;
+  liked: boolean;
+  collected: boolean;
 }
 
 interface FollowUser {
@@ -90,7 +94,7 @@ export default function useUserProfileView() {
     return userProfile.value.id === currentUserId.value
   })
 
-  const activeTab = ref('articles')
+  const activeTab = ref<string>((useRoute().query.tab as string) || 'articles')
 
   // 用户文章列表
   const userArticles = ref<Article[]>([])
@@ -350,7 +354,9 @@ export default function useUserProfileView() {
         createTime: article.ctime,
         readCount: article.readCnt || 0,
         likeCount: article.likeCnt || 0,
-        collectCount: article.collectCnt || 0
+        collectCount: article.collectCnt || 0,
+        liked: !!article.liked,
+        collected: !!article.collected
       }))
 
       userArticles.value = [...userArticles.value, ...moreArticles]
@@ -413,7 +419,9 @@ export default function useUserProfileView() {
           },
           readCount: article.readCnt,
           likeCount: article.likeCnt,
-          collectCount: article.collectCnt
+          collectCount: article.collectCnt,
+          liked: !!article.liked,
+          collected: article.collected ?? true
         }))
         
         userCollections.value = [...userCollections.value, ...collections]
@@ -512,7 +520,9 @@ export default function useUserProfileView() {
         createTime: article.ctime,
         readCount: article.readCnt || 0,
         likeCount: article.likeCnt || 0,
-        collectCount: article.collectCnt || 0
+        collectCount: article.collectCnt || 0,
+        liked: !!article.liked,
+        collected: !!article.collected
       }))
       if (pubs.length < 10) {
         hasMoreArticles.value = false
@@ -578,7 +588,9 @@ export default function useUserProfileView() {
           },
           readCount: article.readCnt,
           likeCount: article.likeCnt,
-          collectCount: article.collectCnt
+          collectCount: article.collectCnt,
+          liked: !!article.liked,
+          collected: article.collected ?? true
         }))
         
         userCollections.value = collections
@@ -594,9 +606,42 @@ export default function useUserProfileView() {
     }
   }
 
+  // 封面加载失败占位
+  const onCoverError = (art: { coverImage: string }) => {
+    art.coverImage = ''
+  }
+
+  // 取消收藏并从列表移除
+  const cancelCollection = async (id: number) => {
+    try {
+      await ElMessageBox.confirm('是否取消收藏？', '提示', {
+        confirmButtonText: '取消收藏',
+        cancelButtonText: '再想想',
+        type: 'warning'
+      })
+
+      const defaultCid = 1
+      await articleApi.cancelCollect(id, defaultCid)
+      userCollections.value = userCollections.value.filter(a => a.id !== id)
+      ElMessage.success('已取消收藏')
+    } catch (error) {
+      // 用户点击取消会抛异常，直接忽略
+      if (error) {
+        const msg = (error as any)?.message || ''
+        if (!/cancel/i.test(msg)) {
+          console.error('取消收藏失败:', error)
+          ElMessage.error('操作失败，请稍后重试')
+        }
+      }
+    }
+  }
+
   onMounted(() => {
     const userId = parseInt(route.params.id as string)
-    
+    // 初始化标签（支持通过 query.tab 直接展示收藏等）
+    if (route.query.tab && typeof route.query.tab === 'string') {
+      activeTab.value = route.query.tab
+    }
     fetchUserProfile(userId)
     fetchUserArticles(userId)
     
@@ -617,6 +662,12 @@ export default function useUserProfileView() {
     } else {
       userCollections.value = []
       hasMoreCollections.value = false
+    }
+  })
+
+  watch(() => route.query.tab, (newTab) => {
+    if (typeof newTab === 'string') {
+      activeTab.value = newTab
     }
   })
 
@@ -648,6 +699,8 @@ export default function useUserProfileView() {
     handleAvatarChange,
     saveProfile,
     loadMoreArticles,
-    loadMoreCollections
+    loadMoreCollections,
+    onCoverError,
+    cancelCollection
   }
 }

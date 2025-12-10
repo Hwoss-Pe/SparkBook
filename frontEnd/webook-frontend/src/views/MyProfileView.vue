@@ -69,20 +69,20 @@
             <p>发布文章，管理草稿</p>
           </div>
           
-          <div class="action-card" @click="navigateTo('/my/articles')">
-            <el-icon class="action-icon"><Document /></el-icon>
-            <h3>我的文章</h3>
-            <p>查看已发布的文章</p>
+          <div class="action-card" @click="navigateTo('/message')">
+            <el-icon class="action-icon"><ChatDotRound /></el-icon>
+            <h3>我的评论</h3>
+            <p>查看我参与的评论与互动</p>
           </div>
           
-          <div class="action-card" @click="navigateTo('/my/collections')">
+          <div class="action-card" @click="navigateToMyCollections">
             <el-icon class="action-icon"><Star /></el-icon>
             <h3>我的收藏</h3>
             <p>查看收藏的文章</p>
           </div>
           
           <div class="action-card" @click="navigateToMyProfile">
-            <el-icon class="action-icon"><Setting /></el-icon>
+            <el-icon class="action-icon"><User /></el-icon>
             <h3>个人主页</h3>
             <p>查看自己的个人主页</p>
           </div>
@@ -180,7 +180,7 @@
 
 <script setup lang="ts">
 import MainLayout from '@/components/layout/MainLayout.vue'
-import { Edit, Document, Star, Setting, Camera } from '@element-plus/icons-vue'
+import { Edit, ChatDotRound, Star, User, Camera } from '@element-plus/icons-vue'
 import useMyProfileView from '@/scripts/views/MyProfileView'
 
 const {
@@ -192,6 +192,8 @@ const {
   editFormRef,
   saving,
   navigateTo,
+  navigateToMyProfile,
+  navigateToMyCollections,
   handleAvatarChange,
   saveProfile,
   resetEditForm
