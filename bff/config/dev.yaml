@@ -21,3 +21,5 @@ grpc:
       target: "etcd:///service/comment"
     follow:
       target: "etcd:///service/follow"
+    tag:
+      target: "etcd:///service/tag"

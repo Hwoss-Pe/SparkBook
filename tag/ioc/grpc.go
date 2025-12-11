@@ -27,7 +27,7 @@ func InitGRPCxServer(asc *grpc2.TagServiceServer,
 	return &grpcx.Server{
 		Server:     server,
 		Port:       cfg.Port,
-		Name:       "reward",
+		Name:       "tag",
 		L:          l,
 		EtcdClient: ecli,
 		EtcdTTL:    cfg.EtcdTTL,

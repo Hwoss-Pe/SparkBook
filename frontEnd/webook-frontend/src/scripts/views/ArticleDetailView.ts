@@ -492,7 +492,7 @@ export default function useArticleDetailView() {
           name: articleDetail.author.name,
           avatar: articleDetail.author.avatar || 'https://picsum.photos/seed/avatar/100/100'
         },
-        tags: [] // 移除假标签，等待后端支持标签功能
+        tags: (articleDetail as any).tags || []
       }
 
       await fetchComments(true)

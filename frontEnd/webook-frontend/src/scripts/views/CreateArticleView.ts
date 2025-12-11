@@ -62,6 +62,8 @@ export default function useCreateArticleView() {
   const showPublishDialog = ref(false)
   const publishing = ref(false)
 
+  const officialTags = ref<string[]>([])
+
   // 显示标签输入框
   const showTagInput = () => {
     inputTagVisible.value = true
@@ -87,6 +89,19 @@ export default function useCreateArticleView() {
     }
     inputTagVisible.value = false
     inputTag.value = ''
+  }
+
+  const toggleOfficialTag = (name: string) => {
+    const idx = articleForm.value.tags.indexOf(name)
+    if (idx >= 0) {
+      articleForm.value.tags.splice(idx, 1)
+      return
+    }
+    if (articleForm.value.tags.length >= 5) {
+      ElMessage.warning('最多添加5个标签')
+      return
+    }
+    articleForm.value.tags.push(name)
   }
 
   // 移除标签
@@ -159,7 +174,8 @@ export default function useCreateArticleView() {
       const resp = await articleApi.publishArticle({
         id: articleForm.value.id,
         title: articleForm.value.title,
-        content: articleForm.value.content
+        content: articleForm.value.content,
+        tags: articleForm.value.tags
       })
       publishing.value = false
       showPublishDialog.value = false
@@ -329,6 +345,14 @@ export default function useCreateArticleView() {
   }
 
   onMounted(() => {
+    articleApi.getOfficialTags()
+      .then((tags) => {
+        officialTags.value = Array.isArray(tags) ? tags : []
+      })
+      .catch(() => {
+        officialTags.value = []
+      })
+
     // 检查是否为编辑模式
     const articleId = route.query.id
     const draftId = route.query.draft
@@ -343,9 +367,9 @@ export default function useCreateArticleView() {
             title: articleDetail.title,
             abstract: articleDetail.abstract || '',
             content: articleDetail.content,
-            coverImage: `https://picsum.photos/id/${400 + articleDetail.id}/800/400`, // 实际应该从文章信息中获取
+            coverImage: articleDetail.coverImage || '',
             visibility: 1,
-            tags: ['美食', '甜点', '意大利菜'] // 实际应该从文章信息中获取
+            tags: articleDetail.tags || []
           }
         })
         .catch(error => {
@@ -373,7 +397,7 @@ export default function useCreateArticleView() {
             content: articleDetail.content,
             coverImage: articleDetail.coverImage || '',
             visibility: 1,
-            tags: []
+            tags: articleDetail.tags || []
           }
         })
         .catch(error => {
@@ -404,8 +428,10 @@ export default function useCreateArticleView() {
     draftList,
     showPublishDialog,
     publishing,
+    officialTags,
     showTagInput,
     addTag,
+    toggleOfficialTag,
     removeTag,
     handleCoverChange,
     saveAsDraft,

@@ -88,6 +88,18 @@
                   <el-button v-else class="button-new-tag" size="small" @click="showTagInput">
                     + 新标签
                   </el-button>
+                  <div class="official-tags">
+                    <span class="official-label">官方标签：</span>
+                    <el-tag
+                      v-for="name in officialTags"
+                      :key="name"
+                      class="article-tag"
+                      :type="articleForm.tags.includes(name) ? 'success' : 'info'"
+                      @click="toggleOfficialTag(name)"
+                    >
+                      {{ name }}
+                    </el-tag>
+                  </div>
                 </el-form-item>
               </el-form>
             </div>
@@ -150,8 +162,10 @@ const {
   draftList,
   showPublishDialog,
   publishing,
+  officialTags,
   showTagInput,
   addTag,
+  toggleOfficialTag,
   removeTag,
   handleCoverChange,
   saveAsDraft,

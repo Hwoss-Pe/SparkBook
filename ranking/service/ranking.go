@@ -6,12 +6,13 @@ import (
 	"Webook/ranking/domain"
 	"Webook/ranking/repository"
 	"errors"
+	"math"
+	"time"
+
 	"github.com/ecodeclub/ekit/queue"
 	"github.com/ecodeclub/ekit/slice"
 	"golang.org/x/net/context"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"math"
-	"time"
 )
 
 //go:generate mockgen -source=./ranking.go -package=svcmocks -destination=./mocks/ranking.mock.go RankingService

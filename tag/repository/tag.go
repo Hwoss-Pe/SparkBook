@@ -48,7 +48,7 @@ func (c *CachedTagRepository) BindTagToBiz(ctx context.Context, uid int64, biz s
 
 func (c *CachedTagRepository) GetTags(ctx context.Context, uid int64) ([]domain.Tag, error) {
 	res, err := c.cache.GetTags(ctx, uid)
-	if err == nil {
+	if err == nil && len(res) > 0 {
 		return res, nil
 	}
 	tags, err := c.dao.GetTagsByUid(ctx, uid)
@@ -59,6 +59,7 @@ func (c *CachedTagRepository) GetTags(ctx context.Context, uid int64) ([]domain.
 	res = slice.Map(tags, func(idx int, src dao.Tag) domain.Tag {
 		return c.toDomain(src)
 	})
+	_ = c.cache.DelTags(ctx, uid)
 	err = c.cache.Append(ctx, uid, res...)
 	if err != nil {
 		logger.Error(err)

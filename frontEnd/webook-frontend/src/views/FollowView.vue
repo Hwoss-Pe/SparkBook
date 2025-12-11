@@ -28,8 +28,9 @@
       <div class="follow-content">
         <template v-if="articles.length > 0">
           <div v-for="article in articles" :key="article.id" class="article-card">
-            <div class="article-cover" v-if="article.coverImage" @click="viewArticle(article.id)">
-              <img :src="article.coverImage" :alt="article.title" />
+            <div class="article-cover" @click="viewArticle(article.id)">
+              <img v-if="article.coverImage" :src="article.coverImage" :alt="article.title" />
+              <div v-else class="cover-placeholder"></div>
             </div>
             <div class="article-info">
               <h3 class="article-title" @click="viewArticle(article.id)">{{ article.title }}</h3>

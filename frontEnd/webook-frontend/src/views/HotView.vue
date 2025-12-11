@@ -5,7 +5,7 @@
         <div class="header-content">
           <div class="title-section">
             <h1 class="hot-title">热门榜单</h1>
-            <p class="hot-subtitle">发现最受欢迎的内容</p>
+            <p class="hot-subtitle">总榜与官方标签榜单</p>
           </div>
           <div class="action-section">
             <el-button type="primary" @click="triggerRankingCalculation" :loading="isTriggering">
@@ -19,24 +19,19 @@
         <div class="tabs">
           <div 
             class="tab" 
-            :class="{ active: activeTab === 'daily' }"
-            @click="changeTab('daily')"
+            :class="{ active: activeTab === 'overall' }"
+            @click="changeTab('overall')"
           >
-            日榜
+            总榜
           </div>
-          <div 
-            class="tab" 
-            :class="{ active: activeTab === 'weekly' }"
-            @click="changeTab('weekly')"
+          <div
+            v-for="tag in officialTags"
+            :key="tag"
+            class="tab"
+            :class="{ active: activeTab === tag }"
+            @click="changeTab(tag)"
           >
-            周榜
-          </div>
-          <div 
-            class="tab" 
-            :class="{ active: activeTab === 'monthly' }"
-            @click="changeTab('monthly')"
-          >
-            月榜
+            {{ tag }}
           </div>
         </div>
       </div>
@@ -49,14 +44,7 @@
           </div>
           <div class="article-info">
             <h3 class="article-title" @click="viewArticle(article.id)">{{ article.title }}</h3>
-            <p class="article-abstract">{{ article.abstract }}</p>
             <div class="article-meta">
-              <div class="author-info">
-                <el-avatar :size="24" :src="article.author.avatar">
-                  {{ article.author.name ? article.author.name.substring(0, 1) : '匿' }}
-                </el-avatar>
-                <span class="author-name">{{ article.author.name || '匿名用户' }}</span>
-              </div>
               <div class="interaction-info">
                 <span class="interaction-item">
                   <el-icon><View /></el-icon>
@@ -92,6 +80,7 @@ import useHotView from '@/scripts/views/HotView'
 
 const {
   activeTab,
+  officialTags,
   hotArticles,
   hasMoreArticles,
   isTriggering,

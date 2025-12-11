@@ -6,6 +6,7 @@ import (
 	intrv1 "Webook/api/proto/gen/api/proto/intr/v1"
 	rankingv1 "Webook/api/proto/gen/api/proto/ranking/v1"
 	rewardv1 "Webook/api/proto/gen/api/proto/reward/v1"
+	tagv1 "Webook/api/proto/gen/api/proto/tag/v1"
 	"Webook/bff/web"
 	"Webook/pkg/logger"
 	"github.com/spf13/viper"
@@ -45,6 +46,32 @@ func NewArticleHandler(artSvc articlev1.ArticleServiceClient,
 	rankingSvc rankingv1.RankingServiceClient,
 	rewardSvc rewardv1.RewardServiceClient,
 	l logger.Logger,
-	followSvc followv1.FollowServiceClient) *web.ArticleHandler {
-	return web.NewArticleHandler(artSvc, intrSvc, rankingSvc, rewardSvc, l, followSvc)
+	followSvc followv1.FollowServiceClient,
+	tagSvc tagv1.TagServiceClient) *web.ArticleHandler {
+	return web.NewArticleHandler(artSvc, intrSvc, rankingSvc, rewardSvc, l, followSvc, tagSvc)
+}
+
+func InitTagClient(ecli *clientv3.Client) tagv1.TagServiceClient {
+	type Config struct {
+		Target string `json:"target"`
+		Secure bool   `json:"secure"`
+	}
+	var cfg Config
+	err := viper.UnmarshalKey("grpc.client.tag", &cfg)
+	if err != nil {
+		panic(err)
+	}
+	rs, err := resolver.NewBuilder(ecli)
+	if err != nil {
+		panic(err)
+	}
+	opts := []grpc.DialOption{grpc.WithResolvers(rs)}
+	if !cfg.Secure {
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+	cc, err := grpc.Dial(cfg.Target, opts...)
+	if err != nil {
+		panic(err)
+	}
+	return tagv1.NewTagServiceClient(cc)
 }

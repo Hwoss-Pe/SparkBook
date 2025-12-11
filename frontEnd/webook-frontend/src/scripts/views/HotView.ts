@@ -1,6 +1,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { rankingApi, type RankingArticle } from '@/api/ranking'
+import { articleApi, type ArticlePub } from '@/api/article'
 import { ElMessage } from 'element-plus'
 
 // 定义类型接口
@@ -24,7 +25,8 @@ export default function useHotView() {
   const router = useRouter()
   
   // 当前选中的标签
-  const activeTab = ref('daily')
+  const activeTab = ref('overall')
+  const officialTags = ref<string[]>([])
   
   // 热门文章列表
   const hotArticles = ref<Article[]>([])
@@ -56,17 +58,13 @@ export default function useHotView() {
   const loadMoreArticles = async () => {
     try {
       const currentLength = hotArticles.value.length
-      const response = await rankingApi.getRanking({ 
-        offset: currentLength, 
-        limit: 10 
-      })
-      
-      if (response.code === 0 && response.data && response.data.length > 0) {
-        const moreArticles: Article[] = response.data.map((article: RankingArticle) => {
-          return {
+      if (activeTab.value === 'overall') {
+        const data = await rankingApi.getRanking({ offset: currentLength, limit: 10 })
+        if (Array.isArray(data) && data.length > 0) {
+          const moreArticles: Article[] = data.map((article: RankingArticle) => ({
             id: article.id,
             title: article.title,
-            abstract: article.abstract || '暂无摘要',
+            abstract: article.abstract || '',
             coverImage: article.coverImage || `https://picsum.photos/id/${400 + article.id}/400/300`,
             author: {
               id: article.author.id,
@@ -77,13 +75,35 @@ export default function useHotView() {
             likeCount: article.likeCnt || 0,
             commentCount: article.collectCnt || 0,
             createTime: article.ctime
-          }
-        })
-        
-        hotArticles.value = [...hotArticles.value, ...moreArticles]
-        hasMoreArticles.value = response.data.length >= 10
+          }))
+          hotArticles.value = [...hotArticles.value, ...moreArticles]
+          hasMoreArticles.value = data.length >= 10
+        } else {
+          hasMoreArticles.value = false
+        }
       } else {
-        hasMoreArticles.value = false
+        const data = await articleApi.getArticlesByOfficialTag({ tag: activeTab.value, offset: currentLength, limit: 10 })
+        if (Array.isArray(data) && data.length > 0) {
+          const moreArticles: Article[] = data.map((article: ArticlePub) => ({
+            id: article.id,
+            title: article.title,
+            abstract: article.abstract || '',
+            coverImage: article.coverImage || `https://picsum.photos/id/${400 + article.id}/400/300`,
+            author: {
+              id: article.author.id,
+              name: article.author.name || '匿名用户',
+              avatar: article.author.avatar || `https://picsum.photos/id/${1000 + article.author.id}/100/100`
+            },
+            readCount: article.readCnt || 0,
+            likeCount: article.likeCnt || 0,
+            commentCount: article.collectCnt || 0,
+            createTime: article.ctime
+          }))
+          hotArticles.value = [...hotArticles.value, ...moreArticles]
+          hasMoreArticles.value = data.length >= 10
+        } else {
+          hasMoreArticles.value = false
+        }
       }
     } catch (error) {
       console.error('加载更多文章失败:', error)
@@ -95,32 +115,45 @@ export default function useHotView() {
   // 获取热门文章
   const fetchHotArticles = async () => {
     try {
-      // 调用热榜API获取热门文章
-      const response = await rankingApi.getRanking({ offset: 0, limit: 20 })
-      
-      // if (response.code === 0 && response.data) {
-        // 构建热门文章列表
-        const articles: Article[] = response.map((article: RankingArticle) => {
-          return {
-            id: article.id,
-            title: article.title,
-            abstract: article.abstract || '暂无摘要',
-            coverImage: article.coverImage || `https://picsum.photos/id/${400 + article.id}/400/300`,
-            author: {
-              id: article.author.id,
-              name: article.author.name || '匿名用户',
-              avatar: article.author.avatar || `https://picsum.photos/id/${1000 + article.author.id}/100/100`
-            },
-            readCount: article.readCnt || 0,
-            likeCount: article.likeCnt || 0,
-            commentCount: article.collectCnt || 0, // 暂时用收藏数代替评论数
-            createTime: article.ctime
-          }
-        })
-        
+      if (activeTab.value === 'overall') {
+        const data = await rankingApi.getRanking({ offset: 0, limit: 20 })
+        const articles: Article[] = (Array.isArray(data) ? data : []).map((article: RankingArticle) => ({
+          id: article.id,
+          title: article.title,
+          abstract: article.abstract || '',
+          coverImage: article.coverImage || `https://picsum.photos/id/${400 + article.id}/400/300`,
+          author: {
+            id: article.author.id,
+            name: article.author.name || '匿名用户',
+            avatar: article.author.avatar || `https://picsum.photos/id/${1000 + article.author.id}/100/100`
+          },
+          readCount: article.readCnt || 0,
+          likeCount: article.likeCnt || 0,
+          commentCount: article.collectCnt || 0,
+          createTime: article.ctime
+        }))
         hotArticles.value = articles
         hasMoreArticles.value = articles.length >= 20
-      
+      } else {
+        const data = await articleApi.getArticlesByOfficialTag({ tag: activeTab.value, offset: 0, limit: 20 })
+        const articles: Article[] = (Array.isArray(data) ? data : []).map((article: ArticlePub) => ({
+          id: article.id,
+          title: article.title,
+          abstract: article.abstract || '',
+          coverImage: article.coverImage || `https://picsum.photos/id/${400 + article.id}/400/300`,
+          author: {
+            id: article.author.id,
+            name: article.author.name || '匿名用户',
+            avatar: article.author.avatar || `https://picsum.photos/id/${1000 + article.author.id}/100/100`
+          },
+          readCount: article.readCnt || 0,
+          likeCount: article.likeCnt || 0,
+          commentCount: article.collectCnt || 0,
+          createTime: article.ctime || ''
+        }))
+        hotArticles.value = articles
+        hasMoreArticles.value = articles.length >= 20
+      }
     } catch (error) {
       console.error('获取热门文章失败:', error)
       ElMessage.error('获取热榜数据失败，请稍后重试')
@@ -135,17 +168,11 @@ export default function useHotView() {
   const triggerRankingCalculation = async () => {
     try {
       isTriggering.value = true
-      const response = await rankingApi.triggerRanking()
-      
-      if (response.code === 0) {
-        ElMessage.success('热榜计算已触发，正在重新计算中...')
-        // 等待几秒后重新获取数据
-        setTimeout(() => {
-          fetchHotArticles()
-        }, 2000)
-      } else {
-        ElMessage.error(response.msg || '触发热榜计算失败')
-      }
+      await rankingApi.triggerRanking()
+      ElMessage.success('热榜计算已触发，正在重新计算中...')
+      setTimeout(() => {
+        fetchHotArticles()
+      }, 2000)
     } catch (error) {
       console.error('触发热榜计算失败:', error)
       ElMessage.error('触发热榜计算失败，请稍后重试')
@@ -154,12 +181,19 @@ export default function useHotView() {
     }
   }
   
-  onMounted(() => {
+  onMounted(async () => {
+    try {
+      const tags = await articleApi.getOfficialTags()
+      officialTags.value = Array.isArray(tags) ? tags : []
+    } catch {
+      officialTags.value = []
+    }
     fetchHotArticles()
   })
   
   return {
     activeTab,
+    officialTags,
     hotArticles,
     hasMoreArticles,
     isTriggering,

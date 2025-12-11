@@ -85,7 +85,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api/user'
 import { Search, House, Star, Histogram, ChatDotRound, Edit, User } from '@element-plus/icons-vue'
@@ -100,8 +100,9 @@ const userInitials = computed(() => {
 })
 
 const router = useRouter()
+const route = useRoute()
 const searchKeyword = ref('')
-const activeMenu = ref('/')
+const activeMenu = computed(() => route.path)
 
 // 处理搜索
 const handleSearch = () => {

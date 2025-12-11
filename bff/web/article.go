@@ -6,17 +6,25 @@ import (
 	intrv1 "Webook/api/proto/gen/api/proto/intr/v1"
 	rankingv1 "Webook/api/proto/gen/api/proto/ranking/v1"
 	rewardv1 "Webook/api/proto/gen/api/proto/reward/v1"
+	searchv1 "Webook/api/proto/gen/api/proto/search/v1"
+	tagv1 "Webook/api/proto/gen/api/proto/tag/v1"
 	"Webook/bff/web/jwt"
 	"Webook/pkg/ginx"
 	"Webook/pkg/logger"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
 	"github.com/ecodeclub/ekit/slice"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
+	clientv3 "go.etcd.io/etcd/client/v3"
+	"go.etcd.io/etcd/client/v3/naming/resolver"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -28,6 +36,8 @@ type ArticleHandler struct {
 	reward     rewardv1.RewardServiceClient
 	l          logger.Logger
 	biz        string
+	tagSvc     tagv1.TagServiceClient
+	searchSvc  searchv1.SearchServiceClient
 }
 
 func NewArticleHandler(svc articlev1.ArticleServiceClient,
@@ -35,7 +45,8 @@ func NewArticleHandler(svc articlev1.ArticleServiceClient,
 	rankingSvc rankingv1.RankingServiceClient,
 	reward rewardv1.RewardServiceClient,
 	l logger.Logger,
-	followSvc followv1.FollowServiceClient) *ArticleHandler {
+	followSvc followv1.FollowServiceClient,
+	tagSvc tagv1.TagServiceClient) *ArticleHandler {
 	return &ArticleHandler{
 		svc:        svc,
 		l:          l,
@@ -44,12 +55,14 @@ func NewArticleHandler(svc articlev1.ArticleServiceClient,
 		intrSvc:    intrSvc,
 		rankingSvc: rankingSvc,
 		followSvc:  followSvc,
+		tagSvc:     tagSvc,
 	}
 }
 
 func (a *ArticleHandler) RegisterRoute(s *gin.Engine) {
 	g := s.Group("/articles")
 	g.GET("/detail/:id", a.Detail)
+	g.GET("/tags/official", a.OfficialTags)
 	g.POST("/list", ginx.WrapClaimsAndReq(a.List))
 	g.POST("/edit", a.Edit)
 	g.POST("/publish", a.Publish)
@@ -64,6 +77,7 @@ func (a *ArticleHandler) RegisterRoute(s *gin.Engine) {
 	pub.GET("/author/:id/list", ginx.WrapReq[AuthorPubListReq](a.ListPubByAuthor))
 	// 获取用户收藏的文章列表（需要登录）
 	pub.GET("/collected/list", ginx.WrapClaimsAndReq[CollectedListReq](a.ListCollected))
+	pub.GET("/following/list", ginx.WrapClaimsAndReq[FollowingListReq](a.ListFollowing))
 	pub.POST("/like", ginx.WrapClaimsAndReq[LikeReq](a.Like))
 	pub.POST("/cancelLike", ginx.WrapClaimsAndReq[LikeReq](a.CancelLike))
 	pub.POST("/collect", ginx.WrapClaimsAndReq[CollectReq](a.Collect))
@@ -72,6 +86,9 @@ func (a *ArticleHandler) RegisterRoute(s *gin.Engine) {
 	pub.POST("/reward", ginx.WrapClaimsAndReq[RewardReq](a.Reward))
 	// 热榜（匿名可访问）
 	pub.GET("/ranking", ginx.WrapReq[RankingReq](a.Ranking))
+	pub.GET("/ranking/tag", ginx.WrapReq[TagRankingReq](a.RankingByTag))
+	// 根据官方标签获取文章列表（匿名可访问）
+	pub.GET("/tag/articles", ginx.WrapReq[OfficialTagListReq](a.ListByOfficialTag))
 	// 手动触发热榜计算
 	pub.POST("/ranking/trigger", ginx.WrapReq[TriggerRankingReq](a.TriggerRanking))
 }
@@ -190,6 +207,17 @@ func (a *ArticleHandler) Detail(ctx *gin.Context) {
 			logger.Int64("uid", usr.Id))
 		return
 	}
+	var tags []string
+	if a.tagSvc != nil && art.Author != nil {
+		tgResp, _ := a.tagSvc.GetBizTags(ctx, &tagv1.GetBizTagsRequest{Uid: usr.Id, Biz: a.biz, BizId: id})
+		if tgResp != nil {
+			for _, t := range tgResp.Tags {
+				if t != nil {
+					tags = append(tags, t.Name)
+				}
+			}
+		}
+	}
 	ctx.JSON(http.StatusOK, Result{
 		Data: ArticleVo{
 			Id:         art.Id,
@@ -199,6 +227,7 @@ func (a *ArticleHandler) Detail(ctx *gin.Context) {
 			CoverImage: art.CoverImage,
 			Ctime:      formatProtoTime(art.Ctime),
 			Utime:      formatProtoTime(art.Utime),
+			Tags:       tags,
 		},
 	})
 }
@@ -222,6 +251,11 @@ type AuthorPubListReq struct {
 
 // CollectedListReq 用户收藏文章列表请求
 type CollectedListReq struct {
+	Offset int32 `json:"offset" form:"offset"`
+	Limit  int32 `json:"limit" form:"limit"`
+}
+
+type FollowingListReq struct {
 	Offset int32 `json:"offset" form:"offset"`
 	Limit  int32 `json:"limit" form:"limit"`
 }
@@ -354,6 +388,38 @@ func (a *ArticleHandler) Publish(ctx *gin.Context) {
 		a.l.Error("发表失败", logger.Error(err))
 		return
 	}
+	if a.tagSvc != nil && len(req.Tags) > 0 {
+		names := make(map[string]struct{}, len(req.Tags))
+		for _, n := range req.Tags {
+			if n == "" {
+				continue
+			}
+			names[n] = struct{}{}
+		}
+		var existed map[string]int64
+		existed = make(map[string]int64)
+		resp, er := a.tagSvc.GetTags(ctx, &tagv1.GetTagsRequest{Uid: usr.Id})
+		if er == nil && resp != nil {
+			for _, t := range resp.Tag {
+				existed[t.Name] = t.Id
+			}
+		}
+		ids := make([]int64, 0, len(names))
+		for n := range names {
+			if id, ok := existed[n]; ok {
+				ids = append(ids, id)
+				continue
+			}
+			cr, e2 := a.tagSvc.CreateTag(ctx, &tagv1.CreateTagRequest{Uid: usr.Id, Name: n})
+			if e2 != nil || cr == nil || cr.Tag == nil {
+				continue
+			}
+			ids = append(ids, cr.Tag.Id)
+		}
+		if len(ids) > 0 {
+			_, _ = a.tagSvc.AttachTags(ctx, &tagv1.AttachTagsRequest{Uid: usr.Id, Biz: a.biz, BizId: idResp.Id, Tids: ids})
+		}
+	}
 	ctx.JSON(http.StatusOK, Result{
 		Data: idResp.Id,
 	})
@@ -407,6 +473,17 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (ginx.R
 
 	// 阅读量不在BFF直接递增，统一走事件驱动链路
 	intr := intrResp.Intr
+	var tags []string
+	if a.tagSvc != nil && art.Author != nil {
+		tgResp, _ := a.tagSvc.GetBizTags(ctx, &tagv1.GetBizTagsRequest{Uid: art.Author.GetId(), Biz: a.biz, BizId: id})
+		if tgResp != nil {
+			for _, t := range tgResp.Tags {
+				if t != nil {
+					tags = append(tags, t.Name)
+				}
+			}
+		}
+	}
 	return Result{
 		Data: ArticleVo{
 			Id:         art.Id,
@@ -422,6 +499,7 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (ginx.R
 			LikeCnt:    intr.LikeCnt,
 			Liked:      intr.Liked,
 			Collected:  intr.Collected,
+			Tags:       tags,
 		},
 	}, nil
 }
@@ -755,6 +833,122 @@ func (a *ArticleHandler) ListCollected(ctx *gin.Context, req CollectedListReq, u
 	}, nil
 }
 
+func (a *ArticleHandler) ListFollowing(ctx *gin.Context, req FollowingListReq, uc ginx.UserClaims) (ginx.Result, error) {
+	if req.Limit > 100 || req.Limit <= 0 {
+		req.Limit = 10
+	}
+	frResp, err := a.followSvc.GetFollowee(ctx, &followv1.GetFolloweeRequest{Follower: uc.Id, Offset: 0, Limit: 1000})
+	if err != nil {
+		a.l.Error("获取关注列表失败", logger.Error(err))
+		return ginx.Result{Code: 5, Msg: "系统错误"}, err
+	}
+	rels := frResp.GetFollowRelations()
+	if len(rels) == 0 {
+		return ginx.Result{Data: []ArticlePubVo{}}, nil
+	}
+	followeeSet := make(map[int64]struct{}, len(rels))
+	for _, r := range rels {
+		if r == nil {
+			continue
+		}
+		followeeSet[r.GetFollowee()] = struct{}{}
+	}
+
+	articleOffset := req.Offset
+	selected := make([]*articlev1.Article, 0, req.Limit)
+	cursor := int32(0)
+	const pageSize int32 = 100
+	for int32(len(selected)) < req.Limit {
+		pubResp, er := a.svc.ListPub(ctx, &articlev1.ListPubRequest{StartTime: timestamppb.Now(), Offset: cursor, Limit: pageSize})
+		if er != nil {
+			a.l.Error("获取推荐文章列表失败", logger.Error(er))
+			return ginx.Result{Code: 5, Msg: "系统错误"}, er
+		}
+		arts := pubResp.GetArticles()
+		if len(arts) == 0 {
+			break
+		}
+		for _, art := range arts {
+			if art.Author != nil {
+				if _, ok := followeeSet[art.Author.Id]; ok && art.Status == 2 {
+					if articleOffset > 0 {
+						articleOffset--
+						continue
+					}
+					selected = append(selected, art)
+					if int32(len(selected)) >= req.Limit {
+						break
+					}
+				}
+			}
+		}
+		if len(arts) < int(pageSize) || int32(len(selected)) >= req.Limit {
+			break
+		}
+		cursor += pageSize
+	}
+
+	if len(selected) == 0 {
+		return ginx.Result{Data: []ArticlePubVo{}}, nil
+	}
+
+	ids := make([]int64, 0, len(selected))
+	for _, art := range selected {
+		ids = append(ids, art.Id)
+	}
+
+	intrMap := make(map[int64]*intrv1.Interactive)
+	intrResp, er := a.intrSvc.GetByIds(ctx, &intrv1.GetByIdsRequest{Biz: a.biz, Ids: ids})
+	if er == nil && intrResp != nil {
+		intrMap = intrResp.GetIntrs()
+	}
+
+	type userIntr struct{ liked, collected bool }
+	userMap := make(map[int64]userIntr, len(ids))
+	var uid int64
+	if rawUser, ok := ctx.Get("user"); ok {
+		if claims, ok2 := rawUser.(ginx.UserClaims); ok2 {
+			uid = claims.Id
+		}
+	}
+	if uid > 0 {
+		for _, aid := range ids {
+			r, e := a.intrSvc.Get(ctx, &intrv1.GetRequest{Biz: a.biz, BizId: aid, Uid: uid})
+			if e != nil || r == nil || r.Intr == nil {
+				continue
+			}
+			userMap[aid] = userIntr{liked: r.Intr.Liked, collected: r.Intr.Collected}
+		}
+	}
+
+	result := make([]ArticlePubVo, 0, len(selected))
+	for _, art := range selected {
+		vo := ArticlePubVo{
+			Id:         art.Id,
+			Title:      art.Title,
+			Abstract:   art.Abstract,
+			CoverImage: art.CoverImage,
+			Ctime:      art.Ctime.AsTime().Format(time.DateTime),
+			Utime:      art.Utime.AsTime().Format(time.DateTime),
+		}
+		if art.Author != nil {
+			vo.Author = AuthorVo{Id: art.Author.Id, Name: art.Author.Name, Avatar: art.Author.Avatar}
+		}
+		if intr, ok := intrMap[art.Id]; ok && intr != nil {
+			vo.ReadCnt = intr.ReadCnt
+			vo.LikeCnt = intr.LikeCnt
+			vo.CollectCnt = intr.CollectCnt
+		}
+		if u, ok := userMap[art.Id]; ok {
+			vo.Liked = u.liked
+			vo.Collected = u.collected
+		}
+		result = append(result, vo)
+	}
+
+	return ginx.Result{Data: result}, nil
+}
+
 func (a *ArticleHandler) CancelLike(ctx *gin.Context, req LikeReq, uc ginx.UserClaims) (ginx.Result, error) {
 	_, err := a.intrSvc.CancelLike(ctx, &intrv1.CancelLikeRequest{Biz: a.biz, BizId: req.Id, Uid: uc.Id})
 	if err != nil {
@@ -845,6 +1039,18 @@ func (a *ArticleHandler) Reward(ctx *gin.Context, req RewardReq, uc ginx.UserCla
 type RankingReq struct {
 	Offset int32 `json:"offset"`
 	Limit  int32 `json:"limit"`
+}
+
+type TagRankingReq struct {
+	Tag    string `json:"tag" form:"tag"`
+	Offset int32  `json:"offset" form:"offset"`
+	Limit  int32  `json:"limit" form:"limit"`
+}
+
+type OfficialTagListReq struct {
+	Tag    string `json:"tag" form:"tag"`
+	Offset int32  `json:"offset" form:"offset"`
+	Limit  int32  `json:"limit" form:"limit"`
 }
 
 // TriggerRankingReq 触发热榜计算请求
@@ -976,4 +1182,283 @@ func (a *ArticleHandler) Ranking(ctx *gin.Context, req RankingReq) (ginx.Result,
 	return ginx.Result{
 		Data: result,
 	}, nil
+}
+
+func (a *ArticleHandler) ensureSearchClient() searchv1.SearchServiceClient {
+	if a.searchSvc != nil {
+		return a.searchSvc
+	}
+	type Config struct {
+		Target string `json:"target"`
+		Secure bool   `json:"secure"`
+	}
+	var cfg Config
+	_ = viper.UnmarshalKey("grpc.client.search", &cfg)
+	ecli, err := func() (*clientv3.Client, error) {
+		var ecfg clientv3.Config
+		if er := viper.UnmarshalKey("etcd", &ecfg); er != nil {
+			return nil, er
+		}
+		return clientv3.New(ecfg)
+	}()
+	if err != nil {
+		return nil
+	}
+	rs, err := resolver.NewBuilder(ecli)
+	if err != nil {
+		return nil
+	}
+	opts := []grpc.DialOption{grpc.WithResolvers(rs)}
+	if !cfg.Secure {
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+	cc, err := grpc.Dial(cfg.Target, opts...)
+	if err != nil {
+		return nil
+	}
+	a.searchSvc = searchv1.NewSearchServiceClient(cc)
+	return a.searchSvc
+}
+
+func (a *ArticleHandler) RankingByTag(ctx *gin.Context, req TagRankingReq) (ginx.Result, error) {
+	if req.Tag == "" {
+		return ginx.Result{Data: []ArticlePubVo{}}, nil
+	}
+	if req.Limit > 100 || req.Limit <= 0 {
+		req.Limit = 10
+	}
+	sc := a.ensureSearchClient()
+	if sc == nil {
+		return ginx.Result{Code: 5, Msg: "系统错误"}, nil
+	}
+	sresp, err := sc.Search(ctx, &searchv1.SearchRequest{Expression: req.Tag, Uid: 0})
+	if err != nil || sresp == nil || sresp.Article == nil {
+		return ginx.Result{Data: []ArticlePubVo{}}, nil
+	}
+	arts := sresp.Article.Articles
+	if len(arts) == 0 {
+		return ginx.Result{Data: []ArticlePubVo{}}, nil
+	}
+	ids := make([]int64, 0, len(arts))
+	for _, aitem := range arts {
+		ids = append(ids, aitem.Id)
+	}
+	intrMap := make(map[int64]*intrv1.Interactive)
+	intrResp, _ := a.intrSvc.GetByIds(ctx, &intrv1.GetByIdsRequest{Biz: a.biz, Ids: ids})
+	if intrResp != nil {
+		intrMap = intrResp.GetIntrs()
+	}
+	type item struct {
+		id   int64
+		like int64
+		col  int64
+	}
+	arr := make([]item, 0, len(ids))
+	for _, id := range ids {
+		var lk, cl int64
+		if intr := intrMap[id]; intr != nil {
+			lk = intr.LikeCnt
+			cl = intr.CollectCnt
+		}
+		arr = append(arr, item{id: id, like: lk, col: cl})
+	}
+	sort.Slice(arr, func(i, j int) bool {
+		return arr[i].like+arr[i].col > arr[j].like+arr[j].col
+	})
+	start := int(req.Offset)
+	end := start + int(req.Limit)
+	if start >= len(arr) {
+		return ginx.Result{Data: []ArticlePubVo{}}, nil
+	}
+	if end > len(arr) {
+		end = len(arr)
+	}
+	page := arr[start:end]
+	result := make([]ArticlePubVo, 0, len(page))
+	var uid int64
+	if raw, ok := ctx.Get("user"); ok {
+		if claims, ok2 := raw.(ginx.UserClaims); ok2 {
+			uid = claims.Id
+		}
+	}
+	userMap := make(map[int64]struct{ liked, collected bool }, len(page))
+	for _, it := range page {
+		if uid > 0 {
+			resp, er := a.intrSvc.Get(ctx, &intrv1.GetRequest{Biz: a.biz, BizId: it.id, Uid: uid})
+			if er == nil && resp != nil && resp.Intr != nil {
+				userMap[it.id] = struct{ liked, collected bool }{liked: resp.Intr.Liked, collected: resp.Intr.Collected}
+			}
+		}
+		ar, er := a.svc.GetPublishedById(ctx, &articlev1.GetPublishedByIdRequest{Id: it.id})
+		if er != nil || ar == nil || ar.Article == nil || ar.Article.Author == nil {
+			continue
+		}
+		aid := ar.Article.Author.Id
+		vo := ArticlePubVo{
+			Id:         ar.Article.Id,
+			Title:      ar.Article.Title,
+			Abstract:   ar.Article.Abstract,
+			CoverImage: ar.Article.CoverImage,
+			Ctime:      formatProtoTime(ar.Article.Ctime),
+			Utime:      formatProtoTime(ar.Article.Utime),
+			ReadCnt: func() int64 {
+				if intr := intrMap[ar.Article.Id]; intr != nil {
+					return intr.ReadCnt
+				}
+				return 0
+			}(),
+			LikeCnt:    it.like,
+			CollectCnt: it.col,
+		}
+		vo.Author = AuthorVo{Id: aid}
+		if u, ok := userMap[ar.Article.Id]; ok {
+			vo.Liked = u.liked
+			vo.Collected = u.collected
+		}
+		result = append(result, vo)
+	}
+	return ginx.Result{Data: result}, nil
+}
+
+func (a *ArticleHandler) ListByOfficialTag(ctx *gin.Context, req OfficialTagListReq) (ginx.Result, error) {
+	if req.Tag == "" {
+		return ginx.Result{Data: []ArticlePubVo{}}, nil
+	}
+	if req.Limit > 100 || req.Limit <= 0 {
+		req.Limit = 10
+	}
+	if a.tagSvc != nil {
+		resp, _ := a.tagSvc.GetTags(ctx, &tagv1.GetTagsRequest{Uid: 0})
+		if resp == nil || len(resp.Tag) == 0 {
+			return ginx.Result{Data: []ArticlePubVo{}}, nil
+		}
+		found := false
+		for _, t := range resp.Tag {
+			if t != nil && t.Name == req.Tag {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return ginx.Result{Data: []ArticlePubVo{}}, nil
+		}
+	}
+	collected := make([]*articlev1.Article, 0, req.Limit)
+	skip := req.Offset
+	cursor := int32(0)
+	const pageSize int32 = 100
+	for int32(len(collected)) < req.Limit {
+		pubResp, er := a.svc.ListPub(ctx, &articlev1.ListPubRequest{StartTime: timestamppb.Now(), Offset: cursor, Limit: pageSize})
+		if er != nil {
+			a.l.Error("获取推荐文章列表失败", logger.Error(er))
+			return ginx.Result{Code: 5, Msg: "系统错误"}, er
+		}
+		arts := pubResp.GetArticles()
+		if len(arts) == 0 {
+			break
+		}
+		for _, art := range arts {
+			if art.Status != 2 || art.Author == nil {
+				continue
+			}
+			tgResp, _ := a.tagSvc.GetBizTags(ctx, &tagv1.GetBizTagsRequest{Uid: art.Author.Id, Biz: a.biz, BizId: art.Id})
+			if tgResp == nil || len(tgResp.Tags) == 0 {
+				continue
+			}
+			matched := false
+			for _, t := range tgResp.Tags {
+				if t != nil && t.Name == req.Tag {
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				continue
+			}
+			if skip > 0 {
+				skip--
+				continue
+			}
+			collected = append(collected, art)
+			if int32(len(collected)) >= req.Limit {
+				break
+			}
+		}
+		if len(arts) < int(pageSize) || int32(len(collected)) >= req.Limit {
+			break
+		}
+		cursor += pageSize
+	}
+	if len(collected) == 0 {
+		return ginx.Result{Data: []ArticlePubVo{}}, nil
+	}
+	ids := make([]int64, 0, len(collected))
+	for _, aitem := range collected {
+		ids = append(ids, aitem.Id)
+	}
+	intrMap := make(map[int64]*intrv1.Interactive)
+	intrResp, _ := a.intrSvc.GetByIds(ctx, &intrv1.GetByIdsRequest{Biz: a.biz, Ids: ids})
+	if intrResp != nil {
+		intrMap = intrResp.GetIntrs()
+	}
+	result := make([]ArticlePubVo, 0, len(collected))
+	var uid int64
+	if raw, ok := ctx.Get("user"); ok {
+		if claims, ok2 := raw.(ginx.UserClaims); ok2 {
+			uid = claims.Id
+		}
+	}
+	userMap := make(map[int64]struct{ liked, collected bool }, len(collected))
+	for _, it := range collected {
+		if uid > 0 {
+			resp, er := a.intrSvc.Get(ctx, &intrv1.GetRequest{Biz: a.biz, BizId: it.Id, Uid: uid})
+			if er == nil && resp != nil && resp.Intr != nil {
+				userMap[it.Id] = struct{ liked, collected bool }{liked: resp.Intr.Liked, collected: resp.Intr.Collected}
+			}
+		}
+		ar, er := a.svc.GetPublishedById(ctx, &articlev1.GetPublishedByIdRequest{Id: it.Id})
+		if er != nil || ar == nil || ar.Article == nil {
+			continue
+		}
+		vo := ArticlePubVo{
+			Id:         ar.Article.Id,
+			Title:      ar.Article.Title,
+			Abstract:   ar.Article.Abstract,
+			CoverImage: ar.Article.CoverImage,
+			Ctime:      formatProtoTime(ar.Article.Ctime),
+			Utime:      formatProtoTime(ar.Article.Utime),
+		}
+		if ar.Article.Author != nil {
+			vo.Author = AuthorVo{Id: ar.Article.Author.Id, Name: ar.Article.Author.Name, Avatar: ar.Article.Author.Avatar}
+		}
+		if intr := intrMap[ar.Article.Id]; intr != nil {
+			vo.ReadCnt = intr.ReadCnt
+			vo.LikeCnt = intr.LikeCnt
+			vo.CollectCnt = intr.CollectCnt
+		}
+		if u, ok := userMap[ar.Article.Id]; ok {
+			vo.Liked = u.liked
+			vo.Collected = u.collected
+		}
+		result = append(result, vo)
+	}
+	return ginx.Result{Data: result}, nil
+}
+func (a *ArticleHandler) OfficialTags(ctx *gin.Context) {
+	if a.tagSvc == nil {
+		ctx.JSON(http.StatusOK, Result{Data: []string{}})
+		return
+	}
+	resp, err := a.tagSvc.GetTags(ctx, &tagv1.GetTagsRequest{Uid: 0})
+	if err != nil {
+		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统错误"})
+		return
+	}
+	names := make([]string, 0, len(resp.GetTag()))
+	for _, t := range resp.GetTag() {
+		if t != nil && t.Name != "" {
+			names = append(names, t.Name)
+		}
+	}
+	ctx.JSON(http.StatusOK, Result{Data: names})
 }

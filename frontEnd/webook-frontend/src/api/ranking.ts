@@ -23,12 +23,8 @@ export interface RankingRequest {
   limit?: number
 }
 
-export interface RankingResponse {
-  map(arg0: (article: { id: any; title: any; author: { name: any }; readCnt: any }) => { avatar:any;id: any; title: any; author: { name: any }; readCount: any }): { id: number; title: string; author: { name: string }; readCount: number }[] | { id: number; title: string; author: { name: string }; readCount: number }[]
-  code: number
-  msg: string
-  data: RankingArticle[]
-}
+// 实际返回为后端 Result 的 data 字段，Axios 拦截器已直接返回数组
+export type RankingResponse = RankingArticle[]
 
 // 热榜相关API
 export const rankingApi = {
@@ -39,7 +35,6 @@ export const rankingApi = {
   
   // 手动触发热榜计算
   triggerRanking: () => {
-    return post<{ code: number; msg: string; data: any }>('/articles/pub/ranking/trigger', {})
+    return post<Record<string, any>>('/articles/pub/ranking/trigger', {})
   }
 }
-

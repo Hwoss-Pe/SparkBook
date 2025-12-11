@@ -32,7 +32,7 @@ func (t *tagService) AttachTags(ctx context.Context, uid int64, biz string, bizI
 	if err != nil {
 		return err
 	}
-	panic(err)
+	return nil
 }
 
 func (t *tagService) GetTags(ctx context.Context, uid int64) ([]domain.Tag, error) {

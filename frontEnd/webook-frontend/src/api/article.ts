@@ -21,6 +21,7 @@ export interface Article {
   readCnt?: number
   likeCnt?: number
   collectCnt?: number
+  tags?: string[]
 }
 
 // 推荐文章（首页使用）
@@ -76,10 +77,18 @@ export const articleApi = {
   getList: (params: ListRequest) => {
     return post<ListResponse>('/articles/list', params)
   },
+  // 根据官方标签获取文章列表（匿名可访问）
+  getArticlesByOfficialTag: (params: { tag: string; offset?: number; limit?: number }) => {
+    return get<ArticlePub[]>('/articles/pub/tag/articles', params)
+  },
   
   // 获取推荐文章列表（首页使用，按时间排序）
   getRecommendList: (params: PublishedListRequest) => {
     return post<ArticlePub[]>('/articles/pub/list', params)
+  },
+  // 获取关注作者的文章列表（需要登录）
+  getFollowingList: (params: PublishedListRequest) => {
+    return get<ArticlePub[]>('/articles/pub/following/list', params)
   },
   // 按作者获取已发布文章列表（读者视角，匿名可访问）
   getAuthorPublishedList: (authorId: number, params: PublishedListRequest) => {
@@ -142,5 +151,9 @@ export const articleApi = {
 
   getAuthorStats: (authorId: number) => {
     return get<AuthorStats>(`/articles/author/${authorId}/stats`)
-  }
+  },
+  // 获取官方标签（uid=0）
+  getOfficialTags: () => {
+    return get<string[]>(`/articles/tags/official`)
+  },
 }

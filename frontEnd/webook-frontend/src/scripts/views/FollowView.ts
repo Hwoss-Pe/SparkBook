@@ -1,8 +1,6 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { followApi } from '@/api/follow'
 import { articleApi } from '@/api/article'
-import { interactiveApi } from '@/api/interactive'
 
 // 定义类型接口
 interface Article {
@@ -26,6 +24,9 @@ export default function useFollowView() {
   
   // 当前选中的标签
   const activeTab = ref('recommend')
+  const limit = 10
+  const offsetRecommend = ref(0)
+  const offsetFollowing = ref(0)
   
   // 文章列表
   const articles = ref<Article[]>([])
@@ -49,53 +50,41 @@ export default function useFollowView() {
   // 切换标签
   const changeTab = (tab: string) => {
     activeTab.value = tab
-    fetchArticles()
+    fetchArticles(true)
   }
   
   // 加载更多文章
   const loadMoreArticles = async () => {
     try {
-      // 这里应该调用API加载更多文章
-      // 实际项目中应该根据不同的标签（推荐、关注）调用不同的API
-      
-      // 模拟加载更多
-      const moreArticles: Article[] = [
-        {
-          id: 7,
-          title: '零基础学习编程：从何开始？',
-          abstract: '想学编程但不知道从何入手？本文为你提供清晰的学习路径...',
-          coverImage: 'https://picsum.photos/id/0/400/300',
-          author: {
-            id: 107,
-            name: '编程教练',
-            avatar: 'https://picsum.photos/id/1/100/100'
-          },
-          readCount: 18500,
-          likeCount: 5100,
-          commentCount: 320,
-          createTime: '2024-11-10T10:30:00'
+      const isFollowing = activeTab.value === 'following'
+      const currentOffset = isFollowing ? offsetFollowing.value : offsetRecommend.value
+      const resp = isFollowing
+        ? await articleApi.getFollowingList({ offset: currentOffset, limit })
+        : await articleApi.getRecommendList({ offset: currentOffset, limit })
+
+      const more: Article[] = resp.map((article: any) => ({
+        id: article.id,
+        title: article.title,
+        abstract: article.abstract,
+        coverImage: article.coverImage,
+        author: {
+          id: article.author?.id,
+          name: article.author?.name,
+          avatar: article.author?.avatar
         },
-        {
-          id: 8,
-          title: '每天10分钟，21天养成冥想习惯',
-          abstract: '冥想不仅能减轻压力，还能提高注意力和创造力...',
-          coverImage: 'https://picsum.photos/id/1029/400/300',
-          author: {
-            id: 108,
-            name: '心灵导师',
-            avatar: 'https://picsum.photos/id/1002/100/100'
-          },
-          readCount: 12300,
-          likeCount: 3600,
-          commentCount: 145,
-          createTime: '2024-11-05T15:45:00'
-        }
-      ]
-      
-      articles.value = [...articles.value, ...moreArticles]
-      
-      // 假设没有更多文章了
-      hasMoreArticles.value = false
+        readCount: article.readCnt || 0,
+        likeCount: article.likeCnt || 0,
+        commentCount: 0,
+        createTime: article.ctime
+      }))
+
+      articles.value = [...articles.value, ...more]
+      if (isFollowing) {
+        offsetFollowing.value += more.length
+      } else {
+        offsetRecommend.value += more.length
+      }
+      hasMoreArticles.value = more.length === limit
     } catch (error) {
       console.error('加载更多文章失败:', error)
       hasMoreArticles.value = false
@@ -103,73 +92,47 @@ export default function useFollowView() {
   }
   
   // 获取文章列表
-  const fetchArticles = async () => {
+  const fetchArticles = async (reset = false) => {
     try {
-      const currentUserId = 101 // 当前用户ID，实际应该从用户状态中获取
-      
-      // 获取关注列表
-      const followResponse = await followApi.getFollowee({
-        follower: currentUserId,
-        offset: 0,
-        limit: 100
-      })
-      
-      // 提取关注的用户ID
-      const followeeIds = followResponse.follow_relations.map(relation => relation.followee)
-      
-      if (followeeIds.length === 0) {
+      const isFollowing = activeTab.value === 'following'
+      if (reset) {
+        if (isFollowing) {
+          offsetFollowing.value = 0
+        } else {
+          offsetRecommend.value = 0
+        }
         articles.value = []
-        hasMoreArticles.value = false
-        return
+        hasMoreArticles.value = true
       }
-      
-      // 获取关注用户的文章
-      // 实际项目中应该有专门的API来获取关注用户的文章
-      // 这里模拟一下，假设调用了文章列表API并过滤出关注用户的文章
-      const articlesResponse = await articleApi.getPublishedList({
-        offset: 0,
-        limit: 10
-      })
-      
-      // 过滤出关注用户的文章
-      const followedArticles = articlesResponse.articles.filter(article => 
-        followeeIds.includes(article.author.id)
-      )
-      
-      // 获取交互数据
-      const articleIds = followedArticles.map(article => article.id)
-      const interactiveData = await interactiveApi.getInteractiveByIds({
-        biz: 'article',
-        ids: articleIds
-      })
-      
-      // 构建文章列表
-      const articleList: Article[] = followedArticles.map(article => {
-        const interactive = interactiveData.intrs[article.id] || {
-          read_cnt: 0,
-          like_cnt: 0,
-          collect_cnt: 0
-        }
-        
-        return {
-          id: article.id,
-          title: article.title,
-          abstract: article.abstract,
-          coverImage: `https://picsum.photos/id/${400 + article.id}/400/300`, // 模拟封面图
-          author: {
-            id: article.author.id,
-            name: article.author.name,
-            avatar: `https://picsum.photos/id/${1000 + article.author.id}/100/100` // 模拟头像
-          },
-          readCount: interactive.read_cnt,
-          likeCount: interactive.like_cnt,
-          commentCount: 0, // 评论数需要从评论API获取
-          createTime: article.ctime
-        }
-      })
-      
-      articles.value = articleList
-      hasMoreArticles.value = articleList.length >= 10 // 如果返回10条或更多，可能还有更多
+
+      const currentOffset = isFollowing ? offsetFollowing.value : offsetRecommend.value
+      const resp = isFollowing
+        ? await articleApi.getFollowingList({ offset: currentOffset, limit })
+        : await articleApi.getRecommendList({ offset: currentOffset, limit })
+
+      const list: Article[] = resp.map((article: any) => ({
+        id: article.id,
+        title: article.title,
+        abstract: article.abstract,
+        coverImage: article.coverImage,
+        author: {
+          id: article.author?.id,
+          name: article.author?.name,
+          avatar: article.author?.avatar
+        },
+        readCount: article.readCnt || 0,
+        likeCount: article.likeCnt || 0,
+        commentCount: 0,
+        createTime: article.ctime
+      }))
+
+      articles.value = list
+      if (isFollowing) {
+        offsetFollowing.value += list.length
+      } else {
+        offsetRecommend.value += list.length
+      }
+      hasMoreArticles.value = list.length === limit
     } catch (error) {
       console.error('获取文章失败:', error)
       
@@ -242,7 +205,7 @@ export default function useFollowView() {
   }
   
   onMounted(() => {
-    fetchArticles()
+    fetchArticles(true)
   })
   
   return {

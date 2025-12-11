@@ -6,8 +6,9 @@ redis:
 
 grpc:
   server:
-    #  启动监听 8090 端口，   如果启动很多个服务的话，小心端口冲突
-    addr: ":8097"
+    port: 8098
+    etcdAddr: "localhost:12379"
+    etcdTTL: 60
   client:
     user:
       addr: ":8091"

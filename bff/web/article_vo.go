@@ -30,6 +30,7 @@ type ArticleVo struct {
 	Author     AuthorVo `json:"author"`
 	Ctime      string   `json:"ctime"`
 	Utime      string   `json:"utime"`
+	Tags       []string `json:"tags"`
 
 	// 点赞之类的信息
 	LikeCnt    int64 `json:"likeCnt"`
@@ -42,10 +43,11 @@ type ArticleVo struct {
 }
 
 type ArticleReq struct {
-	Id         int64  `json:"id"`
-	Title      string `json:"title"`
-	Content    string `json:"content"`
-	CoverImage string `json:"coverImage"`
+	Id         int64    `json:"id"`
+	Title      string   `json:"title"`
+	Content    string   `json:"content"`
+	CoverImage string   `json:"coverImage"`
+	Tags       []string `json:"tags"`
 }
 
 func (req ArticleReq) toDTO(uid int64) *articlev1.Article {
