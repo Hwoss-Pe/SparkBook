@@ -30,7 +30,7 @@ func InitGRPCxServer(syncRpc *grpc2.SyncServiceServer,
 	return &grpcx.Server{
 		Server:     server,
 		Port:       cfg.Port,
-		Name:       "user",
+		Name:       "search",
 		L:          l,
 		EtcdTTL:    cfg.EtcdTTL,
 		EtcdClient: ecli,

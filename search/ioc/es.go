@@ -21,8 +21,8 @@ func InitESClient() *elastic.Client {
 	}
 	const timeout = 10 * time.Second
 	opts := []elastic.ClientOptionFunc{
-		elastic.SetURL("http://localhost:9200"),
-		elastic.SetSniff(false),
+		elastic.SetURL(cfg.Url),
+		elastic.SetSniff(cfg.Sniff),
 		elastic.SetHealthcheckTimeoutStartup(timeout),
 		elastic.SetTraceLog(log.Default()),
 	}

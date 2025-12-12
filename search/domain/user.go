@@ -5,4 +5,5 @@ type User struct {
 	Email    string
 	Nickname string
 	Phone    string
+	Avatar   string
 }

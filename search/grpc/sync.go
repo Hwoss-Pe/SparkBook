@@ -5,6 +5,7 @@ import (
 	"Webook/search/domain"
 	"Webook/search/service"
 	"context"
+
 	"google.golang.org/grpc"
 )
 
@@ -43,6 +44,8 @@ func (s *SyncServiceServer) toDomainUser(vuser *searchv1.User) domain.User {
 		Id:       vuser.Id,
 		Email:    vuser.Email,
 		Nickname: vuser.Nickname,
+		Phone:    vuser.Phone,
+		Avatar:   vuser.Avatar,
 	}
 }
 

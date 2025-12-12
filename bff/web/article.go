@@ -8,6 +8,7 @@ import (
 	rewardv1 "Webook/api/proto/gen/api/proto/reward/v1"
 	searchv1 "Webook/api/proto/gen/api/proto/search/v1"
 	tagv1 "Webook/api/proto/gen/api/proto/tag/v1"
+	userv1 "Webook/api/proto/gen/api/proto/user/v1"
 	"Webook/bff/web/jwt"
 	"Webook/pkg/ginx"
 	"Webook/pkg/logger"
@@ -60,6 +61,7 @@ func NewArticleHandler(svc articlev1.ArticleServiceClient,
 }
 
 func (a *ArticleHandler) RegisterRoute(s *gin.Engine) {
+	s.GET("/search", ginx.WrapReq[SearchReq](a.Search))
 	g := s.Group("/articles")
 	g.GET("/detail/:id", a.Detail)
 	g.GET("/tags/official", a.OfficialTags)
@@ -91,6 +93,46 @@ func (a *ArticleHandler) RegisterRoute(s *gin.Engine) {
 	pub.GET("/tag/articles", ginx.WrapReq[OfficialTagListReq](a.ListByOfficialTag))
 	// 手动触发热榜计算
 	pub.POST("/ranking/trigger", ginx.WrapReq[TriggerRankingReq](a.TriggerRanking))
+}
+
+type SearchReq struct {
+	Expression string `json:"expression" form:"expression"`
+	Uid        int64  `json:"uid" form:"uid"`
+}
+
+func (a *ArticleHandler) Search(ctx *gin.Context, req SearchReq) (ginx.Result, error) {
+	sc := a.ensureSearchClient()
+	if sc == nil {
+		return ginx.Result{Code: 5, Msg: "系统错误"}, nil
+	}
+	resp, err := sc.Search(ctx, &searchv1.SearchRequest{Expression: req.Expression, Uid: req.Uid})
+	if err != nil {
+		return ginx.Result{Code: 5, Msg: "系统错误"}, err
+	}
+	var users []map[string]any
+	if resp != nil && resp.User != nil {
+		ucli := a.ensureUserClient()
+		for _, u := range resp.User.Users {
+			var avatar string
+			if ucli != nil {
+				pr, er := ucli.Profile(ctx, &userv1.ProfileRequest{Id: u.GetId()})
+				if er == nil && pr != nil && pr.User != nil {
+					avatar = pr.User.Avatar
+				}
+			}
+			users = append(users, map[string]any{
+				"id":       u.GetId(),
+				"email":    u.GetEmail(),
+				"nickname": u.GetNickname(),
+				"phone":    u.GetPhone(),
+				"avatar":   avatar,
+			})
+		}
+	}
+	return ginx.Result{Data: map[string]any{
+		"user":    map[string]any{"users": users},
+		"article": resp.GetArticle(),
+	}}, nil
 }
 
 func (a *ArticleHandler) AuthorStats(ctx *gin.Context) {
@@ -1218,6 +1260,38 @@ func (a *ArticleHandler) ensureSearchClient() searchv1.SearchServiceClient {
 	}
 	a.searchSvc = searchv1.NewSearchServiceClient(cc)
 	return a.searchSvc
+}
+
+func (a *ArticleHandler) ensureUserClient() userv1.UsersServiceClient {
+	type Config struct {
+		Target string `json:"target"`
+		Secure bool   `json:"secure"`
+	}
+	var cfg Config
+	_ = viper.UnmarshalKey("grpc.client.user", &cfg)
+	ecli, err := func() (*clientv3.Client, error) {
+		var ecfg clientv3.Config
+		if er := viper.UnmarshalKey("etcd", &ecfg); er != nil {
+			return nil, er
+		}
+		return clientv3.New(ecfg)
+	}()
+	if err != nil {
+		return nil
+	}
+	rs, err := resolver.NewBuilder(ecli)
+	if err != nil {
+		return nil
+	}
+	opts := []grpc.DialOption{grpc.WithResolvers(rs)}
+	if !cfg.Secure {
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+	cc, err := grpc.Dial(cfg.Target, opts...)
+	if err != nil {
+		return nil
+	}
+	return userv1.NewUsersServiceClient(cc)
 }
 
 func (a *ArticleHandler) RankingByTag(ctx *gin.Context, req TagRankingReq) (ginx.Result, error) {

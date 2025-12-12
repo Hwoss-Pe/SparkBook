@@ -28,6 +28,7 @@ func (u *userRepository) SearchUser(ctx context.Context, keywords []string) ([]d
 			Email:    src.Email,
 			Nickname: src.Nickname,
 			Phone:    src.Phone,
+			Avatar:   src.Avatar,
 		}
 	}), nil
 }
@@ -38,6 +39,7 @@ func (u *userRepository) InputUser(ctx context.Context, msg domain.User) error {
 		Email:    msg.Email,
 		Nickname: msg.Nickname,
 		Phone:    msg.Phone,
+		Avatar:   msg.Avatar,
 	})
 
 }

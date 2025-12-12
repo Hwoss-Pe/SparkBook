@@ -33,6 +33,7 @@ func (s *SearchServiceServer) Search(ctx context.Context, request *searchv1.Sear
 					Nickname: src.Nickname,
 					Email:    src.Email,
 					Phone:    src.Phone,
+					Avatar:   src.Avatar,
 				}
 			}),
 		},

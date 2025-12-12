@@ -359,6 +359,7 @@ type User struct {
 	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	Nickname      string                 `protobuf:"bytes,3,opt,name=nickname,proto3" json:"nickname,omitempty"`
 	Phone         string                 `protobuf:"bytes,4,opt,name=phone,proto3" json:"phone,omitempty"`
+	Avatar        string                 `protobuf:"bytes,5,opt,name=avatar,proto3" json:"avatar,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -421,6 +422,13 @@ func (x *User) GetPhone() string {
 	return ""
 }
 
+func (x *User) GetAvatar() string {
+	if x != nil {
+		return x.Avatar
+	}
+	return ""
+}
+
 var File_api_proto_search_v1_sync_proto protoreflect.FileDescriptor
 
 const file_api_proto_search_v1_sync_proto_rawDesc = "" +
@@ -443,12 +451,13 @@ const file_api_proto_search_v1_sync_proto_rawDesc = "" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x16\n" +
 	"\x06status\x18\x03 \x01(\x05R\x06status\x12\x18\n" +
 	"\acontent\x18\x04 \x01(\tR\acontent\x12\x12\n" +
-	"\x04tags\x18\x05 \x03(\tR\x04tags\"^\n" +
+	"\x04tags\x18\x05 \x03(\tR\x04tags\"v\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +
 	"\bnickname\x18\x03 \x01(\tR\bnickname\x12\x14\n" +
-	"\x05phone\x18\x04 \x01(\tR\x05phone2\xeb\x01\n" +
+	"\x05phone\x18\x04 \x01(\tR\x05phone\x12\x16\n" +
+	"\x06avatar\x18\x05 \x01(\tR\x06avatar2\xeb\x01\n" +
 	"\vSyncService\x12F\n" +
 	"\tInputUser\x12\x1b.search.v1.InputUserRequest\x1a\x1c.search.v1.InputUserResponse\x12O\n" +
 	"\fInputArticle\x12\x1e.search.v1.InputArticleRequest\x1a\x1f.search.v1.InputArticleResponse\x12C\n" +

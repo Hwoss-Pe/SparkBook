@@ -36,6 +36,7 @@ func NewJWTLoginMiddlewareBuilder(hdl jwt2.Handler) *JWTLoginMiddlewareBuilder {
 	s.Add("/test/random")
 	s.Add("/articles/pub/list")
 	s.Add("/articles/pub/ranking")
+	s.Add("/search")
 	s.Add("/users/recommend_authors")
 	s.Add("/comment/list")
 	s.Add("/comment/replies")

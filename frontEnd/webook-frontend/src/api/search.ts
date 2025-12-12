@@ -1,22 +1,19 @@
 import { get } from './http'
 
-// 搜索相关接口类型定义
+// 搜索相关接口类型定义（与后端真实返回保持一致）
 export interface User {
   id: number
+  email: string
   nickname: string
-  aboutMe: string
-  // 其他用户字段
+  phone: string
+  avatar?: string
 }
 
 export interface Article {
   id: number
   title: string
-  abstract: string
-  author: {
-    id: number
-    name: string
-  }
-  // 其他文章字段
+  status: number
+  content: string
 }
 
 export interface SearchRequest {

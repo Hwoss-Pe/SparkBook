@@ -47,34 +47,9 @@
       
       <div class="search-content" v-if="activeTab === 'article' && articles.length > 0">
         <div v-for="article in articles" :key="article.id" class="article-card">
-          <div class="article-cover" v-if="article.coverImage" @click="viewArticle(article.id)">
-            <img :src="article.coverImage" :alt="article.title" />
-          </div>
           <div class="article-info">
             <h3 class="article-title" @click="viewArticle(article.id)">{{ article.title }}</h3>
             <p class="article-abstract">{{ article.abstract }}</p>
-            <div class="article-meta">
-              <div class="author-info">
-                <el-avatar :size="24" :src="article.author.avatar">
-                  {{ article.author.name ? article.author.name.substring(0, 1) : '匿' }}
-                </el-avatar>
-                <span class="author-name">{{ article.author.name || '匿名用户' }}</span>
-              </div>
-              <div class="interaction-info">
-                <span class="interaction-item">
-                  <el-icon><View /></el-icon>
-                  {{ formatNumber(article.readCount) }}
-                </span>
-                <span class="interaction-item">
-                  <el-icon><ThumbsUp /></el-icon>
-                  {{ formatNumber(article.likeCount) }}
-                </span>
-                <span class="interaction-item">
-                  <el-icon><ChatDotRound /></el-icon>
-                  {{ formatNumber(article.commentCount) }}
-                </span>
-              </div>
-            </div>
           </div>
         </div>
         
@@ -92,20 +67,10 @@
               </el-avatar>
               <div>
                 <h3 class="article-title" @click="viewUser(user.id)">{{ user.name }}</h3>
-                <p class="article-abstract">{{ user.aboutMe }}</p>
+                <p class="article-abstract">{{ user.aboutMe || ' ' }}</p>
               </div>
             </div>
             <div class="article-meta">
-              <div class="interaction-info">
-                <span class="interaction-item">
-                  <el-icon><User /></el-icon>
-                  {{ formatNumber(user.followersCount) }} 粉丝
-                </span>
-                <span class="interaction-item">
-                  <el-icon><Document /></el-icon>
-                  {{ formatNumber(user.articlesCount) }} 文章
-                </span>
-              </div>
               <el-button size="small" @click="viewUser(user.id)">查看主页</el-button>
             </div>
           </div>
@@ -133,8 +98,7 @@
 
 <script setup lang="ts">
 import MainLayout from '@/components/layout/MainLayout.vue'
-import { View, ChatDotRound, Search, User, Document } from '@element-plus/icons-vue'
-import { Star as ThumbsUp } from '@element-plus/icons-vue'
+import { Search } from '@element-plus/icons-vue'
 import useSearchView from '@/scripts/views/SearchView'
 
 const {

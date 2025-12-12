@@ -48,4 +48,5 @@ message User {
   string email = 2;
   string nickname = 3;
   string phone = 4;
+  string avatar = 5;
 }

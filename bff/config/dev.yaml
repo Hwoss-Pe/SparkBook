@@ -23,3 +23,5 @@ grpc:
       target: "etcd:///service/follow"
     tag:
       target: "etcd:///service/tag"
+    search:
+      target: "etcd:///service/search"

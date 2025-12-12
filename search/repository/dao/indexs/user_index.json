@@ -13,6 +13,9 @@
       },
       "nickname": {
         "type": "text"
+      },
+      "avatar": {
+        "type": "keyword"
       }
     }
   }

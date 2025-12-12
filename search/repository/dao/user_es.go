@@ -15,6 +15,7 @@ type User struct {
 	Email    string `json:"email"`
 	Nickname string `json:"nickname"`
 	Phone    string `json:"phone"`
+	Avatar   string `json:"avatar"`
 }
 
 type UserElasticDAO struct {
