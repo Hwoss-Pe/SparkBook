@@ -3,7 +3,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { userApi } from '@/api/user'
-import { codeApi } from '@/api/code'
 import { useUserStore } from '@/stores/user'
 
 // 定义类型接口
@@ -186,11 +185,8 @@ export default function useLoginView() {
       // 验证手机号
       await phoneFormRef.value?.validateField('phone')
       
-      // 调用发送验证码API
-      await codeApi.sendCode({
-        biz: 'login',
-        phone: phoneForm.phone
-      })
+      // 调用 BFF 的发送验证码接口
+      await userApi.sendSmsCode(phoneForm.phone)
       
       // 开始倒计时
       codeSent.value = true

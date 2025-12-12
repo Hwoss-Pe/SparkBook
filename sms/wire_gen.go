@@ -18,7 +18,7 @@ import (
 // Injectors from wire.go:
 
 func Init() *wego.App {
-	service := ioc.InitSmsTencentService()
+	service := ioc.InitSmsService()
 	logger := ioc.InitLogger()
 	asyncService := async.NewAsyncService(service, logger, repository.NewAsyncSMSRepository(dao.NewGORMAsyncSmsDAO(ioc.InitDB(logger))))
 	client := ioc.InitEtcdClient()

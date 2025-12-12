@@ -1,7 +1,7 @@
 grpc:
   #  启动监听 9001 端口
   server:
-    addr: ":8091"
+    port: 8088
     etcdAddr: "localhost:12379"
     etcdTTL: 60
 

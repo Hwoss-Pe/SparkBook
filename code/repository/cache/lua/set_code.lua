@@ -2,7 +2,7 @@
 local key = KEYS[1]
 --创建使用次数key
 local cntKey = key..":cnt"
-local phone = ARGS[1]
+local code = ARGV[1]
 -- 验证码的有效时间是十分钟，600 秒
 local ttl = tonumber(redis.call("ttl", key))
 
@@ -11,7 +11,7 @@ if ttl == -1 then
     return -2
 elseif ttl < 540 or ttl ==-2 then
     --    没有发过或者已经过了一分钟
-    redis.call("SET", key, phone)
+    redis.call("SET", key, code)
     redis.call("EXPIRE", key, 600)
     redis.call("set", cntKey, 3)
     redis.call("expire", cntKey, 600)

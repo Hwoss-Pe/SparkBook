@@ -14,7 +14,6 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -343,9 +342,8 @@ func (c *UserHandler) LoginSMS(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "系统错误"})
 		return
 	}
-	// 用 uuid 来标识这一次会话
-	ssid := uuid.New().String()
-	err = c.SetJWTToken(ctx, ssid, u.User.Id)
+	// 下发短 JWT 和刷新 Token
+	err = c.SetLoginToken(ctx, u.User.Id)
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{Msg: "系统错误"})
 		return

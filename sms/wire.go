@@ -16,7 +16,7 @@ import (
 
 // 提供 SmsTencentService 实现的 ProviderSet
 var SmsTencentProviderSet = wire.NewSet(
-	ioc.InitSmsTencentService,                                     // 提供 InitSmsTencentService
+	ioc.InitSmsService, // 提供 InitSmsTencentService
 	wire.Bind(new(service.Service), new(*tencent.TencentService)), // 显式绑定接口和实现
 )
 
