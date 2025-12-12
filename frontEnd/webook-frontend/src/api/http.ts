@@ -23,9 +23,6 @@ const resolveBaseURL = () => {
 const service: AxiosInstance = axios.create({
   baseURL: resolveBaseURL(),
   timeout: 15000,
-  headers: {
-    'Content-Type': 'application/json'
-  }
 })
 
 // 请求拦截器
@@ -42,6 +39,10 @@ service.interceptors.request.use(
     console.log('请求数据:', config.data)
     console.log('请求参数:', config.params)
     console.log('localStorage 中的 token:', token ? token.substring(0, 50) + '...' : 'null')
+    if (config.data instanceof FormData) {
+      config.headers = config.headers || {}
+      config.headers['Content-Type'] = 'multipart/form-data'
+    }
     
     // 特别关注个人信息接口
     if (config.url?.includes('/users/profile')) {
@@ -186,3 +187,15 @@ export const del = <T>(url: string, params?: any, config?: AxiosRequestConfig): 
 }
 
 export default service
+
+export const resolveStaticUrl = (url: string): string => {
+  if (!url) return ''
+  if (/^https?:\/\//i.test(url)) return url
+  try {
+    const apiBase = resolveBaseURL()
+    const backendOrigin = apiBase.replace(/\/?api\/?$/, '')
+    return new URL(url, backendOrigin).toString()
+  } catch {
+    return url
+  }
+}

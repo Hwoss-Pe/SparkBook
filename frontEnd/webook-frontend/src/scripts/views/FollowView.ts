@@ -1,6 +1,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { articleApi } from '@/api/article'
+import { resolveStaticUrl } from '@/api/http'
 
 // 定义类型接口
 interface Article {
@@ -66,11 +67,11 @@ export default function useFollowView() {
         id: article.id,
         title: article.title,
         abstract: article.abstract,
-        coverImage: article.coverImage,
+        coverImage: article.coverImage ? resolveStaticUrl(article.coverImage) : '',
         author: {
           id: article.author?.id,
           name: article.author?.name,
-          avatar: article.author?.avatar
+          avatar: article.author?.avatar ? resolveStaticUrl(article.author.avatar) : ''
         },
         readCount: article.readCnt || 0,
         likeCount: article.likeCnt || 0,
@@ -114,11 +115,11 @@ export default function useFollowView() {
         id: article.id,
         title: article.title,
         abstract: article.abstract,
-        coverImage: article.coverImage,
+        coverImage: article.coverImage ? resolveStaticUrl(article.coverImage) : '',
         author: {
           id: article.author?.id,
           name: article.author?.name,
-          avatar: article.author?.avatar
+          avatar: article.author?.avatar ? resolveStaticUrl(article.author.avatar) : ''
         },
         readCount: article.readCnt || 0,
         likeCount: article.likeCnt || 0,

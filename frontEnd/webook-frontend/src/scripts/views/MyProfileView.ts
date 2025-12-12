@@ -1,9 +1,10 @@
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type UploadFile } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { userApi, type User } from '@/api/user'
 import { articleApi } from '@/api/article'
+import { post, resolveStaticUrl } from '@/api/http'
 
 export default function useMyProfileView() {
   const router = useRouter()
@@ -40,6 +41,8 @@ export default function useMyProfileView() {
     birthday: '',
     avatar: ''
   })
+  const userAvatarResolved = computed(() => resolveStaticUrl(userInfo.value.avatar))
+  const editFormAvatarResolved = computed(() => resolveStaticUrl(editForm.avatar))
   
   // 表单验证规则
   const editRules = {
@@ -87,25 +90,27 @@ export default function useMyProfileView() {
   }
   
   // 处理头像上传
-  const handleAvatarChange = (file: UploadFile) => {
+  const handleAvatarChange = async (file: UploadFile) => {
     const isImage = file.raw?.type?.startsWith('image/')
     if (!isImage) {
       ElMessage.error('只能上传图片文件!')
       return
     }
-    
     const isLt2M = file.raw!.size / 1024 / 1024 < 2
     if (!isLt2M) {
       ElMessage.error('图片大小不能超过 2MB!')
       return
     }
-    
-    // 创建预览URL
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      editForm.avatar = e.target?.result as string
+    try {
+      const form = new FormData()
+      form.append('file', file.raw!)
+      const url = await post<string>('/upload/avatar', form)
+      editForm.avatar = url
+      ElMessage.success('头像上传成功')
+    } catch (e) {
+      console.error('头像上传失败:', e)
+      ElMessage.error('头像上传失败，请重试')
     }
-    reader.readAsDataURL(file.raw!)
   }
   
   // 重置编辑表单
@@ -133,7 +138,8 @@ export default function useMyProfileView() {
         nickname: editForm.nickname,
         phone: editForm.phone,
         aboutMe: editForm.aboutMe,
-        birthday: editForm.birthday
+        birthday: editForm.birthday,
+        avatar: editForm.avatar
       }
       
       await userApi.updateProfile(updateData)
@@ -168,6 +174,7 @@ export default function useMyProfileView() {
         const response = await userApi.getProfile()
         userInfo.value = response.user
       }
+      userInfo.value.avatar = resolveStaticUrl(userInfo.value.avatar)
     } catch (error) {
       console.error('获取用户信息失败:', error)
       ElMessage.error('获取用户信息失败')
@@ -198,9 +205,11 @@ export default function useMyProfileView() {
   
   return {
     userInfo,
+    userAvatarResolved,
     stats,
     showEditDialog,
     editForm,
+    editFormAvatarResolved,
     editRules,
     editFormRef,
     saving,

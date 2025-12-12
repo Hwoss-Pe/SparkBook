@@ -9,7 +9,7 @@
         <div class="profile-card">
           <div class="profile-info">
             <div class="avatar-section">
-              <el-avatar :size="80" :src="userInfo.avatar">
+              <el-avatar :size="80" :src="userAvatarResolved">
                 {{ userInfo.nickname ? userInfo.nickname.substring(0, 1) : 'U' }}
               </el-avatar>
               <el-button type="text" @click="showEditDialog = true" class="edit-btn">
@@ -108,7 +108,7 @@
               :on-change="handleAvatarChange"
               accept="image/*"
             >
-              <el-avatar :size="60" :src="editForm.avatar">
+              <el-avatar :size="60" :src="editFormAvatarResolved">
                 {{ editForm.nickname ? editForm.nickname.substring(0, 1) : 'U' }}
               </el-avatar>
               <div class="upload-overlay">
@@ -185,9 +185,11 @@ import useMyProfileView from '@/scripts/views/MyProfileView'
 
 const {
   userInfo,
+  userAvatarResolved,
   stats,
   showEditDialog,
   editForm,
+  editFormAvatarResolved,
   editRules,
   editFormRef,
   saving,

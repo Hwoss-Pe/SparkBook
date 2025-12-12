@@ -3,6 +3,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { articleApi } from '@/api/article'
 import { useUserStore } from '@/stores/user'
+import { post } from '@/api/http'
 
 // 定义类型接口
 interface ArticleForm {
@@ -110,13 +111,29 @@ export default function useCreateArticleView() {
   }
 
   // 处理封面图变更
-  const handleCoverChange = (file: UploadFile) => {
-    // 这里应该上传图片到服务器
-    // 模拟上传成功
-    const reader = new FileReader()
-    reader.readAsDataURL(file.raw)
-    reader.onload = () => {
-      articleForm.value.coverImage = reader.result as string
+  const handleCoverChange = async (file: UploadFile) => {
+    const isImage = file.raw?.type?.startsWith('image/')
+    if (!isImage) {
+      ElMessage.error('只能上传图片文件!')
+      return
+    }
+    const isLt4M = file.raw!.size / 1024 / 1024 < 4
+    if (!isLt4M) {
+      ElMessage.error('图片大小不能超过 4MB!')
+      return
+    }
+    try {
+      const form = new FormData()
+      form.append('file', file.raw!)
+      if (articleForm.value.id) {
+        form.append('articleId', String(articleForm.value.id))
+      }
+      const url = await post<string>('/upload/cover', form)
+      articleForm.value.coverImage = url
+      ElMessage.success('封面上传成功')
+    } catch (e) {
+      console.error('封面上传失败:', e)
+      ElMessage.error('封面上传失败，请重试')
     }
   }
 
@@ -132,6 +149,7 @@ export default function useCreateArticleView() {
         id: articleForm.value.id,
         title: articleForm.value.title,
         content: articleForm.value.content,
+        coverImage: articleForm.value.coverImage,
         status: 1
       })
       ElMessage.success('草稿保存成功')
@@ -175,6 +193,7 @@ export default function useCreateArticleView() {
         id: articleForm.value.id,
         title: articleForm.value.title,
         content: articleForm.value.content,
+        coverImage: articleForm.value.coverImage,
         tags: articleForm.value.tags
       })
       publishing.value = false

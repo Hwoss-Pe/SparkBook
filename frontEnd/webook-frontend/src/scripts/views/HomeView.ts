@@ -1,6 +1,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { articleApi } from '@/api/article'
+import { resolveStaticUrl } from '@/api/http'
 import type { ArticlePub } from '@/api/article'
 
 // 首页文章展示的数据结构
@@ -98,7 +99,7 @@ export default function useHomeView() {
       recommendedAuthors.value = (authors || []).map(a => ({
         id: a.id,
         name: a.name || '匿名作者',
-        avatar: a.avatar || 'https://picsum.photos/seed/avatar/100/100',
+        avatar: a.avatar ? resolveStaticUrl(a.avatar) : 'https://picsum.photos/seed/avatar/100/100',
         description: (() => {
           const desc = a.description || ''
           return desc.length > 10 ? desc.slice(0, 10) + '...' : desc
@@ -139,11 +140,11 @@ export default function useHomeView() {
       id: article.id,
       title: article.title,
       abstract: article.abstract,
-      coverImage: article.coverImage || `https://picsum.photos/id/${400 + article.id}/400/300`,
+      coverImage: article.coverImage ? resolveStaticUrl(article.coverImage) : `https://picsum.photos/id/${400 + article.id}/400/300`,
       author: {
         id: article.author?.id || 0,
         name: article.author?.name || '匿名用户',
-        avatar: article.author?.avatar || 'https://picsum.photos/seed/avatar/100/100'
+        avatar: article.author?.avatar ? resolveStaticUrl(article.author.avatar) : 'https://picsum.photos/seed/avatar/100/100'
       },
       readCount: article.readCnt || 0,
       likeCount: article.likeCnt || 0,

@@ -2,6 +2,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { searchApi, type SearchResponse } from '@/api/search'
 import { ElMessage } from 'element-plus'
+import { resolveStaticUrl } from '@/api/http'
 
 // 定义类型接口（与UI展示所需的最小字段）
 interface Article {
@@ -36,7 +37,8 @@ export default function useSearchView() {
 
   const normalizeAvatarUrl = (u: string | undefined): string => {
     if (!u) return ''
-    return u.replace(/`/g, '').trim()
+    const v = u.replace(/`/g, '').trim()
+    return resolveStaticUrl(v)
   }
   
   // 格式化数字，例如1200显示为1.2k

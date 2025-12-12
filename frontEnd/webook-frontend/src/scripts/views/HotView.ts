@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import { rankingApi, type RankingArticle } from '@/api/ranking'
 import { articleApi, type ArticlePub } from '@/api/article'
 import { ElMessage } from 'element-plus'
+import { resolveStaticUrl } from '@/api/http'
 
 // 定义类型接口
 interface Article {
@@ -65,11 +66,11 @@ export default function useHotView() {
             id: article.id,
             title: article.title,
             abstract: article.abstract || '',
-            coverImage: article.coverImage || `https://picsum.photos/id/${400 + article.id}/400/300`,
+            coverImage: article.coverImage ? resolveStaticUrl(article.coverImage) : `https://picsum.photos/id/${400 + article.id}/400/300`,
             author: {
               id: article.author.id,
               name: article.author.name || '匿名用户',
-              avatar: article.author.avatar || `https://picsum.photos/id/${1000 + article.author.id}/100/100`
+              avatar: article.author.avatar ? resolveStaticUrl(article.author.avatar) : `https://picsum.photos/id/${1000 + article.author.id}/100/100`
             },
             readCount: article.readCnt || 0,
             likeCount: article.likeCnt || 0,
@@ -88,11 +89,11 @@ export default function useHotView() {
             id: article.id,
             title: article.title,
             abstract: article.abstract || '',
-            coverImage: article.coverImage || `https://picsum.photos/id/${400 + article.id}/400/300`,
+            coverImage: article.coverImage ? resolveStaticUrl(article.coverImage) : `https://picsum.photos/id/${400 + article.id}/400/300`,
             author: {
               id: article.author.id,
               name: article.author.name || '匿名用户',
-              avatar: article.author.avatar || `https://picsum.photos/id/${1000 + article.author.id}/100/100`
+              avatar: article.author.avatar ? resolveStaticUrl(article.author.avatar) : `https://picsum.photos/id/${1000 + article.author.id}/100/100`
             },
             readCount: article.readCnt || 0,
             likeCount: article.likeCnt || 0,
@@ -121,11 +122,11 @@ export default function useHotView() {
           id: article.id,
           title: article.title,
           abstract: article.abstract || '',
-          coverImage: article.coverImage || `https://picsum.photos/id/${400 + article.id}/400/300`,
+          coverImage: article.coverImage ? resolveStaticUrl(article.coverImage) : `https://picsum.photos/id/${400 + article.id}/400/300`,
           author: {
             id: article.author.id,
             name: article.author.name || '匿名用户',
-            avatar: article.author.avatar || `https://picsum.photos/id/${1000 + article.author.id}/100/100`
+            avatar: article.author.avatar ? resolveStaticUrl(article.author.avatar) : `https://picsum.photos/id/${1000 + article.author.id}/100/100`
           },
           readCount: article.readCnt || 0,
           likeCount: article.likeCnt || 0,
@@ -140,11 +141,11 @@ export default function useHotView() {
           id: article.id,
           title: article.title,
           abstract: article.abstract || '',
-          coverImage: article.coverImage || `https://picsum.photos/id/${400 + article.id}/400/300`,
+          coverImage: article.coverImage ? resolveStaticUrl(article.coverImage) : `https://picsum.photos/id/${400 + article.id}/400/300`,
           author: {
             id: article.author.id,
             name: article.author.name || '匿名用户',
-            avatar: article.author.avatar || `https://picsum.photos/id/${1000 + article.author.id}/100/100`
+            avatar: article.author.avatar ? resolveStaticUrl(article.author.avatar) : `https://picsum.photos/id/${1000 + article.author.id}/100/100`
           },
           readCount: article.readCnt || 0,
           likeCount: article.likeCnt || 0,

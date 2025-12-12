@@ -7,6 +7,7 @@ import { followApi } from '@/api/follow'
 import { articleApi } from '@/api/article'
 import type { Article as ApiArticle } from '@/api/article'
 import { useUserStore } from '@/stores/user'
+import { post, resolveStaticUrl } from '@/api/http'
 
 // 定义类型接口
 interface UserProfile {
@@ -222,7 +223,7 @@ export default function useUserProfileView() {
       followDialogUsers.value = response.follow_relations.map(relation => ({
         id: relation.follower,
         name: relation.name || `用户${relation.follower}`,
-        avatar: relation.avatar || `https://picsum.photos/id/${1000 + relation.follower}/100/100`,
+        avatar: relation.avatar ? resolveStaticUrl(relation.avatar) : `https://picsum.photos/id/${1000 + relation.follower}/100/100`,
         description: relation.about_me || '这个人很懒，还没有填写个人简介',
         isFollowing: false
       }))
@@ -271,7 +272,7 @@ export default function useUserProfileView() {
       followDialogUsers.value = response.follow_relations.map(relation => ({
         id: relation.followee,
         name: relation.name || `用户${relation.followee}`,
-        avatar: relation.avatar || `https://picsum.photos/id/${1000 + relation.followee}/100/100`,
+        avatar: relation.avatar ? resolveStaticUrl(relation.avatar) : `https://picsum.photos/id/${1000 + relation.followee}/100/100`,
         description: relation.about_me || '这个人很懒，还没有填写个人简介',
         isFollowing: true
       }))
@@ -309,13 +310,26 @@ export default function useUserProfileView() {
   }
 
   // 处理头像变更
-  const handleAvatarChange = (file: UploadFile) => {
-    // 这里应该上传头像到服务器
-    // 模拟上传成功
-    const reader = new FileReader()
-    reader.readAsDataURL(file.raw)
-    reader.onload = () => {
-      editForm.value.avatarUrl = reader.result as string
+  const handleAvatarChange = async (file: UploadFile) => {
+    const isImage = file.raw?.type?.startsWith('image/')
+    if (!isImage) {
+      ElMessage.error('只能上传图片文件!')
+      return
+    }
+    const isLt2M = file.raw!.size / 1024 / 1024 < 2
+    if (!isLt2M) {
+      ElMessage.error('图片大小不能超过 2MB!')
+      return
+    }
+    try {
+      const form = new FormData()
+      form.append('file', file.raw!)
+      const url = await post<string>('/upload/avatar', form)
+      editForm.value.avatarUrl = url
+      ElMessage.success('头像上传成功')
+    } catch (e) {
+      console.error('头像上传失败:', e)
+      ElMessage.error('头像上传失败，请重试')
     }
   }
 
@@ -326,13 +340,13 @@ export default function useUserProfileView() {
       await userApi.updateProfile({
         id: userProfile.value.id,
         nickname: editForm.value.nickname,
-        aboutMe: editForm.value.aboutMe
-        // 头像上传应该有单独的API
+        aboutMe: editForm.value.aboutMe,
+        avatar: editForm.value.avatarUrl
       })
       
       userProfile.value.nickname = editForm.value.nickname
       userProfile.value.aboutMe = editForm.value.aboutMe
-      userProfile.value.avatar = editForm.value.avatarUrl
+      userProfile.value.avatar = resolveStaticUrl(editForm.value.avatarUrl)
       
       showEditDialog.value = false
       ElMessage.success('个人资料已更新')
@@ -350,7 +364,7 @@ export default function useUserProfileView() {
         id: article.id,
         title: article.title,
         abstract: article.abstract,
-        coverImage: article.coverImage || `https://picsum.photos/id/${400 + article.id}/400/300`,
+        coverImage: article.coverImage ? resolveStaticUrl(article.coverImage) : `https://picsum.photos/id/${400 + article.id}/400/300`,
         createTime: article.ctime,
         readCount: article.readCnt || 0,
         likeCount: article.likeCnt || 0,
@@ -412,10 +426,10 @@ export default function useUserProfileView() {
           id: article.id,
           title: article.title,
           abstract: article.abstract,
-          coverImage: article.coverImage,
+          coverImage: resolveStaticUrl(article.coverImage),
           author: {
             name: article.author.name,
-            avatar: article.author.avatar
+            avatar: resolveStaticUrl(article.author.avatar)
           },
           readCount: article.readCnt,
           likeCount: article.likeCnt,
@@ -470,7 +484,7 @@ export default function useUserProfileView() {
       userProfile.value = {
         id: userId,
         nickname: profile.Nickname || profile.nickname || '',
-        avatar: av,
+        avatar: resolveStaticUrl(av),
         aboutMe: profile.AboutMe || profile.aboutMe || '',
         email: profile.Email || profile.email || '',
         birthday: profile.Birthday || profile.birthday || '',
@@ -516,7 +530,7 @@ export default function useUserProfileView() {
         id: article.id,
         title: article.title,
         abstract: article.abstract,
-        coverImage: article.coverImage || `https://picsum.photos/id/${400 + article.id}/400/300`,
+        coverImage: article.coverImage ? resolveStaticUrl(article.coverImage) : `https://picsum.photos/id/${400 + article.id}/400/300`,
         createTime: article.ctime,
         readCount: article.readCnt || 0,
         likeCount: article.likeCnt || 0,

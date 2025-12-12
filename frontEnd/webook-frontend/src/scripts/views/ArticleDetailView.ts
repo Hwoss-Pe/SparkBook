@@ -4,6 +4,7 @@ import { ElMessage } from 'element-plus'
 import { articleApi, type ArticleDetail } from '@/api/article'
 import { commentApi, type Comment } from '@/api/comment'
 import { useUserStore } from '@/stores/user'
+import { resolveStaticUrl } from '@/api/http'
 
 // 定义类型接口
 interface ArticleData {
@@ -224,7 +225,7 @@ export default function useArticleDetailView() {
     user: {
       id: r.uid,
       name: r.name || `用户#${r.uid}`,
-      avatar: r.avatar || `https://picsum.photos/id/${1000 + r.uid}/100/100`
+      avatar: r.avatar ? resolveStaticUrl(r.avatar) : `https://picsum.photos/id/${1000 + r.uid}/100/100`
     },
     replyTo: r.parent_comment?.id
       ? { id: r.parent_comment.id, name: r.parent_comment?.name || (r.parent_comment?.uid ? `用户#${r.parent_comment.uid}` : `用户#${r.parent_comment.id}`) }
@@ -321,7 +322,7 @@ export default function useArticleDetailView() {
       user: {
         id: c.uid,
         name: c.name || `用户#${c.uid}`,
-        avatar: c.avatar || `https://picsum.photos/id/${1000 + c.uid}/100/100`
+        avatar: c.avatar ? resolveStaticUrl(c.avatar) : `https://picsum.photos/id/${1000 + c.uid}/100/100`
       },
       replies
     }
@@ -478,7 +479,7 @@ export default function useArticleDetailView() {
         id: articleDetail.id,
         title: articleDetail.title,
         content: articleDetail.content,
-        coverImage: articleDetail.coverImage || '', // 使用API返回的封面图片
+        coverImage: articleDetail.coverImage ? resolveStaticUrl(articleDetail.coverImage) : '',
         publishTime: new Date(articleDetail.ctime),
         readCount: articleDetail.readCnt,
         likeCount: articleDetail.likeCnt,
@@ -490,7 +491,7 @@ export default function useArticleDetailView() {
         author: {
           id: articleDetail.author.id,
           name: articleDetail.author.name,
-          avatar: articleDetail.author.avatar || 'https://picsum.photos/seed/avatar/100/100'
+          avatar: articleDetail.author.avatar ? resolveStaticUrl(articleDetail.author.avatar) : 'https://picsum.photos/seed/avatar/100/100'
         },
         tags: (articleDetail as any).tags || []
       }

@@ -21,7 +21,7 @@
         <template v-if="isLoggedIn">
           <el-dropdown trigger="click">
             <div class="user-avatar">
-              <el-avatar :size="32" :src="userAvatar">{{ userInitials }}</el-avatar>
+              <el-avatar :size="32" :src="userAvatarResolved">{{ userInitials }}</el-avatar>
             </div>
             <template #dropdown>
               <el-dropdown-menu>
@@ -89,10 +89,12 @@ import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api/user'
 import { Search, House, Star, Histogram, ChatDotRound, Edit, User } from '@element-plus/icons-vue'
+import { resolveStaticUrl } from '@/api/http'
 
 const userStore = useUserStore()
 const isLoggedIn = computed(() => userStore.isLoggedIn)
 const userAvatar = computed(() => userStore.user?.avatar || '')
+const userAvatarResolved = computed(() => resolveStaticUrl(userAvatar.value))
 const userName = computed(() => userStore.user?.nickname || '')
 
 const userInitials = computed(() => {
