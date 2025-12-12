@@ -8,6 +8,7 @@ package main
 
 import (
 	"Webook/pkg/wego"
+	"Webook/user/events"
 	"Webook/user/grpc"
 	"Webook/user/ioc"
 	"Webook/user/repository"
@@ -26,7 +27,9 @@ func Init() *wego.App {
 	cmdable := ioc.InitRedis()
 	userCache := cache.NewRedisUserCache(cmdable)
 	userRepository := repository.NewCachedUserRepository(userDAO, userCache)
-	userService := service.NewUserService(userRepository)
+	syncProducer := ioc.InitKafka()
+	producer := events.NewSaramaSyncProducer(syncProducer)
+	userService := service.NewUserService(userRepository, producer)
 	userServiceServer := grpc.NewUserServiceServer(userService)
 	client := ioc.InitEtcdClient()
 	server := ioc.InitGRPCxServer(userServiceServer, client, logger)

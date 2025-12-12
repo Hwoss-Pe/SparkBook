@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const DataSyncData = "sync_article_data"
+const DataSyncData = "search_sync_data"
 
 type SyncDataEventConsumer struct {
 	svc    service.SyncService

@@ -2,6 +2,7 @@ package service
 
 import (
 	"Webook/user/domain"
+	"Webook/user/events"
 	"Webook/user/repository"
 	"context"
 	"errors"
@@ -28,12 +29,13 @@ type UserService interface {
 }
 
 type userService struct {
-	repo   repository.UserRepository
-	logger *zap.Logger
+	repo     repository.UserRepository
+	logger   *zap.Logger
+	producer events.Producer
 }
 
-func NewUserService(repo repository.UserRepository) UserService {
-	return &userService{repo: repo, logger: zap.L()}
+func NewUserService(repo repository.UserRepository, producer events.Producer) UserService {
+	return &userService{repo: repo, logger: zap.L(), producer: producer}
 }
 
 // Signup 注册的逻辑对密码进行加密后直接写进数据库，在服务层进行透
@@ -75,7 +77,20 @@ func (u *userService) UpdateNonSensitiveInfo(ctx context.Context,
 	user.Email = ""
 	user.Phone = ""
 	user.Password = ""
-	return u.repo.Update(ctx, user)
+	err := u.repo.Update(ctx, user)
+	if err != nil {
+		return err
+	}
+	go func() {
+		_ = u.producer.ProduceUserEvent(ctx, events.UserEvent{
+			Id:       user.Id,
+			Email:    user.Email,
+			Phone:    user.Phone,
+			Nickname: user.Nickname,
+			Avatar:   user.Avatar,
+		})
+	}()
+	return nil
 }
 
 func (u *userService) FindOrCreate(ctx context.Context,

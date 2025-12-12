@@ -22,6 +22,7 @@ type UserEvent struct {
 	Email    string `json:"email"`
 	Phone    string `json:"phone"`
 	Nickname string `json:"nickname"`
+	Avatar   string `json:"avatar"`
 }
 
 func NewUserConsumer(client sarama.Client,
@@ -62,5 +63,6 @@ func (u *UserConsumer) toDomain(evt UserEvent) domain.User {
 		Email:    evt.Email,
 		Nickname: evt.Nickname,
 		Phone:    evt.Phone,
+		Avatar:   evt.Avatar,
 	}
 }

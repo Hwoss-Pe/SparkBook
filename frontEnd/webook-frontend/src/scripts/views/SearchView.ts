@@ -87,7 +87,7 @@ export default function useSearchView() {
       })
       
       // 处理文章搜索结果，使用真实字段并生成摘要
-      const searchedArticles = (response as SearchResponse).article.articles
+      const searchedArticles = (response as SearchResponse).article?.articles ?? []
       const makeAbstract = (content: string): string => {
         const text = (content || '').replace(/[#`*_>\-]+/g, ' ').replace(/\s+/g, ' ').trim()
         return text.length > 120 ? text.slice(0, 120) + '…' : text
@@ -99,7 +99,7 @@ export default function useSearchView() {
       }))
       
       // 处理用户搜索结果，使用真实字段
-      users.value = (response as SearchResponse).user.users.map(u => ({
+      users.value = ((response as SearchResponse).user?.users ?? []).map(u => ({
         id: u.id,
         name: u.nickname,
         avatar: normalizeAvatarUrl(u.avatar) || '',

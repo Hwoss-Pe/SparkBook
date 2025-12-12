@@ -10,3 +10,6 @@ grpc:
     port: 8091
 #    这里会有一个续约机制
     etcdTTL: 60
+kafka:
+  addrs:
+    - "localhost:9094"

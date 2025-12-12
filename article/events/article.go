@@ -6,6 +6,7 @@ import (
 )
 
 const topicReadEvent = "article_read_event"
+const topicSyncArticle = "sync_article_event"
 
 type ReadEvent struct {
 	Aid int64
@@ -13,6 +14,7 @@ type ReadEvent struct {
 }
 type Producer interface {
 	ProduceReadEvent(evt ReadEvent) error
+	ProduceArticleEvent(evt ArticleEvent) error
 }
 
 type SaramaSyncProducer struct {
@@ -26,6 +28,25 @@ func (s *SaramaSyncProducer) ProduceReadEvent(evt ReadEvent) error {
 	}
 	_, _, err = s.producer.SendMessage(&sarama.ProducerMessage{
 		Topic: topicReadEvent,
+		Value: sarama.ByteEncoder(data),
+	})
+	return err
+}
+
+type ArticleEvent struct {
+	Id      int64  `json:"id"`
+	Title   string `json:"title"`
+	Status  int32  `json:"status"`
+	Content string `json:"content"`
+}
+
+func (s *SaramaSyncProducer) ProduceArticleEvent(evt ArticleEvent) error {
+	data, err := json.Marshal(evt)
+	if err != nil {
+		return err
+	}
+	_, _, err = s.producer.SendMessage(&sarama.ProducerMessage{
+		Topic: topicSyncArticle,
 		Value: sarama.ByteEncoder(data),
 	})
 	return err

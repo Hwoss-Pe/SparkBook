@@ -64,7 +64,24 @@ func (a *articleService) Save(ctx context.Context, art domain.Article) (int64, e
 
 func (a *articleService) Publish(ctx context.Context, art domain.Article) (int64, error) {
 	art.Status = domain.ArticleStatusPublished
-	return a.repo.Sync(ctx, art)
+	id, err := a.repo.Sync(ctx, art)
+	if err != nil {
+		return 0, err
+	}
+	go func() {
+		er := a.producer.ProduceArticleEvent(events.ArticleEvent{
+			Id:      id,
+			Title:   art.Title,
+			Status:  int32(art.Status),
+			Content: art.Content,
+		})
+		if er != nil {
+			a.logger.Error("发送文章事件失败",
+				logger.Int64("art_id", id),
+				logger.Error(er))
+		}
+	}()
+	return id, nil
 }
 
 func (a *articleService) Withdraw(ctx context.Context, uid, id int64) error {
@@ -122,6 +139,19 @@ func (a *articleService) PublishV1(ctx context.Context, art domain.Article) (int
 			logger.Error(err))
 		return 0, err
 	}
+	go func() {
+		er := a.producer.ProduceArticleEvent(events.ArticleEvent{
+			Id:      id,
+			Title:   art.Title,
+			Status:  int32(art.Status),
+			Content: art.Content,
+		})
+		if er != nil {
+			a.logger.Error("发送文章事件失败",
+				logger.Int64("art_id", id),
+				logger.Error(er))
+		}
+	}()
 	return id, nil
 }
 

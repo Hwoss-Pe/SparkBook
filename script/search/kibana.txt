@@ -1,0 +1,65 @@
+GET _search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+GET user_index/_search
+{
+  "query": {
+    "match": { "nickname": "大擦" }
+  }
+}
+
+GET user_index/_search
+{
+  "size": 1000,
+  "query": { "match_all": {} }
+}
+
+GET article_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "bool": {
+            "should": [
+              { "match": { "title": "标签" } },
+              { "match": { "content": "" } }
+            ]
+          }
+        },
+        { "term": { "status": 2 } }
+      ]
+    }
+  }
+}
+
+GET tags_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "term": { "biz": "article" } },
+        { "terms": { "tags": ["推"] } }
+      ]
+    }
+  },
+  "_source": ["biz_id"],
+  "size": 1000
+}
+
+GET article_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "terms": { "id": [154] } },
+        { "term": { "status": 2 } }
+      ]
+    }
+  },
+  "size": 100
+}

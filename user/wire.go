@@ -4,6 +4,7 @@ package main
 
 import (
 	"Webook/pkg/wego"
+	"Webook/user/events"
 	"Webook/user/grpc"
 	"Webook/user/ioc"
 	"Webook/user/repository"
@@ -20,6 +21,7 @@ var thirdProvider = wire.NewSet(
 	ioc.InitDB,
 	ioc.InitRedis,
 	ioc.InitEtcdClient,
+	ioc.InitKafka,
 )
 
 func Init() *wego.App {
@@ -28,6 +30,8 @@ func Init() *wego.App {
 		cache.NewRedisUserCache,
 		dao.NewGORMUserDAO,
 		repository.NewCachedUserRepository,
+		ioc.InitProducer,
+		events.NewSaramaSyncProducer,
 		service.NewUserService,
 		grpc.NewUserServiceServer,
 		ioc.InitGRPCxServer,
