@@ -3,6 +3,7 @@ package dao
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/olivere/elastic/v7"
 )
 
@@ -12,9 +13,10 @@ type TagESDAO struct {
 
 func (t *TagESDAO) Search(ctx context.Context, uid int64, biz string, keywords []string) ([]int64, error) {
 	query := elastic.NewBoolQuery().Must(
-		elastic.NewTermsQuery("uid", uid),
+		//elastic.NewTermsQuery("uid", uid),
 		elastic.NewTermsQueryFromStrings("tags", keywords...),
 		elastic.NewTermQuery("biz", biz))
+	fmt.Println(query)
 	resp, err := t.client.Search(TagIndexName).Query(query).Do(ctx)
 	if err != nil {
 		return nil, err

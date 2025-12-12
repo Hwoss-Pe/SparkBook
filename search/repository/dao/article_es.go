@@ -2,11 +2,12 @@ package dao
 
 import (
 	"context"
+	"strconv"
+	"strings"
+
 	"github.com/ecodeclub/ekit/slice"
 	"github.com/goccy/go-json"
 	"github.com/olivere/elastic/v7"
-	"strconv"
-	"strings"
 )
 
 const ArticleIndexName = "article_index"
@@ -33,21 +34,37 @@ func (a *ArticleElasticDAO) InputArticle(ctx context.Context, article Article) e
 }
 
 func (a *ArticleElasticDAO) Search(ctx context.Context, tagArtIds []int64, keywords []string) ([]Article, error) {
+	// 当标签索引命中文章 ID 时，优先按 ID 精确过滤 + 状态
+	if len(tagArtIds) > 0 {
+		ids := slice.Map(tagArtIds, func(idx int, src int64) any { return src })
+		query := elastic.NewBoolQuery().Must(
+			elastic.NewTermsQuery("id", ids...),
+			elastic.NewTermQuery("status", 2),
+		)
+		resp, err := a.client.Search(ArticleIndexName).Query(query).Size(100).Do(ctx)
+		if err != nil {
+			return nil, err
+		}
+		articles := make([]Article, 0, len(resp.Hits.Hits))
+		for _, hit := range resp.Hits.Hits {
+			var ele Article
+			err = json.Unmarshal(hit.Source, &ele)
+			articles = append(articles, ele)
+		}
+		return articles, nil
+	}
+
+	// 否则走全文检索（标题/内容），并要求至少命中一项
 	queryString := strings.Join(keywords, " ")
-	//	需要把ids变成any的类型
-	ids := slice.Map(tagArtIds, func(idx int, src int64) any {
-		return src
-	})
-	//term 是字段查询，相当于去匹配字段的
-	//match是全文查询，找对应的值的
 	should := elastic.NewBoolQuery().Should(
-		elastic.NewTermsQuery("id", ids...).Boost(2),
 		elastic.NewMatchQuery("title", queryString),
-		elastic.NewMatchQuery("content", queryString))
+		elastic.NewMatchQuery("content", queryString),
+	).MinimumShouldMatch("1")
 	query := elastic.NewBoolQuery().Must(
 		should,
-		elastic.NewTermQuery("status", "2"))
-	resp, err := a.client.Search(ArticleIndexName).Query(query).Do(ctx)
+		elastic.NewTermQuery("status", 2),
+	)
+	resp, err := a.client.Search(ArticleIndexName).Query(query).Size(100).Do(ctx)
 	if err != nil {
 		return nil, err
 	}

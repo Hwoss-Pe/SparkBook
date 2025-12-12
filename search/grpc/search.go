@@ -5,6 +5,7 @@ import (
 	"Webook/search/domain"
 	"Webook/search/service"
 	"context"
+
 	"github.com/ecodeclub/ekit/slice"
 	"google.golang.org/grpc"
 )
@@ -44,6 +45,7 @@ func (s *SearchServiceServer) Search(ctx context.Context, request *searchv1.Sear
 					Title:   src.Title,
 					Status:  src.Status,
 					Content: src.Content,
+					Tags:    src.Tags,
 				}
 			}),
 		},
