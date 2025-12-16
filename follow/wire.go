@@ -3,6 +3,7 @@
 package main
 
 import (
+	"Webook/follow/events"
 	grpc2 "Webook/follow/grpc"
 	"Webook/follow/ioc"
 	"Webook/follow/repository"
@@ -24,10 +25,13 @@ var thirdProvider = wire.NewSet(
 	ioc.InitRedisClient,
 	ioc.InitEtcdClient,
 	ioc.InitLogger,
-	ioc.InitDB)
+	ioc.InitDB,
+	ioc.InitKafka,
+	ioc.InitProducer,
+)
 
 func Init() *App {
 	wire.Build(
-		thirdProvider, serviceProviderSet, ioc.InitGRPCxServer, wire.Struct(new(App), "*"))
+		thirdProvider, serviceProviderSet, ioc.InitGRPCxServer, events.NewFollowEventConsumer, events.NewProducer, ioc.NewConsumers, wire.Struct(new(App), "*"))
 	return new(App)
 }

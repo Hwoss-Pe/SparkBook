@@ -921,6 +921,546 @@ func (x *GetCollectedBizIdsResponse) GetTotal() int64 {
 	return 0
 }
 
+type NotificationSender struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Avatar        string                 `protobuf:"bytes,3,opt,name=avatar,proto3" json:"avatar,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NotificationSender) Reset() {
+	*x = NotificationSender{}
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NotificationSender) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NotificationSender) ProtoMessage() {}
+
+func (x *NotificationSender) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NotificationSender.ProtoReflect.Descriptor instead.
+func (*NotificationSender) Descriptor() ([]byte, []int) {
+	return file_api_proto_intr_v1_interactive_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *NotificationSender) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *NotificationSender) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *NotificationSender) GetAvatar() string {
+	if x != nil {
+		return x.Avatar
+	}
+	return ""
+}
+
+type NotificationTarget struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Id            int64                  `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	Preview       string                 `protobuf:"bytes,4,opt,name=preview,proto3" json:"preview,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NotificationTarget) Reset() {
+	*x = NotificationTarget{}
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NotificationTarget) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NotificationTarget) ProtoMessage() {}
+
+func (x *NotificationTarget) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NotificationTarget.ProtoReflect.Descriptor instead.
+func (*NotificationTarget) Descriptor() ([]byte, []int) {
+	return file_api_proto_intr_v1_interactive_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *NotificationTarget) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *NotificationTarget) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *NotificationTarget) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *NotificationTarget) GetPreview() string {
+	if x != nil {
+		return x.Preview
+	}
+	return ""
+}
+
+type NotificationItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Category      string                 `protobuf:"bytes,2,opt,name=category,proto3" json:"category,omitempty"`
+	Content       string                 `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
+	Time          string                 `protobuf:"bytes,4,opt,name=time,proto3" json:"time,omitempty"`
+	Sender        *NotificationSender    `protobuf:"bytes,5,opt,name=sender,proto3" json:"sender,omitempty"`
+	Target        *NotificationTarget    `protobuf:"bytes,6,opt,name=target,proto3" json:"target,omitempty"`
+	Status        string                 `protobuf:"bytes,7,opt,name=status,proto3" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NotificationItem) Reset() {
+	*x = NotificationItem{}
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NotificationItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NotificationItem) ProtoMessage() {}
+
+func (x *NotificationItem) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NotificationItem.ProtoReflect.Descriptor instead.
+func (*NotificationItem) Descriptor() ([]byte, []int) {
+	return file_api_proto_intr_v1_interactive_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *NotificationItem) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *NotificationItem) GetCategory() string {
+	if x != nil {
+		return x.Category
+	}
+	return ""
+}
+
+func (x *NotificationItem) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *NotificationItem) GetTime() string {
+	if x != nil {
+		return x.Time
+	}
+	return ""
+}
+
+func (x *NotificationItem) GetSender() *NotificationSender {
+	if x != nil {
+		return x.Sender
+	}
+	return nil
+}
+
+func (x *NotificationItem) GetTarget() *NotificationTarget {
+	if x != nil {
+		return x.Target
+	}
+	return nil
+}
+
+func (x *NotificationItem) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+type GetNotificationsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Uid           int64                  `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	Offset        int32                  `protobuf:"varint,3,opt,name=offset,proto3" json:"offset,omitempty"`
+	Limit         int32                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetNotificationsRequest) Reset() {
+	*x = GetNotificationsRequest{}
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetNotificationsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetNotificationsRequest) ProtoMessage() {}
+
+func (x *GetNotificationsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetNotificationsRequest.ProtoReflect.Descriptor instead.
+func (*GetNotificationsRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_intr_v1_interactive_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *GetNotificationsRequest) GetUid() int64 {
+	if x != nil {
+		return x.Uid
+	}
+	return 0
+}
+
+func (x *GetNotificationsRequest) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *GetNotificationsRequest) GetOffset() int32 {
+	if x != nil {
+		return x.Offset
+	}
+	return 0
+}
+
+func (x *GetNotificationsRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type GetNotificationsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*NotificationItem    `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetNotificationsResponse) Reset() {
+	*x = GetNotificationsResponse{}
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetNotificationsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetNotificationsResponse) ProtoMessage() {}
+
+func (x *GetNotificationsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetNotificationsResponse.ProtoReflect.Descriptor instead.
+func (*GetNotificationsResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_intr_v1_interactive_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *GetNotificationsResponse) GetItems() []*NotificationItem {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+type MarkReadRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Uid           int64                  `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	Ids           []int64                `protobuf:"varint,2,rep,packed,name=ids,proto3" json:"ids,omitempty"`
+	Type          string                 `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MarkReadRequest) Reset() {
+	*x = MarkReadRequest{}
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MarkReadRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MarkReadRequest) ProtoMessage() {}
+
+func (x *MarkReadRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MarkReadRequest.ProtoReflect.Descriptor instead.
+func (*MarkReadRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_intr_v1_interactive_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *MarkReadRequest) GetUid() int64 {
+	if x != nil {
+		return x.Uid
+	}
+	return 0
+}
+
+func (x *MarkReadRequest) GetIds() []int64 {
+	if x != nil {
+		return x.Ids
+	}
+	return nil
+}
+
+func (x *MarkReadRequest) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+type MarkReadResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MarkReadResponse) Reset() {
+	*x = MarkReadResponse{}
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MarkReadResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MarkReadResponse) ProtoMessage() {}
+
+func (x *MarkReadResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MarkReadResponse.ProtoReflect.Descriptor instead.
+func (*MarkReadResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_intr_v1_interactive_proto_rawDescGZIP(), []int{23}
+}
+
+type GetUnreadCountsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Uid           int64                  `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetUnreadCountsRequest) Reset() {
+	*x = GetUnreadCountsRequest{}
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetUnreadCountsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUnreadCountsRequest) ProtoMessage() {}
+
+func (x *GetUnreadCountsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUnreadCountsRequest.ProtoReflect.Descriptor instead.
+func (*GetUnreadCountsRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_intr_v1_interactive_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *GetUnreadCountsRequest) GetUid() int64 {
+	if x != nil {
+		return x.Uid
+	}
+	return 0
+}
+
+type GetUnreadCountsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Interaction   int32                  `protobuf:"varint,1,opt,name=interaction,proto3" json:"interaction,omitempty"`
+	Follow        int32                  `protobuf:"varint,2,opt,name=follow,proto3" json:"follow,omitempty"`
+	System        int32                  `protobuf:"varint,3,opt,name=system,proto3" json:"system,omitempty"`
+	Total         int32                  `protobuf:"varint,4,opt,name=total,proto3" json:"total,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetUnreadCountsResponse) Reset() {
+	*x = GetUnreadCountsResponse{}
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetUnreadCountsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUnreadCountsResponse) ProtoMessage() {}
+
+func (x *GetUnreadCountsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_intr_v1_interactive_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUnreadCountsResponse.ProtoReflect.Descriptor instead.
+func (*GetUnreadCountsResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_intr_v1_interactive_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *GetUnreadCountsResponse) GetInteraction() int32 {
+	if x != nil {
+		return x.Interaction
+	}
+	return 0
+}
+
+func (x *GetUnreadCountsResponse) GetFollow() int32 {
+	if x != nil {
+		return x.Follow
+	}
+	return 0
+}
+
+func (x *GetUnreadCountsResponse) GetSystem() int32 {
+	if x != nil {
+		return x.System
+	}
+	return 0
+}
+
+func (x *GetUnreadCountsResponse) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
 var File_api_proto_intr_v1_interactive_proto protoreflect.FileDescriptor
 
 const file_api_proto_intr_v1_interactive_proto_rawDesc = "" +
@@ -984,7 +1524,43 @@ const file_api_proto_intr_v1_interactive_proto_rawDesc = "" +
 	"\x05limit\x18\x04 \x01(\x05R\x05limit\"K\n" +
 	"\x1aGetCollectedBizIdsResponse\x12\x17\n" +
 	"\abiz_ids\x18\x01 \x03(\x03R\x06bizIds\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x03R\x05total2\xba\x04\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total\"P\n" +
+	"\x12NotificationSender\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x16\n" +
+	"\x06avatar\x18\x03 \x01(\tR\x06avatar\"h\n" +
+	"\x12NotificationTarget\x12\x12\n" +
+	"\x04type\x18\x01 \x01(\tR\x04type\x12\x0e\n" +
+	"\x02id\x18\x02 \x01(\x03R\x02id\x12\x14\n" +
+	"\x05title\x18\x03 \x01(\tR\x05title\x12\x18\n" +
+	"\apreview\x18\x04 \x01(\tR\apreview\"\xee\x01\n" +
+	"\x10NotificationItem\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1a\n" +
+	"\bcategory\x18\x02 \x01(\tR\bcategory\x12\x18\n" +
+	"\acontent\x18\x03 \x01(\tR\acontent\x12\x12\n" +
+	"\x04time\x18\x04 \x01(\tR\x04time\x123\n" +
+	"\x06sender\x18\x05 \x01(\v2\x1b.intr.v1.NotificationSenderR\x06sender\x123\n" +
+	"\x06target\x18\x06 \x01(\v2\x1b.intr.v1.NotificationTargetR\x06target\x12\x16\n" +
+	"\x06status\x18\a \x01(\tR\x06status\"m\n" +
+	"\x17GetNotificationsRequest\x12\x10\n" +
+	"\x03uid\x18\x01 \x01(\x03R\x03uid\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12\x16\n" +
+	"\x06offset\x18\x03 \x01(\x05R\x06offset\x12\x14\n" +
+	"\x05limit\x18\x04 \x01(\x05R\x05limit\"K\n" +
+	"\x18GetNotificationsResponse\x12/\n" +
+	"\x05items\x18\x01 \x03(\v2\x19.intr.v1.NotificationItemR\x05items\"I\n" +
+	"\x0fMarkReadRequest\x12\x10\n" +
+	"\x03uid\x18\x01 \x01(\x03R\x03uid\x12\x10\n" +
+	"\x03ids\x18\x02 \x03(\x03R\x03ids\x12\x12\n" +
+	"\x04type\x18\x03 \x01(\tR\x04type\"\x12\n" +
+	"\x10MarkReadResponse\"*\n" +
+	"\x16GetUnreadCountsRequest\x12\x10\n" +
+	"\x03uid\x18\x01 \x01(\x03R\x03uid\"\x81\x01\n" +
+	"\x17GetUnreadCountsResponse\x12 \n" +
+	"\vinteraction\x18\x01 \x01(\x05R\vinteraction\x12\x16\n" +
+	"\x06follow\x18\x02 \x01(\x05R\x06follow\x12\x16\n" +
+	"\x06system\x18\x03 \x01(\x05R\x06system\x12\x14\n" +
+	"\x05total\x18\x04 \x01(\x05R\x05total2\xaa\x06\n" +
 	"\x12InteractiveService\x12H\n" +
 	"\vIncrReadCnt\x12\x1b.intr.v1.IncrReadCntRequest\x1a\x1c.intr.v1.IncrReadCntResponse\x123\n" +
 	"\x04Like\x12\x14.intr.v1.LikeRequest\x1a\x15.intr.v1.LikeResponse\x12E\n" +
@@ -994,7 +1570,10 @@ const file_api_proto_intr_v1_interactive_proto_rawDesc = "" +
 	"\rCancelCollect\x12\x1d.intr.v1.CancelCollectRequest\x1a\x1e.intr.v1.CancelCollectResponse\x120\n" +
 	"\x03Get\x12\x13.intr.v1.GetRequest\x1a\x14.intr.v1.GetResponse\x12?\n" +
 	"\bGetByIds\x12\x18.intr.v1.GetByIdsRequest\x1a\x19.intr.v1.GetByIdsResponse\x12]\n" +
-	"\x12GetCollectedBizIds\x12\".intr.v1.GetCollectedBizIdsRequest\x1a#.intr.v1.GetCollectedBizIdsResponseB\x89\x01\n" +
+	"\x12GetCollectedBizIds\x12\".intr.v1.GetCollectedBizIdsRequest\x1a#.intr.v1.GetCollectedBizIdsResponse\x12W\n" +
+	"\x10GetNotifications\x12 .intr.v1.GetNotificationsRequest\x1a!.intr.v1.GetNotificationsResponse\x12?\n" +
+	"\bMarkRead\x12\x18.intr.v1.MarkReadRequest\x1a\x19.intr.v1.MarkReadResponse\x12T\n" +
+	"\x0fGetUnreadCounts\x12\x1f.intr.v1.GetUnreadCountsRequest\x1a .intr.v1.GetUnreadCountsResponseB\x89\x01\n" +
 	"\vcom.intr.v1B\x10InteractiveProtoP\x01Z+ecodepub/pkg/model/api/proto/intr/v1;intrv1\xa2\x02\x03IXX\xaa\x02\aIntr.V1\xca\x02\aIntr\\V1\xe2\x02\x13Intr\\V1\\GPBMetadata\xea\x02\bIntr::V1b\x06proto3"
 
 var (
@@ -1009,7 +1588,7 @@ func file_api_proto_intr_v1_interactive_proto_rawDescGZIP() []byte {
 	return file_api_proto_intr_v1_interactive_proto_rawDescData
 }
 
-var file_api_proto_intr_v1_interactive_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_api_proto_intr_v1_interactive_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_api_proto_intr_v1_interactive_proto_goTypes = []any{
 	(*GetResponse)(nil),                // 0: intr.v1.GetResponse
 	(*GetRequest)(nil),                 // 1: intr.v1.GetRequest
@@ -1028,33 +1607,51 @@ var file_api_proto_intr_v1_interactive_proto_goTypes = []any{
 	(*CancelCollectResponse)(nil),      // 14: intr.v1.CancelCollectResponse
 	(*GetCollectedBizIdsRequest)(nil),  // 15: intr.v1.GetCollectedBizIdsRequest
 	(*GetCollectedBizIdsResponse)(nil), // 16: intr.v1.GetCollectedBizIdsResponse
-	nil,                                // 17: intr.v1.GetByIdsResponse.IntrsEntry
+	(*NotificationSender)(nil),         // 17: intr.v1.NotificationSender
+	(*NotificationTarget)(nil),         // 18: intr.v1.NotificationTarget
+	(*NotificationItem)(nil),           // 19: intr.v1.NotificationItem
+	(*GetNotificationsRequest)(nil),    // 20: intr.v1.GetNotificationsRequest
+	(*GetNotificationsResponse)(nil),   // 21: intr.v1.GetNotificationsResponse
+	(*MarkReadRequest)(nil),            // 22: intr.v1.MarkReadRequest
+	(*MarkReadResponse)(nil),           // 23: intr.v1.MarkReadResponse
+	(*GetUnreadCountsRequest)(nil),     // 24: intr.v1.GetUnreadCountsRequest
+	(*GetUnreadCountsResponse)(nil),    // 25: intr.v1.GetUnreadCountsResponse
+	nil,                                // 26: intr.v1.GetByIdsResponse.IntrsEntry
 }
 var file_api_proto_intr_v1_interactive_proto_depIdxs = []int32{
 	4,  // 0: intr.v1.GetResponse.intr:type_name -> intr.v1.Interactive
-	17, // 1: intr.v1.GetByIdsResponse.intrs:type_name -> intr.v1.GetByIdsResponse.IntrsEntry
-	4,  // 2: intr.v1.GetByIdsResponse.IntrsEntry.value:type_name -> intr.v1.Interactive
-	5,  // 3: intr.v1.InteractiveService.IncrReadCnt:input_type -> intr.v1.IncrReadCntRequest
-	9,  // 4: intr.v1.InteractiveService.Like:input_type -> intr.v1.LikeRequest
-	8,  // 5: intr.v1.InteractiveService.CancelLike:input_type -> intr.v1.CancelLikeRequest
-	12, // 6: intr.v1.InteractiveService.Collect:input_type -> intr.v1.CollectRequest
-	13, // 7: intr.v1.InteractiveService.CancelCollect:input_type -> intr.v1.CancelCollectRequest
-	1,  // 8: intr.v1.InteractiveService.Get:input_type -> intr.v1.GetRequest
-	2,  // 9: intr.v1.InteractiveService.GetByIds:input_type -> intr.v1.GetByIdsRequest
-	15, // 10: intr.v1.InteractiveService.GetCollectedBizIds:input_type -> intr.v1.GetCollectedBizIdsRequest
-	6,  // 11: intr.v1.InteractiveService.IncrReadCnt:output_type -> intr.v1.IncrReadCntResponse
-	10, // 12: intr.v1.InteractiveService.Like:output_type -> intr.v1.LikeResponse
-	7,  // 13: intr.v1.InteractiveService.CancelLike:output_type -> intr.v1.CancelLikeResponse
-	11, // 14: intr.v1.InteractiveService.Collect:output_type -> intr.v1.CollectResponse
-	14, // 15: intr.v1.InteractiveService.CancelCollect:output_type -> intr.v1.CancelCollectResponse
-	0,  // 16: intr.v1.InteractiveService.Get:output_type -> intr.v1.GetResponse
-	3,  // 17: intr.v1.InteractiveService.GetByIds:output_type -> intr.v1.GetByIdsResponse
-	16, // 18: intr.v1.InteractiveService.GetCollectedBizIds:output_type -> intr.v1.GetCollectedBizIdsResponse
-	11, // [11:19] is the sub-list for method output_type
-	3,  // [3:11] is the sub-list for method input_type
-	3,  // [3:3] is the sub-list for extension type_name
-	3,  // [3:3] is the sub-list for extension extendee
-	0,  // [0:3] is the sub-list for field type_name
+	26, // 1: intr.v1.GetByIdsResponse.intrs:type_name -> intr.v1.GetByIdsResponse.IntrsEntry
+	17, // 2: intr.v1.NotificationItem.sender:type_name -> intr.v1.NotificationSender
+	18, // 3: intr.v1.NotificationItem.target:type_name -> intr.v1.NotificationTarget
+	19, // 4: intr.v1.GetNotificationsResponse.items:type_name -> intr.v1.NotificationItem
+	4,  // 5: intr.v1.GetByIdsResponse.IntrsEntry.value:type_name -> intr.v1.Interactive
+	5,  // 6: intr.v1.InteractiveService.IncrReadCnt:input_type -> intr.v1.IncrReadCntRequest
+	9,  // 7: intr.v1.InteractiveService.Like:input_type -> intr.v1.LikeRequest
+	8,  // 8: intr.v1.InteractiveService.CancelLike:input_type -> intr.v1.CancelLikeRequest
+	12, // 9: intr.v1.InteractiveService.Collect:input_type -> intr.v1.CollectRequest
+	13, // 10: intr.v1.InteractiveService.CancelCollect:input_type -> intr.v1.CancelCollectRequest
+	1,  // 11: intr.v1.InteractiveService.Get:input_type -> intr.v1.GetRequest
+	2,  // 12: intr.v1.InteractiveService.GetByIds:input_type -> intr.v1.GetByIdsRequest
+	15, // 13: intr.v1.InteractiveService.GetCollectedBizIds:input_type -> intr.v1.GetCollectedBizIdsRequest
+	20, // 14: intr.v1.InteractiveService.GetNotifications:input_type -> intr.v1.GetNotificationsRequest
+	22, // 15: intr.v1.InteractiveService.MarkRead:input_type -> intr.v1.MarkReadRequest
+	24, // 16: intr.v1.InteractiveService.GetUnreadCounts:input_type -> intr.v1.GetUnreadCountsRequest
+	6,  // 17: intr.v1.InteractiveService.IncrReadCnt:output_type -> intr.v1.IncrReadCntResponse
+	10, // 18: intr.v1.InteractiveService.Like:output_type -> intr.v1.LikeResponse
+	7,  // 19: intr.v1.InteractiveService.CancelLike:output_type -> intr.v1.CancelLikeResponse
+	11, // 20: intr.v1.InteractiveService.Collect:output_type -> intr.v1.CollectResponse
+	14, // 21: intr.v1.InteractiveService.CancelCollect:output_type -> intr.v1.CancelCollectResponse
+	0,  // 22: intr.v1.InteractiveService.Get:output_type -> intr.v1.GetResponse
+	3,  // 23: intr.v1.InteractiveService.GetByIds:output_type -> intr.v1.GetByIdsResponse
+	16, // 24: intr.v1.InteractiveService.GetCollectedBizIds:output_type -> intr.v1.GetCollectedBizIdsResponse
+	21, // 25: intr.v1.InteractiveService.GetNotifications:output_type -> intr.v1.GetNotificationsResponse
+	23, // 26: intr.v1.InteractiveService.MarkRead:output_type -> intr.v1.MarkReadResponse
+	25, // 27: intr.v1.InteractiveService.GetUnreadCounts:output_type -> intr.v1.GetUnreadCountsResponse
+	17, // [17:28] is the sub-list for method output_type
+	6,  // [6:17] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_api_proto_intr_v1_interactive_proto_init() }
@@ -1068,7 +1665,7 @@ func file_api_proto_intr_v1_interactive_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_intr_v1_interactive_proto_rawDesc), len(file_api_proto_intr_v1_interactive_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   27,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

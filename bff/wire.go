@@ -7,6 +7,7 @@ import (
 	"Webook/bff/web"
 	"Webook/bff/web/jwt"
 	"Webook/pkg/wego"
+
 	"github.com/google/wire"
 )
 
@@ -21,6 +22,7 @@ func InitApp() *wego.App {
 		web.NewUserHandler,
 		web.NewFollowHandler,
 		web.NewRewardHandler,
+		web.NewNotificationHandler,
 		jwt.NewRedisHandler,
 
 		ioc.InitUserClient,

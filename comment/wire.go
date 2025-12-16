@@ -3,6 +3,7 @@
 package main
 
 import (
+	"Webook/comment/events"
 	grpc2 "Webook/comment/grpc"
 	"Webook/comment/ioc"
 	"Webook/comment/repository"
@@ -21,12 +22,18 @@ var thirdProvider = wire.NewSet(
 	ioc.InitLogger,
 	ioc.InitDB,
 	ioc.InitEtcdClient,
+	ioc.InitKafka,
+	ioc.InitProducer,
 )
 
 func Init() *App {
 	wire.Build(
 		thirdProvider,
 		serviceProviderSet,
-		ioc.InitGRPCxServer, wire.Struct(new(App), "*"))
+		ioc.InitGRPCxServer,
+		events.NewProducer,
+		events.NewCommentEventConsumer,
+		ioc.NewConsumers,
+		wire.Struct(new(App), "*"))
 	return new(App)
 }

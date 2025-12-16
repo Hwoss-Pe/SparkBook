@@ -16,6 +16,9 @@ service InteractiveService{
   rpc GetByIds(GetByIdsRequest) returns (GetByIdsResponse);
   // GetCollectedBizIds 获取用户收藏的biz_id列表
   rpc GetCollectedBizIds(GetCollectedBizIdsRequest) returns (GetCollectedBizIdsResponse);
+  rpc GetNotifications(GetNotificationsRequest) returns (GetNotificationsResponse);
+  rpc MarkRead(MarkReadRequest) returns (MarkReadResponse);
+  rpc GetUnreadCounts(GetUnreadCountsRequest) returns (GetUnreadCountsResponse);
 
 }
 
@@ -101,4 +104,55 @@ message GetCollectedBizIdsRequest {
 message GetCollectedBizIdsResponse {
   repeated int64 biz_ids = 1;
   int64 total = 2;
+}
+
+message NotificationSender {
+  int64 id = 1;
+  string name = 2;
+  string avatar = 3;
+}
+
+message NotificationTarget {
+  string type = 1;
+  int64 id = 2;
+  string title = 3;
+  string preview = 4;
+}
+
+message NotificationItem {
+  int64 id = 1;
+  string category = 2;
+  string content = 3;
+  string time = 4;
+  NotificationSender sender = 5;
+  NotificationTarget target = 6;
+  string status = 7;
+}
+
+message GetNotificationsRequest {
+  int64 uid = 1;
+  string type = 2;
+  int32 offset = 3;
+  int32 limit = 4;
+}
+
+message GetNotificationsResponse {
+  repeated NotificationItem items = 1;
+}
+
+message MarkReadRequest {
+  int64 uid = 1;
+  repeated int64 ids = 2;
+  string type = 3;
+}
+
+message MarkReadResponse {}
+
+message GetUnreadCountsRequest { int64 uid = 1; }
+
+message GetUnreadCountsResponse {
+  int32 interaction = 1;
+  int32 follow = 2;
+  int32 system = 3;
+  int32 total = 4;
 }

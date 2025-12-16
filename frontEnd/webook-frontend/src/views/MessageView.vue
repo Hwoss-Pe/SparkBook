@@ -5,9 +5,13 @@
       
       <div class="message-content">
         <el-tabs v-model="activeTab" class="message-tabs">
-          <el-tab-pane label="互动消息" name="interaction">
+          <el-tab-pane name="interaction">
+            <template #label>
+              互动消息
+              <el-badge v-if="unread.interaction > 0" :value="unread.interaction" class="tab-badge" />
+            </template>
             <div v-if="interactionMessages.length > 0" class="message-list">
-              <div v-for="message in interactionMessages" :key="message.id" class="message-item">
+              <div v-for="message in interactionMessages" :key="message.id" class="message-item clickable" @click="navigateToTarget(message)">
                 <div class="message-avatar">
                   <el-avatar :size="40" :src="message.sender.avatar">
                     {{ message.sender.name ? message.sender.name.substring(0, 1) : '匿' }}
@@ -19,7 +23,7 @@
                     <span class="message-time">{{ formatTime(message.time) }}</span>
                   </div>
                   <div class="message-content-text" v-html="message.content"></div>
-                  <div class="message-target" v-if="message.target" @click="navigateToTarget(message)">
+                  <div class="message-target" v-if="message.target && (message.target.title || message.target.preview)">
                     <div class="target-content">
                       <div class="target-title">{{ message.target.title }}</div>
                       <div class="target-preview">{{ message.target.preview }}</div>
@@ -37,9 +41,13 @@
             </div>
           </el-tab-pane>
           
-          <el-tab-pane label="关注消息" name="follow">
+          <el-tab-pane name="follow">
+            <template #label>
+              关注消息
+              <el-badge v-if="unread.follow > 0" :value="unread.follow" class="tab-badge" />
+            </template>
             <div v-if="followMessages.length > 0" class="message-list">
-              <div v-for="message in followMessages" :key="message.id" class="message-item">
+              <div v-for="message in followMessages" :key="message.id" class="message-item clickable" @click="navigateToUser(message)">
                 <div class="message-avatar">
                   <el-avatar :size="40" :src="message.sender.avatar">
                     {{ message.sender.name ? message.sender.name.substring(0, 1) : '匿' }}
@@ -51,9 +59,6 @@
                     <span class="message-time">{{ formatTime(message.time) }}</span>
                   </div>
                   <div class="message-content-text">{{ message.content }}</div>
-                  <div class="message-actions" v-if="!message.isFollowing">
-                    <el-button size="small" type="primary" @click="followUser(message.sender.id)">关注</el-button>
-                  </div>
                 </div>
               </div>
               
@@ -66,20 +71,24 @@
             </div>
           </el-tab-pane>
           
-          <el-tab-pane label="系统消息" name="system">
+          <el-tab-pane name="system">
+            <template #label>
+              系统消息
+              <el-badge v-if="unread.system > 0" :value="unread.system" class="tab-badge" />
+            </template>
             <div v-if="systemMessages.length > 0" class="message-list">
               <div v-for="message in systemMessages" :key="message.id" class="message-item system-message">
-                <div class="message-avatar">
-                  <el-avatar :size="40" icon="el-icon-bell">
-                    系统
-                  </el-avatar>
+                <div class="system-icon">
+                  <el-icon><Bell /></el-icon>
                 </div>
                 <div class="message-body">
-                  <div class="message-header">
+                  <div class="message-header system-header">
                     <span class="sender-name">系统通知</span>
                     <span class="message-time">{{ formatTime(message.time) }}</span>
                   </div>
-                  <div class="message-content-text">{{ message.content }}</div>
+                  <div class="system-content">
+                    <div class="system-text">{{ message.content }}</div>
+                  </div>
                 </div>
               </div>
               
@@ -98,115 +107,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import MainLayout from '@/components/layout/MainLayout.vue'
 import { Bell } from '@element-plus/icons-vue'
+import { useNotificationStore } from '@/stores/notification'
 
 const router = useRouter()
 const activeTab = ref('interaction')
+const store = useNotificationStore()
+const unread = store.unread
+const interactionMessages = computed(() => store.interaction)
+const followMessages = computed(() => store.follow)
+const systemMessages = computed(() => store.system)
+const hasMoreInteraction = computed(() => store.hasMore.interaction)
+const hasMoreFollow = computed(() => store.hasMore.follow)
+const hasMoreSystem = computed(() => store.hasMore.system)
 
-// 模拟互动消息数据
-const interactionMessages = ref([
-  {
-    id: 1,
-    sender: {
-      id: 101,
-      name: '美食达人',
-      avatar: 'https://picsum.photos/id/1027/100/100'
-    },
-    type: 'like',
-    content: '赞了你的文章',
-    time: new Date(Date.now() - 30 * 60 * 1000), // 30分钟前
-    target: {
-      type: 'article',
-      id: 1,
-      title: '如何在家制作完美的提拉米苏',
-      preview: '提拉米苏是一道经典的意大利甜点，本文将分享专业大厨的独家秘方...'
-    }
-  },
-  {
-    id: 2,
-    sender: {
-      id: 102,
-      name: '旅行笔记',
-      avatar: 'https://picsum.photos/id/1012/100/100'
-    },
-    type: 'comment',
-    content: '评论了你的文章：<span class="comment-text">这篇文章写得太棒了，非常实用的建议！</span>',
-    time: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2小时前
-    target: {
-      type: 'article',
-      id: 2,
-      title: '2025年最值得去的10个小众旅行地',
-      preview: '厌倦了人山人海的热门景点？这些鲜为人知的目的地将带给你全新的旅行体验...'
-    }
-  },
-  {
-    id: 3,
-    sender: {
-      id: 103,
-      name: '生活家',
-      avatar: 'https://picsum.photos/id/1005/100/100'
-    },
-    type: 'collect',
-    content: '收藏了你的文章',
-    time: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1天前
-    target: {
-      type: 'article',
-      id: 3,
-      title: '极简主义：如何通过断舍离改变你的生活',
-      preview: '极简主义不仅是一种生活方式，更是一种思维模式。本文将分享如何开始你的极简之旅...'
-    }
-  }
-])
-
-// 模拟关注消息数据
-const followMessages = ref([
-  {
-    id: 1,
-    sender: {
-      id: 104,
-      name: '摄影师小王',
-      avatar: 'https://picsum.photos/id/1062/100/100'
-    },
-    content: '关注了你',
-    time: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5小时前
-    isFollowing: false
-  },
-  {
-    id: 2,
-    sender: {
-      id: 105,
-      name: '健身达人',
-      avatar: 'https://picsum.photos/id/1025/100/100'
-    },
-    content: '关注了你',
-    time: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2天前
-    isFollowing: true
-  }
-])
-
-// 模拟系统消息数据
-const systemMessages = ref([
-  {
-    id: 1,
-    content: '您的文章《如何在家制作完美的提拉米苏》已被推荐到首页',
-    time: new Date(Date.now() - 12 * 60 * 60 * 1000) // 12小时前
-  },
-  {
-    id: 2,
-    content: '您的账号已完成实名认证',
-    time: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) // 5天前
-  }
-])
-
-const hasMoreInteraction = ref(false)
-const hasMoreFollow = ref(false)
-const hasMoreSystem = ref(false)
+ 
 
 // 格式化时间
-const formatTime = (date: Date): string => {
+const formatTime = (dateLike: any): string => {
+  const date = typeof dateLike === 'string' ? new Date(dateLike) : dateLike
   const now = new Date()
   const diff = now.getTime() - date.getTime()
   
@@ -239,45 +161,35 @@ const formatTime = (date: Date): string => {
 
 // 导航到目标
 const navigateToTarget = (message: any) => {
-  if (message.target.type === 'article') {
+  if (message && message.target && message.target.type === 'article' && message.target.id) {
     router.push(`/article/${message.target.id}`)
   }
 }
 
-// 关注用户
-const followUser = (userId: number) => {
-  // 这里应该调用关注API
-  // 模拟关注
-  const message = followMessages.value.find(msg => msg.sender.id === userId)
-  if (message) {
-    message.isFollowing = true
+// 跳转到对方个人主页（关注消息）
+const navigateToUser = (message: any) => {
+  if (message && message.sender && message.sender.id) {
+    router.push(`/user/${message.sender.id}`)
   }
 }
 
-// 加载更多互动消息
-const loadMoreInteraction = () => {
-  // 这里应该调用API加载更多互动消息
-  // 模拟加载更多
-  hasMoreInteraction.value = false
-}
+// 关注用户
+// 关注消息不在此进行操作，点击卡片直接跳转个人主页
 
-// 加载更多关注消息
-const loadMoreFollow = () => {
-  // 这里应该调用API加载更多关注消息
-  // 模拟加载更多
-  hasMoreFollow.value = false
-}
+const loadMoreInteraction = () => { store.fetchMessages('interaction', false, 10) }
+const loadMoreFollow = () => { store.fetchMessages('follow', false, 10) }
+const loadMoreSystem = () => { store.fetchMessages('system', false, 10) }
 
-// 加载更多系统消息
-const loadMoreSystem = () => {
-  // 这里应该调用API加载更多系统消息
-  // 模拟加载更多
-  hasMoreSystem.value = false
-}
+onMounted(async () => {
+  await store.fetchUnreadCounts()
+  await store.fetchMessages('interaction', true, 10)
+})
 
-onMounted(() => {
-  // 这里应该调用API获取消息数据
-  // 目前使用模拟数据
+watch(activeTab, async (tab) => {
+  if (tab === 'interaction' || tab === 'follow' || tab === 'system') {
+    await store.markReadByCategory(tab as any)
+    await store.fetchMessages(tab as any, true, 10)
+  }
 })
 </script>
 
@@ -317,6 +229,10 @@ onMounted(() => {
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.message-item.clickable {
+  cursor: pointer;
 }
 
 .message-avatar {
@@ -391,6 +307,39 @@ onMounted(() => {
 
 .system-message .message-avatar {
   background-color: #f0f0f0;
+}
+
+.system-message {
+  background: linear-gradient(135deg, #f8fbff 0%, #ffffff 60%);
+  border-left: 4px solid #409EFF;
+}
+
+.system-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(64, 158, 255, 0.15);
+  color: #409EFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+}
+
+.system-header .sender-name {
+  color: #409EFF;
+  font-weight: 700;
+}
+
+.system-content {
+  background-color: rgba(64, 158, 255, 0.08);
+  border: 1px solid rgba(64, 158, 255, 0.15);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.system-text {
+  color: #3a3a3a;
 }
 
 .load-more {

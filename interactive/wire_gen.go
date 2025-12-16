@@ -7,6 +7,7 @@
 package main
 
 import (
+	artdao "Webook/article/repository/dao"
 	"Webook/interactive/events"
 	"Webook/interactive/grpc"
 	"Webook/interactive/ioc"
@@ -15,6 +16,7 @@ import (
 	"Webook/interactive/repository/dao"
 	"Webook/interactive/service"
 	"github.com/google/wire"
+	xcontext "golang.org/x/net/context"
 )
 
 // Injectors from wire.go:
@@ -29,17 +31,36 @@ func Init() *App {
 	doubleWritePool := ioc.InitDoubleWritePool(srcDB, dstDB)
 	db := ioc.InitBizDB(doubleWritePool)
 	interactiveDAO := dao.NewGORMInteractiveDAO(db)
+	notificationDAO := dao.NewGORMNotificationDAO(db)
 	interactiveRepository := repository.NewCachedInteractiveRepository(interactiveCache, interactiveDAO, logger)
-	interactiveService := service.NewInteractiveService(interactiveRepository, logger)
-	interactiveServiceServer := grpc2.NewInteractiveServiceServer(interactiveService)
-	server := ioc.InitGRPCxServer(logger, client, interactiveServiceServer)
+	notificationRepository := repository.NewNotificationRepository(notificationDAO)
 	saramaClient := ioc.InitKafka()
 	syncProducer := ioc.InitProducer(saramaClient)
+	interactiveEventsProducer := events.NewInteractiveProducer(syncProducer)
+	interactiveService := service.NewInteractiveService(interactiveRepository, logger, interactiveEventsProducer)
+	notificationService := service.NewNotificationService(notificationRepository)
+	interactiveServiceServer := grpc2.NewInteractiveServiceServer(interactiveService, notificationService)
+	server := ioc.InitGRPCxServer(logger, client, interactiveServiceServer)
 	producer := ioc.InitMigratorProducer(syncProducer)
 	ginxServer := ioc.InitMigratorWeb(logger, srcDB, dstDB, doubleWritePool, producer)
 	interactiveReadEventConsumer := events.NewInteractiveReadEventConsumer(saramaClient, logger, interactiveRepository)
+	articleDB := ioc.InitArticleDB()
+	articleDAO := artdao.NewGORMArticleDAO(articleDB)
+	resolveOwner := func(ctx xcontext.Context, biz string, bizId int64) (int64, error) {
+		if biz == "article" {
+			pa, err := articleDAO.GetPubById(ctx, bizId)
+			if err != nil {
+				return 0, err
+			}
+			return pa.AuthorId, nil
+		}
+		return 0, nil
+	}
+	likeEventConsumer := events.NewLikeEventConsumer(saramaClient, logger, interactiveRepository, resolveOwner)
+	collectEventConsumer := events.NewCollectEventConsumer(saramaClient, logger, interactiveRepository, resolveOwner)
+	notificationEventConsumer := events.NewNotificationEventConsumer(saramaClient, logger, notificationDAO, resolveOwner)
 	consumer := ioc.InitFixDataConsumer(logger, srcDB, dstDB, saramaClient)
-	v := ioc.NewConsumers(interactiveReadEventConsumer, consumer)
+	v := ioc.NewConsumers(interactiveReadEventConsumer, likeEventConsumer, collectEventConsumer, notificationEventConsumer, consumer)
 	app := &App{
 		server:         server,
 		migratorServer: ginxServer,

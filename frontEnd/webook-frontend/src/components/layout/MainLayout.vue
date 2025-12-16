@@ -60,6 +60,7 @@
           <el-menu-item index="/message">
             <el-icon><ChatDotRound /></el-icon>
             <span>消息</span>
+            <el-badge v-if="totalUnread > 0" :value="totalUnread" class="menu-badge" />
           </el-menu-item>
           <el-menu-item index="/create" v-if="isLoggedIn">
             <el-icon><Edit /></el-icon>
@@ -90,6 +91,7 @@ import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api/user'
 import { Search, House, Star, Histogram, ChatDotRound, Edit, User } from '@element-plus/icons-vue'
 import { resolveStaticUrl } from '@/api/http'
+import { useNotificationStore } from '@/stores/notification'
 
 const userStore = useUserStore()
 const isLoggedIn = computed(() => userStore.isLoggedIn)
@@ -105,6 +107,8 @@ const router = useRouter()
 const route = useRoute()
 const searchKeyword = ref('')
 const activeMenu = computed(() => route.path)
+const notificationStore = useNotificationStore()
+const totalUnread = computed(() => notificationStore.totalUnread)
 
 // 处理搜索
 const handleSearch = () => {
@@ -165,6 +169,9 @@ onMounted(() => {
       localStorage.removeItem('user')
       localStorage.removeItem('refreshToken')
     }
+  }
+  if (userStore.isLoggedIn) {
+    notificationStore.fetchUnreadCounts()
   }
 })
 </script>

@@ -7,6 +7,7 @@
 package main
 
 import (
+	"Webook/follow/events"
 	"Webook/follow/grpc"
 	"Webook/follow/ioc"
 	"Webook/follow/repository"
@@ -25,12 +26,18 @@ func Init() *App {
 	cmdable := ioc.InitRedisClient()
 	followCache := cache.NewRedisFollowCache(cmdable)
 	followRepository := repository.NewFollowRelationRepository(followRelationDao, followCache, logger)
-	followRelationService := service.NewFollowRelationService(followRepository)
+	kafkaClient := ioc.InitKafka()
+	syncProducer := ioc.InitProducer(kafkaClient)
+	followProducer := events.NewProducer(syncProducer)
+	followRelationService := service.NewFollowRelationService(followRepository, followProducer)
 	followServiceServer := grpc2.NewFollowRelationServiceServer(followRelationService)
 	client := ioc.InitEtcdClient()
 	server := ioc.InitGRPCxServer(followServiceServer, client, logger)
+	followConsumer := events.NewFollowEventConsumer(kafkaClient, logger, followRepository)
+	consumers := ioc.NewConsumers(followConsumer)
 	app := &App{
-		server: server,
+		server:    server,
+		consumers: consumers,
 	}
 	return app
 }

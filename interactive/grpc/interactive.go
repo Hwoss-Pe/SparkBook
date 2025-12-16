@@ -5,20 +5,22 @@ import (
 	"Webook/interactive/domain"
 	"Webook/interactive/service"
 	"context"
+
 	"google.golang.org/grpc"
 )
 
 type InteractiveServiceServer struct {
 	intrv1.UnimplementedInteractiveServiceServer
-	svc service.InteractiveService
+	svc   service.InteractiveService
+	notif service.NotificationService
 }
 
 func (i *InteractiveServiceServer) Register(server grpc.ServiceRegistrar) {
 	intrv1.RegisterInteractiveServiceServer(server, i)
 }
 
-func NewInteractiveServiceServer(svc service.InteractiveService) *InteractiveServiceServer {
-	return &InteractiveServiceServer{svc: svc}
+func NewInteractiveServiceServer(svc service.InteractiveService, notif service.NotificationService) *InteractiveServiceServer {
+	return &InteractiveServiceServer{svc: svc, notif: notif}
 }
 
 func (i *InteractiveServiceServer) IncrReadCnt(ctx context.Context, request *intrv1.IncrReadCntRequest) (*intrv1.IncrReadCntResponse, error) {
@@ -83,6 +85,19 @@ func (i *InteractiveServiceServer) GetCollectedBizIds(ctx context.Context, reque
 		BizIds: bizIds,
 		Total:  total,
 	}, nil
+}
+
+func (i *InteractiveServiceServer) GetNotifications(ctx context.Context, req *intrv1.GetNotificationsRequest) (*intrv1.GetNotificationsResponse, error) {
+	return i.notif.GetNotifications(ctx, req.GetUid(), req.GetType(), int(req.GetOffset()), int(req.GetLimit()))
+}
+
+func (i *InteractiveServiceServer) MarkRead(ctx context.Context, req *intrv1.MarkReadRequest) (*intrv1.MarkReadResponse, error) {
+	err := i.notif.MarkRead(ctx, req.GetUid(), req.GetIds(), req.GetType())
+	return &intrv1.MarkReadResponse{}, err
+}
+
+func (i *InteractiveServiceServer) GetUnreadCounts(ctx context.Context, req *intrv1.GetUnreadCountsRequest) (*intrv1.GetUnreadCountsResponse, error) {
+	return i.notif.GetUnreadCounts(ctx, req.GetUid())
 }
 
 func (i *InteractiveServiceServer) toDTO(intr domain.Interactive) *intrv1.Interactive {

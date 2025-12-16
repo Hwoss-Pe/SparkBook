@@ -9,6 +9,9 @@ redis:
 kafka:
   addrs:
   - "localhost:9094"
+article:
+  db:
+    dsn: "root:root@tcp(localhost:13316)/webook_article"
 etcd:
   endpoints:
     - "localhost:12379"

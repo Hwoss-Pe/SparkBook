@@ -33,6 +33,31 @@ func InitBizDB(pool *connpool.DoubleWritePool) *gorm.DB {
 	return db
 }
 
+// InitArticleDB 提供文章库连接用于跨库读取作者信息
+func InitArticleDB() *gorm.DB {
+	type Config struct {
+		DSN string `yaml:"dsn"`
+	}
+	c := Config{DSN: "root:root@tcp(localhost:13316)/webook_article"}
+	err := viper.UnmarshalKey("article.db", &c)
+	if err != nil {
+		panic(fmt.Errorf("初始化文章库配置失败 %v, 原因 %w", c, err))
+	}
+	db, err := gorm.Open(mysql.Open(c.DSN), &gorm.Config{})
+	if err != nil {
+		panic(err)
+	}
+	err = db.Use(prometheus.New(prometheus.Config{DBName: "webook_article", RefreshInterval: 15}))
+	if err != nil {
+		panic(err)
+	}
+	err = db.Use(tracing.NewPlugin(tracing.WithoutMetrics()))
+	if err != nil {
+		panic(err)
+	}
+	return db
+}
+
 func initDB(key string, name string) *gorm.DB {
 	type Config struct {
 		DSN string `yaml:"dsn"`

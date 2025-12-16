@@ -2,6 +2,7 @@ package service
 
 import (
 	"Webook/follow/domain"
+	"Webook/follow/events"
 	"Webook/follow/repository"
 	"golang.org/x/net/context"
 )
@@ -18,12 +19,14 @@ type FollowRelationService interface {
 }
 
 type followRelationService struct {
-	repo repository.FollowRepository
+	repo     repository.FollowRepository
+	producer events.Producer
 }
 
-func NewFollowRelationService(repo repository.FollowRepository) FollowRelationService {
+func NewFollowRelationService(repo repository.FollowRepository, p events.Producer) FollowRelationService {
 	return &followRelationService{
-		repo: repo,
+		repo:     repo,
+		producer: p,
 	}
 }
 func (f *followRelationService) GetFollower(ctx context.Context, follower, offset, limit int64) ([]domain.FollowRelation, error) {
@@ -34,13 +37,16 @@ func (f *followRelationService) GetFollowee(ctx context.Context, follower, offse
 }
 
 func (f *followRelationService) Follow(ctx context.Context, follower, followee int64) error {
-	return f.repo.AddFollowRelation(ctx, domain.FollowRelation{
-		Followee: followee,
-		Follower: follower,
-	})
+	if f.producer != nil {
+		return f.producer.ProduceFollow(events.FollowEvent{Follower: follower, Followee: followee})
+	}
+	return f.repo.AddFollowRelation(ctx, domain.FollowRelation{Followee: followee, Follower: follower})
 }
 
 func (f *followRelationService) CancelFollow(ctx context.Context, follower, followee int64) error {
+	if f.producer != nil {
+		return f.producer.ProduceCancelFollow(events.FollowEvent{Follower: follower, Followee: followee})
+	}
 	return f.repo.InactiveFollowRelation(ctx, follower, followee)
 }
 

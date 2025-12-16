@@ -34,6 +34,9 @@ type InteractiveServiceClient interface {
 	GetByIds(ctx context.Context, in *GetByIdsRequest, opts ...grpc.CallOption) (*GetByIdsResponse, error)
 	// GetCollectedBizIds 获取用户收藏的biz_id列表
 	GetCollectedBizIds(ctx context.Context, in *GetCollectedBizIdsRequest, opts ...grpc.CallOption) (*GetCollectedBizIdsResponse, error)
+	GetNotifications(ctx context.Context, in *GetNotificationsRequest, opts ...grpc.CallOption) (*GetNotificationsResponse, error)
+	MarkRead(ctx context.Context, in *MarkReadRequest, opts ...grpc.CallOption) (*MarkReadResponse, error)
+	GetUnreadCounts(ctx context.Context, in *GetUnreadCountsRequest, opts ...grpc.CallOption) (*GetUnreadCountsResponse, error)
 }
 
 type interactiveServiceClient struct {
@@ -116,6 +119,33 @@ func (c *interactiveServiceClient) GetCollectedBizIds(ctx context.Context, in *G
 	return out, nil
 }
 
+func (c *interactiveServiceClient) GetNotifications(ctx context.Context, in *GetNotificationsRequest, opts ...grpc.CallOption) (*GetNotificationsResponse, error) {
+	out := new(GetNotificationsResponse)
+	err := c.cc.Invoke(ctx, "/intr.v1.InteractiveService/GetNotifications", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *interactiveServiceClient) MarkRead(ctx context.Context, in *MarkReadRequest, opts ...grpc.CallOption) (*MarkReadResponse, error) {
+	out := new(MarkReadResponse)
+	err := c.cc.Invoke(ctx, "/intr.v1.InteractiveService/MarkRead", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *interactiveServiceClient) GetUnreadCounts(ctx context.Context, in *GetUnreadCountsRequest, opts ...grpc.CallOption) (*GetUnreadCountsResponse, error) {
+	out := new(GetUnreadCountsResponse)
+	err := c.cc.Invoke(ctx, "/intr.v1.InteractiveService/GetUnreadCounts", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InteractiveServiceServer is the server API for InteractiveService service.
 // All implementations must embed UnimplementedInteractiveServiceServer
 // for forward compatibility
@@ -132,6 +162,9 @@ type InteractiveServiceServer interface {
 	GetByIds(context.Context, *GetByIdsRequest) (*GetByIdsResponse, error)
 	// GetCollectedBizIds 获取用户收藏的biz_id列表
 	GetCollectedBizIds(context.Context, *GetCollectedBizIdsRequest) (*GetCollectedBizIdsResponse, error)
+	GetNotifications(context.Context, *GetNotificationsRequest) (*GetNotificationsResponse, error)
+	MarkRead(context.Context, *MarkReadRequest) (*MarkReadResponse, error)
+	GetUnreadCounts(context.Context, *GetUnreadCountsRequest) (*GetUnreadCountsResponse, error)
 	mustEmbedUnimplementedInteractiveServiceServer()
 }
 
@@ -162,6 +195,15 @@ func (UnimplementedInteractiveServiceServer) GetByIds(context.Context, *GetByIds
 }
 func (UnimplementedInteractiveServiceServer) GetCollectedBizIds(context.Context, *GetCollectedBizIdsRequest) (*GetCollectedBizIdsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCollectedBizIds not implemented")
+}
+func (UnimplementedInteractiveServiceServer) GetNotifications(context.Context, *GetNotificationsRequest) (*GetNotificationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNotifications not implemented")
+}
+func (UnimplementedInteractiveServiceServer) MarkRead(context.Context, *MarkReadRequest) (*MarkReadResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MarkRead not implemented")
+}
+func (UnimplementedInteractiveServiceServer) GetUnreadCounts(context.Context, *GetUnreadCountsRequest) (*GetUnreadCountsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUnreadCounts not implemented")
 }
 func (UnimplementedInteractiveServiceServer) mustEmbedUnimplementedInteractiveServiceServer() {}
 
@@ -320,6 +362,60 @@ func _InteractiveService_GetCollectedBizIds_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InteractiveService_GetNotifications_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetNotificationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InteractiveServiceServer).GetNotifications(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/intr.v1.InteractiveService/GetNotifications",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InteractiveServiceServer).GetNotifications(ctx, req.(*GetNotificationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InteractiveService_MarkRead_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MarkReadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InteractiveServiceServer).MarkRead(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/intr.v1.InteractiveService/MarkRead",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InteractiveServiceServer).MarkRead(ctx, req.(*MarkReadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InteractiveService_GetUnreadCounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUnreadCountsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InteractiveServiceServer).GetUnreadCounts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/intr.v1.InteractiveService/GetUnreadCounts",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InteractiveServiceServer).GetUnreadCounts(ctx, req.(*GetUnreadCountsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // InteractiveService_ServiceDesc is the grpc.ServiceDesc for InteractiveService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -358,6 +454,18 @@ var InteractiveService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCollectedBizIds",
 			Handler:    _InteractiveService_GetCollectedBizIds_Handler,
+		},
+		{
+			MethodName: "GetNotifications",
+			Handler:    _InteractiveService_GetNotifications_Handler,
+		},
+		{
+			MethodName: "MarkRead",
+			Handler:    _InteractiveService_MarkRead_Handler,
+		},
+		{
+			MethodName: "GetUnreadCounts",
+			Handler:    _InteractiveService_GetUnreadCounts_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

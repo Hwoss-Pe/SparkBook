@@ -18,6 +18,9 @@ var serviceProviderSet = wire.NewSet(
 	cache.NewRedisInteractiveCache,
 	repository.NewCachedInteractiveRepository,
 	service.NewInteractiveService,
+	dao.NewGORMNotificationDAO,
+	repository.NewNotificationRepository,
+	service.NewNotificationService,
 )
 
 var thirdProvider = wire.NewSet(

@@ -1,6 +1,10 @@
 db:
   dsn: "root:root@tcp(localhost:13316)/webook_comment"
 
+kafka:
+  addrs:
+    - "localhost:9094"
+
 grpc:
   server:
     port: 8093

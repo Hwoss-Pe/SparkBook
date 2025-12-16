@@ -6,13 +6,14 @@ import (
 	"Webook/bff/web/middleware"
 	"Webook/pkg/ginx"
 	"Webook/pkg/logger"
+	"strings"
+	"time"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
-	"strings"
-	"time"
 )
 
 func InitGinServer(l logger.Logger,
@@ -21,7 +22,8 @@ func InitGinServer(l logger.Logger,
 	article *web.ArticleHandler,
 	reward *web.RewardHandler,
 	comment *web.CommentHandler,
-	follow *web.FollowHandler) *ginx.Server {
+	follow *web.FollowHandler,
+	notification *web.NotificationHandler) *ginx.Server {
 	engine := gin.Default()
 	engine.Use(corsHdl(), timeout(), middleware.NewJWTLoginMiddlewareBuilder(jwtHdl).Build())
 	engine.Static("/static", "./media")
@@ -30,6 +32,7 @@ func InitGinServer(l logger.Logger,
 	reward.RegisterRoute(engine)
 	comment.RegisterRoute(engine)
 	follow.RegisterRoute(engine)
+	notification.RegisterRoute(engine)
 	web.NewUploadHandler(l).RegisterRoute(engine)
 	addr := viper.GetString("http.addr")
 	ginx.InitCounter(prometheus.CounterOpts{

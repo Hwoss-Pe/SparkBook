@@ -185,19 +185,24 @@ export default function useHomeView() {
   }
 
   const toggleArticleLike = async (article: HomeArticle) => {
+    const prevLiked = !!article.isLiked
+    const prevCnt = article.likeCount || 0
+    // 乐观更新：先改UI
+    article.isLiked = !prevLiked
+    article.likeCount = Math.max(0, prevCnt + (article.isLiked ? 1 : -1))
+    article.isLikeAnimating = true
+    setTimeout(() => { article.isLikeAnimating = false }, 300)
+
     try {
       if (article.isLiked) {
-        await articleApi.cancelLike(article.id)
-        article.isLiked = false
-        article.likeCount = Math.max(0, (article.likeCount || 0) - 1)
-      } else {
         await articleApi.like(article.id)
-        article.isLiked = true
-        article.likeCount = (article.likeCount || 0) + 1
+      } else {
+        await articleApi.cancelLike(article.id)
       }
-      article.isLikeAnimating = true
-      setTimeout(() => { article.isLikeAnimating = false }, 300)
     } catch (error) {
+      // 回滚
+      article.isLiked = prevLiked
+      article.likeCount = prevCnt
       console.error('首页点赞操作失败:', error)
     }
   }

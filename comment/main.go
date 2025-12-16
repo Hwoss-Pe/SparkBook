@@ -2,6 +2,7 @@ package main
 
 import (
 	"Webook/pkg/grpcx"
+	"Webook/pkg/saramax"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -22,6 +23,11 @@ func initViperV2Watch() {
 func main() {
 	initViperV2Watch()
 	app := Init()
+	for _, c := range app.consumers {
+		if err := c.Start(); err != nil {
+			panic(err)
+		}
+	}
 	err := app.server.Serve()
 	if err != nil {
 		panic(err)
@@ -29,5 +35,6 @@ func main() {
 }
 
 type App struct {
-	server *grpcx.Server
+	server    *grpcx.Server
+	consumers []saramax.Consumer
 }

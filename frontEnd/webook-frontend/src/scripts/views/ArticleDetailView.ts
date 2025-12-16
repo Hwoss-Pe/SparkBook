@@ -167,19 +167,23 @@ export default function useArticleDetailView() {
 
   // 点赞/取消点赞
   const toggleLike = async () => {
+    const prevLiked = !!article.value.isLiked
+    const prevCnt = article.value.likeCount
+    // 乐观更新：先改UI
+    article.value.isLiked = !prevLiked
+    article.value.likeCount = Math.max(0, prevCnt + (article.value.isLiked ? 1 : -1))
+
     try {
       if (article.value.isLiked) {
-        await articleApi.cancelLike(article.value.id)
-        article.value.isLiked = false
-        article.value.likeCount = Math.max(0, article.value.likeCount - 1)
-      } else {
         await articleApi.like(article.value.id)
-        article.value.isLiked = true
-        article.value.likeCount += 1
+      } else {
+        await articleApi.cancelLike(article.value.id)
       }
-
       ElMessage.success(article.value.isLiked ? '已点赞' : '已取消点赞')
     } catch (error) {
+      // 回滚
+      article.value.isLiked = prevLiked
+      article.value.likeCount = prevCnt
       console.error('点赞操作失败:', error)
       ElMessage.error('操作失败，请稍后重试')
     }

@@ -22,10 +22,13 @@ func InitGRPCServer() *grpc2.InteractiveServiceServer {
 	interactiveCache := cache.NewRedisInteractiveCache(cmdable)
 	gormDB := InitTestDB()
 	interactiveDAO := dao.NewGORMInteractiveDAO(gormDB)
+	notificationDAO := dao.NewGORMNotificationDAO(gormDB)
 	logger := InitLog()
 	interactiveRepository := repository.NewCachedInteractiveRepository(interactiveCache, interactiveDAO, logger)
-	interactiveService := service.NewInteractiveService(interactiveRepository, logger)
-	interactiveServiceServer := grpc2.NewInteractiveServiceServer(interactiveService)
+	notificationRepository := repository.NewNotificationRepository(notificationDAO)
+	interactiveService := service.NewInteractiveService(interactiveRepository, logger, nil)
+	notificationService := service.NewNotificationService(notificationRepository)
+	interactiveServiceServer := grpc2.NewInteractiveServiceServer(interactiveService, notificationService)
 	return interactiveServiceServer
 }
 

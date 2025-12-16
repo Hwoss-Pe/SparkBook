@@ -2,6 +2,7 @@ package service
 
 import (
 	"Webook/interactive/domain"
+	"Webook/interactive/events"
 	"Webook/interactive/repository"
 	"Webook/pkg/logger"
 	"context"
@@ -26,15 +27,17 @@ type InteractiveService interface {
 }
 
 type interactiveService struct {
-	repo repository.InteractiveRepository
-	l    logger.Logger
+	repo     repository.InteractiveRepository
+	l        logger.Logger
+	producer events.Producer
 }
 
 func NewInteractiveService(repo repository.InteractiveRepository,
-	l logger.Logger) InteractiveService {
+	l logger.Logger, p events.Producer) InteractiveService {
 	return &interactiveService{
-		repo: repo,
-		l:    l,
+		repo:     repo,
+		l:        l,
+		producer: p,
 	}
 }
 
@@ -43,18 +46,31 @@ func (i *interactiveService) IncrReadCnt(ctx context.Context, biz string, bizId 
 }
 
 func (i *interactiveService) Like(ctx context.Context, biz string, bizId int64, uid int64) error {
+	if i.producer != nil {
+		// 异步写库
+		return i.producer.ProduceLike(events.LikeEvent{Biz: biz, BizId: bizId, Uid: uid})
+	}
 	return i.repo.IncrLike(ctx, biz, bizId, uid)
 }
 
 func (i *interactiveService) CancelLike(ctx context.Context, biz string, bizId int64, uid int64) error {
+	if i.producer != nil {
+		return i.producer.ProduceCancelLike(events.LikeEvent{Biz: biz, BizId: bizId, Uid: uid})
+	}
 	return i.repo.DecrLike(ctx, biz, bizId, uid)
 }
 
 func (i *interactiveService) Collect(ctx context.Context, biz string, bizId, cid, uid int64) error {
+	if i.producer != nil {
+		return i.producer.ProduceCollect(events.CollectEvent{Biz: biz, BizId: bizId, Cid: cid, Uid: uid})
+	}
 	return i.repo.AddCollectionItem(ctx, biz, bizId, cid, uid)
 }
 
 func (i *interactiveService) CancelCollect(ctx context.Context, biz string, bizId, cid, uid int64) error {
+	if i.producer != nil {
+		return i.producer.ProduceCancelCollect(events.CollectEvent{Biz: biz, BizId: bizId, Cid: cid, Uid: uid})
+	}
 	return i.repo.RemoveCollectionItem(ctx, biz, bizId, cid, uid)
 }
 

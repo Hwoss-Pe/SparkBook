@@ -7,6 +7,7 @@
 package main
 
 import (
+	"Webook/comment/events"
 	"Webook/comment/grpc"
 	"Webook/comment/ioc"
 	"Webook/comment/repository"
@@ -23,11 +24,17 @@ func Init() *App {
 	db := ioc.InitDB(logger)
 	commentDAO := dao.NewGORMCommentDAO(db)
 	commentRepository := repository.NewCommentRepo(commentDAO, logger)
-	commentService := service.NewCommentSvc(commentRepository)
+	kafkaClient := ioc.InitKafka()
+	syncProducer := ioc.InitProducer(kafkaClient)
+	commentProducer := events.NewProducer(syncProducer)
+	commentService := service.NewCommentSvc(commentRepository, commentProducer)
 	commentServiceServer := grpc2.NewGrpcServer(commentService)
 	server := ioc.InitGRPCxServer(logger, client, commentServiceServer)
+	commentConsumer := events.NewCommentEventConsumer(kafkaClient, logger, commentRepository)
+	consumers := ioc.NewConsumers(commentConsumer)
 	app := &App{
-		server: server,
+		server:    server,
+		consumers: consumers,
 	}
 	return app
 }
