@@ -92,6 +92,6 @@ const {
 } = useHotView()
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '@/styles/views/HotView.scss';
 </style>

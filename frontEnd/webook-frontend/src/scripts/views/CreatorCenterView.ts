@@ -134,7 +134,6 @@ export default function useCreatorCenterView() {
     activeTab.value = tabName
     if (tabName === 'published') {
       loadPublishedArticles(true)
-      setupPublishedObserver()
     } else if (tabName === 'drafts') {
       loadDraftArticles()
     }
@@ -331,6 +330,11 @@ export default function useCreatorCenterView() {
       publishedArticles.value = filteredPublishedArticles.value
       publishedOffset.value = currentOffset + resp.length
       hasMorePublished.value = resp.length >= publishedLimit
+      
+      // 确保在DOM更新后设置观察器，解决首次进入无法滚动加载的问题
+      nextTick(() => {
+        setupPublishedObserver()
+      })
     } catch (error) {
       console.error('获取已发布文章失败:', error)
       ElMessage.error('获取文章列表失败')
@@ -386,7 +390,6 @@ export default function useCreatorCenterView() {
   onMounted(() => {
     loadStats()
     loadPublishedArticles(true)
-    setupPublishedObserver()
   })
 
   onUnmounted(() => {

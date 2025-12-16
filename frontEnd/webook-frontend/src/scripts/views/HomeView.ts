@@ -1,4 +1,4 @@
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { articleApi } from '@/api/article'
 import { resolveStaticUrl } from '@/api/http'
@@ -154,8 +154,14 @@ export default function useHomeView() {
     }
   }
 
+  let isMounted = true
+  onUnmounted(() => {
+    isMounted = false
+  })
+
   // 获取推荐文章列表
   const fetchArticles = async (isLoadMore = false) => {
+    if (!isMounted) return
     try {
       const offset = isLoadMore ? currentOffset.value : 0
       const res = await articleApi.getRecommendList({
@@ -163,12 +169,26 @@ export default function useHomeView() {
         limit: pageSize
       })
       
+      if (!isMounted) return
+
       const newArticles = (res || []).map(convertToHomeArticle)
       
       if (isLoadMore) {
-        articles.value = [...articles.value, ...newArticles]
+        // 过滤重复文章
+        const existingIds = new Set(articles.value.map(a => a.id))
+        const uniqueNewArticles = newArticles.filter(a => !existingIds.has(a.id))
+        articles.value = [...articles.value, ...uniqueNewArticles]
       } else {
-        articles.value = newArticles
+        // 确保新加载的列表也没有重复（后端可能返回重复数据）
+        const uniqueNewArticles: HomeArticle[] = []
+        const seenIds = new Set<number>()
+        for (const article of newArticles) {
+          if (!seenIds.has(article.id)) {
+            uniqueNewArticles.push(article)
+            seenIds.add(article.id)
+          }
+        }
+        articles.value = uniqueNewArticles
       }
       
       currentOffset.value = offset + newArticles.length
@@ -235,6 +255,15 @@ export default function useHomeView() {
       author.isFollowed = !author.isFollowed
     }
   }
+
+  onMounted(() => {
+    // 获取推荐文章列表
+    fetchArticles()
+    // 获取热榜数据
+    fetchHotRankings()
+    // 获取推荐作者
+    fetchRecommendedAuthors()
+  })
 
   onMounted(() => {
     // 获取推荐文章列表

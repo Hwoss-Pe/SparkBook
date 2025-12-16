@@ -202,6 +202,6 @@ const {
 } = useMyProfileView()
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '@/styles/views/MyProfileView.scss';
 </style>

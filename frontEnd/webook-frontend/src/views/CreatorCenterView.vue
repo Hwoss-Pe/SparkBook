@@ -276,6 +276,6 @@ const {
 } = useCreatorCenterView()
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '@/styles/views/CreatorCenterView.scss';
 </style>

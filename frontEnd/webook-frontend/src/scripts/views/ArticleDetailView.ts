@@ -5,6 +5,7 @@ import { articleApi, type ArticleDetail } from '@/api/article'
 import { commentApi, type Comment } from '@/api/comment'
 import { useUserStore } from '@/stores/user'
 import { resolveStaticUrl } from '@/api/http'
+import MarkdownIt from 'markdown-it'
 
 // 定义类型接口
 interface ArticleData {
@@ -75,6 +76,14 @@ export default function useArticleDetailView() {
   const router = useRouter()
   const route = useRoute()
   const articleId = ref(Number(route.params.id))
+  
+  // 初始化 Markdown 解析器
+  const md = new MarkdownIt({
+    html: true,
+    linkify: true,
+    breaks: true,
+    typographer: true
+  })
 
   const loading = ref(true)
   const error = ref('')
@@ -97,6 +106,12 @@ export default function useArticleDetailView() {
       avatar: ''
     },
     tags: []
+  })
+
+  // 计算属性：渲染 Markdown 内容
+  const renderedContent = computed(() => {
+    if (!article.value.content) return ''
+    return md.render(article.value.content)
   })
 
   const comments = ref<CommentData[]>([])
@@ -523,6 +538,7 @@ export default function useArticleDetailView() {
     loading,
     error,
     article,
+    renderedContent,
     comments,
     hasMoreComments,
     commentContent,

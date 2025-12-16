@@ -177,6 +177,6 @@ const {
 } = useCreateArticleView()
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '@/styles/views/CreateArticleView.scss';
 </style>

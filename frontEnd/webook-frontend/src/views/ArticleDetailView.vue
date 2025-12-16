@@ -42,7 +42,7 @@
             <img :src="article.coverImage" :alt="article.title" />
           </div>
           
-          <div class="article-text" v-html="article.content"></div>
+          <div class="article-text markdown-body" v-html="renderedContent"></div>
           
           <div class="article-tags">
             <el-tag 
@@ -234,6 +234,7 @@ const {
   loading,
   error,
   article,
+  renderedContent,
   comments,
   hasMoreComments,
   commentContent,
@@ -261,6 +262,10 @@ const {
 } = useArticleDetailView()
 </script>
 
-<style lang="scss">
+<style>
+@import 'github-markdown-css/github-markdown.css';
+</style>
+
+<style lang="scss" scoped>
 @import '@/styles/views/ArticleDetailView.scss';
 </style>

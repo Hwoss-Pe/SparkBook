@@ -89,7 +89,7 @@ func (r *RedisInteractiveCache) Get(ctx context.Context, biz string, bizId int64
 
 func (r *RedisInteractiveCache) Set(ctx context.Context, biz string, bizId int64, intr domain.Interactive) error {
 	key := r.key(biz, bizId)
-	err := r.client.HMSet(ctx, key, key,
+	err := r.client.HMSet(ctx, key,
 		fieldLikeCnt, intr.LikeCnt,
 		fieldCollectCnt, intr.CollectCnt,
 		fieldReadCnt, intr.ReadCnt).Err()

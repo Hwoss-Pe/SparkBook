@@ -129,6 +129,6 @@ const {
 } = useHomeView()
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '@/styles/views/HomeView.scss';
 </style>

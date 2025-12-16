@@ -118,6 +118,6 @@ const {
 } = useSearchView()
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '@/styles/views/SearchView.scss';
 </style>

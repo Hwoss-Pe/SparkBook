@@ -93,6 +93,6 @@ const {
 } = useFollowView()
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '@/styles/views/FollowView.scss';
 </style>

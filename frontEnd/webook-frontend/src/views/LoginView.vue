@@ -195,6 +195,6 @@ const {
 } = useLoginView()
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '@/styles/views/LoginView.scss';
 </style>

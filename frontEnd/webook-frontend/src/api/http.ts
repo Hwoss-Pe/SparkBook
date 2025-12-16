@@ -25,6 +25,11 @@ const service: AxiosInstance = axios.create({
   timeout: 15000,
 })
 
+// 是否正在刷新 token
+let isRefreshing = false
+// 重试队列，每一项是一个函数
+let requests: any[] = []
+
 // 请求拦截器
 service.interceptors.request.use(
   (config) => {
@@ -50,7 +55,15 @@ service.interceptors.request.use(
       console.log('完整token:', token)
     }
     
-    if (token) {
+    // 如果是刷新 token 的请求，使用 refresh token
+    if (config.url?.includes('/users/refresh_token')) {
+      const refreshToken = localStorage.getItem('refreshToken')
+      if (refreshToken) {
+        config.headers['Authorization'] = `Bearer ${refreshToken}`
+        console.log('刷新Token请求，使用 refreshToken')
+      }
+    } else if (token) {
+      // 普通请求使用 access token
       // 后端从 Authorization 头提取 token，格式为 "Bearer token"
       config.headers['Authorization'] = `Bearer ${token}`
       console.log('已添加 Authorization 头:', `Bearer ${token.substring(0, 20)}...`)
@@ -134,16 +147,56 @@ service.interceptors.response.use(
     let message = '网络错误，请稍后重试'
     
     if (error.response) {
+      const config = error.config
       switch (error.response.status) {
         case 400:
           message = '请求参数错误'
           break
         case 401:
-          message = '未授权，请重新登录'
-          localStorage.removeItem('token')
-          localStorage.removeItem('refreshToken')
-          router.push('/login')
-          break
+          // 如果是刷新 token 的请求失败，直接登出
+          if (config.url?.includes('/users/refresh_token')) {
+            message = '登录已过期，请重新登录'
+            localStorage.removeItem('token')
+            localStorage.removeItem('refreshToken')
+            router.push('/login')
+            break
+          }
+
+          // 如果不是刷新请求，尝试刷新 token
+          if (!isRefreshing) {
+            isRefreshing = true
+            // 尝试刷新 token
+            return service.post('/users/refresh_token', {})
+              .then(() => {
+                // 刷新成功，重试队列中的请求
+                requests.forEach(cb => cb())
+                requests = []
+                
+                // 重试当前请求
+                config.headers['Authorization'] = `Bearer ${localStorage.getItem('token')}`
+                return service(config)
+              })
+              .catch(refreshErr => {
+                console.error('Refresh token failed:', refreshErr)
+                // 刷新失败，清空队列并登出
+                requests = []
+                localStorage.removeItem('token')
+                localStorage.removeItem('refreshToken')
+                router.push('/login')
+                return Promise.reject(refreshErr)
+              })
+              .finally(() => {
+                isRefreshing = false
+              })
+          } else {
+            // 正在刷新，将请求加入队列
+            return new Promise((resolve) => {
+              requests.push(() => {
+                config.headers['Authorization'] = `Bearer ${localStorage.getItem('token')}`
+                resolve(service(config))
+              })
+            })
+          }
         case 403:
           message = '拒绝访问'
           break
@@ -160,7 +213,11 @@ service.interceptors.response.use(
       message = '服务器无响应'
     }
     
-    ElMessage.error(message)
+    // 只有在非 401 错误，或者 401 且是刷新 token 失败时才提示错误
+    if (error.response?.status !== 401 || (error.response?.status === 401 && error.config?.url?.includes('/users/refresh_token'))) {
+      ElMessage.error(message)
+    }
+    
     console.error('Response error:', error)
     return Promise.reject(error)
   }

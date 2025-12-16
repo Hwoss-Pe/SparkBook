@@ -5,6 +5,12 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
+      path: '/',
+      name: 'home',
+      component: HomeView,
+      meta: { title: '首页 - 小微书' }
+    },
+    {
       path: '/follow',
       name: 'follow',
       component: () => import('../views/FollowView.vue'),
