@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"strings"
+	"time"
 
 	"Webook/bff/web/jwt"
 	"Webook/pkg/ginx"
@@ -62,8 +64,22 @@ func (a *ArticleHandler) Generate(ctx *gin.Context, req GenerateReq, claims jwt.
 		}, nil
 	}
 
+	// 增加随机性：在内容末尾添加随机风格指令
+	// 这会改变 LLM 的输入，从而促使其生成不同的结果
+	randomStyles := []string{
+		"\n\n(Instruction: Please generate a title that is catchy and intriguing)",
+		"\n\n(Instruction: Please generate a title that is professional and concise)",
+		"\n\n(Instruction: Please generate a title using a question format)",
+		"\n\n(Instruction: Please focus the abstract on the core value proposition)",
+		"\n\n(Instruction: Please use a slightly more humorous tone if appropriate)",
+		"\n\n(Instruction: Please keep the abstract under 50 words)",
+		"", // 也有概率不加任何指令
+	}
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	salt := randomStyles[r.Intn(len(randomStyles))]
+
 	// 调用 Dify Workflow
-	title, abstract, err := a.callDifyWorkflow(ctx, apiKey, baseURL, req.Content, claims.Id)
+	title, abstract, err := a.callDifyWorkflow(ctx, apiKey, baseURL, req.Content+salt, claims.Id)
 	if err != nil {
 		a.l.Error("Dify workflow failed", logger.Error(err))
 		return ginx.Result{
