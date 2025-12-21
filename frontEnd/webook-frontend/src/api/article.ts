@@ -100,9 +100,19 @@ export const articleApi = {
     return get<ArticlePub[]>(`/articles/pub/collected/list`, params)
   },
 
-  // AI 自动生成摘要和标题
+  // AI 自动生成摘要和标题（兼容旧调用，但推荐使用 generateAI）
   generateSummary: (content: string) => {
-    return post<{ title: string; abstract: string }>('/articles/generate', { content })
+    return post<{ title: string; abstract: string }>('/articles/generate', { content, type: 'generate' }, { timeout: 120000 })
+  },
+
+  // AI 智能助手通用接口
+  generateAI: (data: { content: string; type: 'generate' | 'polish' | 'tag'; instruction?: string }) => {
+    return post<{ 
+      title?: string; 
+      abstract?: string; 
+      content?: string; 
+      tags?: string[] 
+    }>('/articles/generate', data, { timeout: 120000 })
   },
   
   // 获取文章详情（作者视角）

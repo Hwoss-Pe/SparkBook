@@ -50,14 +50,35 @@
               />
             </el-form-item>
 
-            <div class="ai-generate-bar" style="text-align: right; margin-bottom: 18px;">
+            <div class="ai-generate-bar" style="text-align: right; margin-bottom: 18px; display: flex; justify-content: flex-end; gap: 10px;">
+              <el-dropdown split-button type="warning" plain :loading="aiPolishLoading" @click="handleAIPolish('优化表达')" @command="handleAIPolish">
+                ✒️ AI 润色
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="修复语法错误">修复语法错误</el-dropdown-item>
+                    <el-dropdown-item command="扩写这段内容">扩写内容</el-dropdown-item>
+                    <el-dropdown-item command="使用更专业的语气">更专业的语气</el-dropdown-item>
+                    <el-dropdown-item command="使用更轻松幽默的语气">更幽默的风格</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+
+              <el-button 
+                type="success" 
+                plain 
+                :loading="aiTagLoading"
+                @click="handleAITag"
+              >
+                🏷️ AI 自动标签
+              </el-button>
+
               <el-button 
                 type="primary" 
                 plain 
                 :loading="aiLoading"
                 @click="handleAIGenerate"
               >
-                ✨ AI 一键生成标题和摘要
+                ✨ AI 生成标题摘要
               </el-button>
             </div>
 
@@ -197,7 +218,11 @@ const {
   onDeleteDraft,
   formatDate,
   aiLoading,
-  handleAIGenerate
+  handleAIGenerate,
+  aiPolishLoading,
+  aiTagLoading,
+  handleAITag,
+  handleAIPolish
 } = useCreateArticleView()
 </script>
 

@@ -20,12 +20,16 @@ import (
 )
 
 type GenerateReq struct {
-	Content string `json:"content"`
+	Content     string `json:"content"`
+	Type        string `json:"type"`        // "generate" (default), "polish", "tag"
+	Instruction string `json:"instruction"` // For polish: "fix grammar", "expand", etc.
 }
 
 type GenerateResp struct {
-	Title    string `json:"title"`
-	Abstract string `json:"abstract"`
+	Title    string   `json:"title,omitempty"`
+	Abstract string   `json:"abstract,omitempty"`
+	Content  string   `json:"content,omitempty"` // For polish
+	Tags     []string `json:"tags,omitempty"`    // For tag
 }
 
 type DifyWorkflowReq struct {
@@ -56,30 +60,55 @@ func (a *ArticleHandler) Generate(ctx *gin.Context, req GenerateReq, claims jwt.
 
 	// 简单的 Mock 逻辑，如果未配置 AI Key，则返回 Mock 数据
 	if apiKey == "" || apiKey == "app-xxxx" {
+		mockResp := GenerateResp{}
+		switch req.Type {
+		case "polish":
+			mockResp.Content = "这是Mock的润色结果：" + req.Content
+		case "tag":
+			mockResp.Tags = []string{"Mock标签1", "Mock标签2", "Mock标签3"}
+		default:
+			mockResp.Title = mockTitle(req.Content)
+			mockResp.Abstract = mockAbstract(req.Content)
+		}
 		return ginx.Result{
-			Data: GenerateResp{
-				Title:    mockTitle(req.Content),
-				Abstract: mockAbstract(req.Content),
-			},
+			Data: mockResp,
 		}, nil
 	}
 
-	// 增加随机性：在内容末尾添加随机风格指令
-	// 这会改变 LLM 的输入，从而促使其生成不同的结果
-	randomStyles := []string{
-		"\n\n(Instruction: Please generate a title that is catchy and intriguing)",
-		"\n\n(Instruction: Please generate a title that is professional and concise)",
-		"\n\n(Instruction: Please generate a title using a question format)",
-		"\n\n(Instruction: Please focus the abstract on the core value proposition)",
-		"\n\n(Instruction: Please use a slightly more humorous tone if appropriate)",
-		"\n\n(Instruction: Please keep the abstract under 50 words)",
-		"", // 也有概率不加任何指令
+	// 构造 Dify 输入参数
+	inputs := map[string]interface{}{
+		"content": req.Content,
 	}
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	salt := randomStyles[r.Intn(len(randomStyles))]
+	if req.Type != "" {
+		inputs["type"] = req.Type
+	} else {
+		// 默认是 generate
+		inputs["type"] = "generate"
+	}
+
+	if req.Instruction != "" {
+		inputs["instruction"] = req.Instruction
+	}
+
+	// 增加随机性：在内容末尾添加随机风格指令
+	// 仅在生成摘要/标题模式下使用，避免影响润色
+	if inputs["type"] == "generate" {
+		randomStyles := []string{
+			"\n\n(Instruction: Please generate a title that is catchy and intriguing)",
+			"\n\n(Instruction: Please generate a title that is professional and concise)",
+			"\n\n(Instruction: Please generate a title using a question format)",
+			"\n\n(Instruction: Please focus the abstract on the core value proposition)",
+			"\n\n(Instruction: Please use a slightly more humorous tone if appropriate)",
+			"\n\n(Instruction: Please keep the abstract under 50 words)",
+			"", // 也有概率不加任何指令
+		}
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		salt := randomStyles[r.Intn(len(randomStyles))]
+		inputs["content"] = req.Content + salt
+	}
 
 	// 调用 Dify Workflow
-	title, abstract, err := a.callDifyWorkflow(ctx, apiKey, baseURL, req.Content+salt, claims.Id)
+	rawOutput, err := a.callDifyWorkflow(ctx, apiKey, baseURL, inputs, claims.Id)
 	if err != nil {
 		a.l.Error("Dify workflow failed", logger.Error(err))
 		return ginx.Result{
@@ -88,58 +117,84 @@ func (a *ArticleHandler) Generate(ctx *gin.Context, req GenerateReq, claims jwt.
 		}, nil
 	}
 
+	// 预处理
+	cleanOutput := cleanAIOutput(rawOutput)
+
+	// 根据类型解析结果
+	var resp GenerateResp
+	switch inputs["type"] {
+	case "polish":
+		// 润色通常直接返回文本
+		resp.Content = cleanOutput
+	case "tag":
+		// 标签解析
+		tags, err := parseTags(cleanOutput)
+		if err != nil {
+			a.l.Warn("Parse tags failed", logger.Error(err))
+			// 降级：返回空标签或尝试逗号分割
+			resp.Tags = []string{}
+		} else {
+			resp.Tags = tags
+		}
+	default:
+		// 默认 "generate"
+		title, abstract, err := parseGenerateJSON(cleanOutput)
+		if err != nil {
+			a.l.Warn("Parse generate json failed", logger.Error(err))
+			resp.Title = "AI生成标题"
+			resp.Abstract = cleanOutput
+		} else {
+			resp.Title = title
+			resp.Abstract = abstract
+		}
+	}
+
 	return ginx.Result{
-		Data: GenerateResp{
-			Title:    title,
-			Abstract: abstract,
-		},
+		Data: resp,
 	}, nil
 }
 
-func (a *ArticleHandler) callDifyWorkflow(ctx *gin.Context, apiKey, baseURL, content string, uid int64) (string, string, error) {
+func (a *ArticleHandler) callDifyWorkflow(ctx *gin.Context, apiKey, baseURL string, inputs map[string]interface{}, uid int64) (string, error) {
 	url := fmt.Sprintf("%s/workflows/run", strings.TrimRight(baseURL, "/"))
 
 	// 构造请求体
 	difyReq := DifyWorkflowReq{
-		Inputs: map[string]interface{}{
-			"content": content, // 对应 Dify Workflow Start 节点的变量名
-		},
+		Inputs:       inputs,
 		ResponseMode: "blocking",
 		User:         fmt.Sprintf("user-%d", uid),
 	}
 
 	jsonData, err := json.Marshal(difyReq)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := a.client.Do(req)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return "", "", fmt.Errorf("dify api status: %d, body: %s", resp.StatusCode, string(bodyBytes))
+		return "", fmt.Errorf("dify api status: %d, body: %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	var difyResp DifyWorkflowResp
 	if err := json.Unmarshal(bodyBytes, &difyResp); err != nil {
-		return "", "", fmt.Errorf("parse dify response failed: %w", err)
+		return "", fmt.Errorf("parse dify response failed: %w", err)
 	}
 
 	if difyResp.Data.Status != "succeeded" {
-		return "", "", fmt.Errorf("workflow status: %s", difyResp.Data.Status)
+		return "", fmt.Errorf("workflow status: %s", difyResp.Data.Status)
 	}
 
 	// 假设 Dify Workflow 的 End 节点直接输出 LLM 的结果，变量名通常是 'text' 或自定义的 key
@@ -158,14 +213,17 @@ func (a *ArticleHandler) callDifyWorkflow(ctx *gin.Context, apiKey, baseURL, con
 	}
 
 	if rawOutput == "" {
-		return "", "", errors.New("empty output from workflow")
+		return "", errors.New("empty output from workflow")
 	}
 
-	// 清洗并解析 JSON
-	return parseAIJSON(rawOutput)
+	return rawOutput, nil
 }
 
-func parseAIJSON(raw string) (string, string, error) {
+func cleanAIOutput(raw string) string {
+	return strings.TrimSpace(raw)
+}
+
+func parseGenerateJSON(raw string) (string, string, error) {
 	// 1. 尝试清洗 Markdown 标记
 	clean := strings.TrimSpace(raw)
 	// 找到第一个 '{'
@@ -195,6 +253,31 @@ func parseAIJSON(raw string) (string, string, error) {
 	}
 
 	return res.Title, res.Abstract, nil
+}
+
+func parseTags(raw string) ([]string, error) {
+	// 尝试解析 JSON 数组 ["tag1", "tag2"]
+	clean := strings.TrimSpace(raw)
+	start := strings.Index(clean, "[")
+	end := strings.LastIndex(clean, "]")
+	if start != -1 && end != -1 && start < end {
+		jsonStr := clean[start : end+1]
+		var tags []string
+		if err := json.Unmarshal([]byte(jsonStr), &tags); err == nil {
+			return tags, nil
+		}
+	}
+
+	// 如果不是 JSON 数组，尝试按逗号分割
+	tags := strings.Split(clean, ",")
+	for i := range tags {
+		tags[i] = strings.TrimSpace(tags[i])
+	}
+	if len(tags) > 0 {
+		return tags, nil
+	}
+
+	return nil, errors.New("failed to parse tags")
 }
 
 func mockTitle(content string) string {

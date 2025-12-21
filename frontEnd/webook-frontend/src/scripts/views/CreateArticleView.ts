@@ -1,6 +1,6 @@
 import { ref, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { articleApi } from '@/api/article'
 import { useUserStore } from '@/stores/user'
 import { post } from '@/api/http'
@@ -63,8 +63,94 @@ export default function useCreateArticleView() {
   const showPublishDialog = ref(false)
   const publishing = ref(false)
   const aiLoading = ref(false)
+  const aiPolishLoading = ref(false)
+  const aiTagLoading = ref(false)
 
   const officialTags = ref<string[]>([])
+
+  // AI 自动标签
+  const handleAITag = async () => {
+    if (!articleForm.value.content || articleForm.value.content.length < 10) {
+      ElMessage.warning('内容太少，无法生成标签')
+      return
+    }
+    aiTagLoading.value = true
+    try {
+      const res = await articleApi.generateAI({
+        content: articleForm.value.content,
+        type: 'tag'
+      })
+      // @ts-ignore
+      const tags = res.tags || (res.data && res.data.tags)
+      if (tags && Array.isArray(tags)) {
+        let added = 0
+        for (const t of tags) {
+          if (articleForm.value.tags.length >= 5) break
+          if (!articleForm.value.tags.includes(t)) {
+            articleForm.value.tags.push(t)
+            added++
+          }
+        }
+        if (added > 0) {
+          ElMessage.success(`成功添加 ${added} 个标签`)
+        } else {
+          ElMessage.info('未添加新标签（可能已存在或已满）')
+        }
+      } else {
+        ElMessage.warning('未能生成有效标签')
+      }
+    } catch (e) {
+      console.error(e)
+      ElMessage.error('生成标签失败')
+    } finally {
+      aiTagLoading.value = false
+    }
+  }
+
+  // AI 润色
+  const handleAIPolish = async (instruction: string) => {
+    const content = articleForm.value.content
+    if (!content || content.length < 5) {
+      ElMessage.warning('内容太少')
+      return
+    }
+
+    aiPolishLoading.value = true
+    try {
+      const res = await articleApi.generateAI({
+        content,
+        type: 'polish',
+        instruction
+      })
+      // @ts-ignore
+      const newContent = res.content || (res.data && res.data.content)
+      
+      if (newContent) {
+        try {
+          await ElMessageBox.confirm(
+            'AI 润色/扩写完成，是否替换原文？', 
+            '确认替换', 
+            {
+              confirmButtonText: '替换',
+              cancelButtonText: '取消',
+              type: 'info'
+            }
+          )
+          articleForm.value.content = newContent
+          ElMessage.success('内容已更新')
+        } catch {
+          // 用户取消，不做操作
+        }
+      } else {
+        ElMessage.warning('AI 未返回有效内容')
+      }
+    } catch (e) {
+      console.error(e)
+      ElMessage.error('请求失败')
+    } finally {
+      aiPolishLoading.value = false
+    }
+  }
 
   // AI 生成摘要和标题
   const handleAIGenerate = async () => {
@@ -498,6 +584,10 @@ export default function useCreateArticleView() {
     onDeleteDraft,
     onDraftCommand,
     formatDate,
-    handleAIGenerate
+    handleAIGenerate,
+    aiPolishLoading,
+    aiTagLoading,
+    handleAITag,
+    handleAIPolish
   }
 }

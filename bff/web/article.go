@@ -39,6 +39,7 @@ type ArticleHandler struct {
 	biz        string
 	tagSvc     tagv1.TagServiceClient
 	searchSvc  searchv1.SearchServiceClient
+	client     *http.Client
 }
 
 func NewArticleHandler(svc articlev1.ArticleServiceClient,
@@ -57,6 +58,7 @@ func NewArticleHandler(svc articlev1.ArticleServiceClient,
 		rankingSvc: rankingSvc,
 		followSvc:  followSvc,
 		tagSvc:     tagSvc,
+		client:     &http.Client{},
 	}
 }
 
