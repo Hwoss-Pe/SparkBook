@@ -62,8 +62,45 @@ export default function useCreateArticleView() {
   // 发布确认弹窗
   const showPublishDialog = ref(false)
   const publishing = ref(false)
+  const aiLoading = ref(false)
 
   const officialTags = ref<string[]>([])
+
+  // AI 生成摘要和标题
+  const handleAIGenerate = async () => {
+    if (!articleForm.value.content || articleForm.value.content.trim().length < 10) {
+      ElMessage.warning('文章内容太少，请先输入至少10个字的正文')
+      return
+    }
+
+    aiLoading.value = true
+    try {
+      const res = await articleApi.generateSummary(articleForm.value.content)
+      // http.ts 拦截器已经解包了 res.data，所以 res 直接就是 { title: string, abstract: string }
+      if (res && res.title) {
+        articleForm.value.title = res.title
+        articleForm.value.abstract = res.abstract
+        ElMessage.success('AI 生成成功')
+      } else {
+        // 如果拦截器没有正确解包或者返回了其他结构，尝试兼容
+        // @ts-ignore
+        if (res && res.data && res.data.title) {
+           // @ts-ignore
+           articleForm.value.title = res.data.title
+           // @ts-ignore
+           articleForm.value.abstract = res.data.abstract
+           ElMessage.success('AI 生成成功')
+        } else {
+           ElMessage.error('生成失败，返回数据异常')
+        }
+      }
+    } catch (error) {
+      ElMessage.error('网络请求失败，请稍后重试')
+      console.error(error)
+    } finally {
+      aiLoading.value = false
+    }
+  }
 
   // 显示标签输入框
   const showTagInput = () => {
@@ -447,6 +484,7 @@ export default function useCreateArticleView() {
     draftList,
     showPublishDialog,
     publishing,
+    aiLoading,
     officialTags,
     showTagInput,
     addTag,
@@ -459,6 +497,7 @@ export default function useCreateArticleView() {
     loadDraft,
     onDeleteDraft,
     onDraftCommand,
-    formatDate
+    formatDate,
+    handleAIGenerate
   }
 }

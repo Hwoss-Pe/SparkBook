@@ -25,3 +25,7 @@ grpc:
       target: "etcd:///service/tag"
     search:
       target: "etcd:///service/search"
+ai:
+  api_key: "app-Xd1TTEzQxFDt9NyNzfL9WiNl" # 替换为你的 Dify Workflow API Key
+  base_url: "https://api.dify.ai/v1" # 如果是私有部署，请替换为你的域名
+

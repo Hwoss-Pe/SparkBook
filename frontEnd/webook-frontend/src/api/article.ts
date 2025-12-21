@@ -99,6 +99,11 @@ export const articleApi = {
   getCollectedList: (params: PublishedListRequest) => {
     return get<ArticlePub[]>(`/articles/pub/collected/list`, params)
   },
+
+  // AI 自动生成摘要和标题
+  generateSummary: (content: string) => {
+    return post<{ title: string; abstract: string }>('/articles/generate', { content })
+  },
   
   // 获取文章详情（作者视角）
   getArticleById: (id: number) => {

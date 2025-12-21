@@ -67,6 +67,7 @@ func (a *ArticleHandler) RegisterRoute(s *gin.Engine) {
 	g.GET("/tags/official", a.OfficialTags)
 	g.POST("/list", ginx.WrapClaimsAndReq(a.List))
 	g.POST("/edit", a.Edit)
+	g.POST("/generate", ginx.WrapClaimsAndReq[GenerateReq](a.Generate))
 	g.POST("/publish", a.Publish)
 	g.POST("/withdraw", a.Withdraw)
 	g.POST("/unpublish", a.Unpublish)

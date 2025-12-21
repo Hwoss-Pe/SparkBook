@@ -25,7 +25,7 @@
               </div>
             </div>
             
-            <div class="action-buttons">
+            <div class="action-buttons" v-if="!isAuthor">
               <el-button
                 :type="article.isFollowed ? 'success' : 'primary'"
                 size="small" 
@@ -258,12 +258,13 @@ const {
   getThreadView,
   openThreadModal,
   closeThreadModal,
-  loadMoreComments
+  loadMoreComments,
+  isAuthor
 } = useArticleDetailView()
 </script>
 
 <style>
-@import 'github-markdown-css/github-markdown.css';
+@import 'github-markdown-css/github-markdown-light.css';
 </style>
 
 <style lang="scss" scoped>

@@ -108,6 +108,11 @@ export default function useArticleDetailView() {
     tags: []
   })
 
+  // 判断是否为作者本人
+  const isAuthor = computed(() => {
+    return userStore.user?.id === article.value.author.id
+  })
+
   // 计算属性：渲染 Markdown 内容
   const renderedContent = computed(() => {
     if (!article.value.content) return ''
@@ -563,6 +568,7 @@ export default function useArticleDetailView() {
     submitComment,
     likeComment,
     replyToComment,
-    loadMoreComments
+    loadMoreComments,
+    isAuthor
   }
 }

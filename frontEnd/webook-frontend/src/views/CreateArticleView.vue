@@ -49,6 +49,28 @@
                 :rows="15"
               />
             </el-form-item>
+
+            <div class="ai-generate-bar" style="text-align: right; margin-bottom: 18px;">
+              <el-button 
+                type="primary" 
+                plain 
+                :loading="aiLoading"
+                @click="handleAIGenerate"
+              >
+                ✨ AI 一键生成标题和摘要
+              </el-button>
+            </div>
+
+            <el-form-item label="文章摘要" prop="abstract">
+              <el-input
+                v-model="articleForm.abstract"
+                type="textarea"
+                placeholder="请输入或使用AI生成摘要"
+                :rows="3"
+                maxlength="200"
+                show-word-limit
+              />
+            </el-form-item>
           </el-form>
         </div>
         
@@ -173,7 +195,9 @@ const {
   confirmPublish,
   loadDraft,
   onDeleteDraft,
-  formatDate
+  formatDate,
+  aiLoading,
+  handleAIGenerate
 } = useCreateArticleView()
 </script>
 
