@@ -7,11 +7,19 @@
       "title": {
         "type": "text"
       },
+      "title_vec": {
+        "type": "dense_vector",
+        "dims": 512
+      },
       "status": {
         "type": "integer"
       },
       "content": {
         "type": "text"
+      },
+      "content_vec": {
+        "type": "dense_vector",
+        "dims": 512
       },
       "tags": {
         "type": "keyword"

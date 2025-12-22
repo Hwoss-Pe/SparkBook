@@ -86,7 +86,7 @@ func articleToDomain(article *articlev1.Article) domain.Article {
 func (a *BatchRankingService) rankTopN(ctx context.Context) ([]domain.Article, error) {
 	//只计算七天内的，超过七天就不算热榜，这里设置一个utime进行计算
 	now := time.Now()
-	ddl := now.Add(-time.Hour * 24 * 7)
+	ddl := now.Add(-time.Hour * 24 * 300)
 	offset := 0
 	type Score struct {
 		art   domain.Article
