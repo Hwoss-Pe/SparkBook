@@ -174,6 +174,7 @@ func (a *articleService) GetPublishedById(ctx context.Context, id, uid int64) (d
 		art = &res
 		return eerr
 	})
+	//测试用的空作者文章，这里会查不到作者，所以直接return导致加载不出文章
 	eg.Go(func() error {
 		res, eerr := a.userRepo.FindAuthor(ctx, id)
 		author = &res

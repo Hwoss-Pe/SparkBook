@@ -16,6 +16,8 @@ service InteractiveService{
   rpc GetByIds(GetByIdsRequest) returns (GetByIdsResponse);
   // GetCollectedBizIds 获取用户收藏的biz_id列表
   rpc GetCollectedBizIds(GetCollectedBizIdsRequest) returns (GetCollectedBizIdsResponse);
+  // GetLikedBizIds 获取用户点赞的biz_id列表
+  rpc GetLikedBizIds(GetLikedBizIdsRequest) returns (GetLikedBizIdsResponse);
   rpc GetNotifications(GetNotificationsRequest) returns (GetNotificationsResponse);
   rpc MarkRead(MarkReadRequest) returns (MarkReadResponse);
   rpc GetUnreadCounts(GetUnreadCountsRequest) returns (GetUnreadCountsResponse);
@@ -102,6 +104,18 @@ message GetCollectedBizIdsRequest {
 }
 
 message GetCollectedBizIdsResponse {
+  repeated int64 biz_ids = 1;
+  int64 total = 2;
+}
+
+message GetLikedBizIdsRequest {
+  string biz = 1;
+  int64 uid = 2;
+  int32 offset = 3;
+  int32 limit = 4;
+}
+
+message GetLikedBizIdsResponse {
   repeated int64 biz_ids = 1;
   int64 total = 2;
 }

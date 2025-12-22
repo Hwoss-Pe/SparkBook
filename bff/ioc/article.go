@@ -6,9 +6,11 @@ import (
 	intrv1 "Webook/api/proto/gen/api/proto/intr/v1"
 	rankingv1 "Webook/api/proto/gen/api/proto/ranking/v1"
 	rewardv1 "Webook/api/proto/gen/api/proto/reward/v1"
+	searchv1 "Webook/api/proto/gen/api/proto/search/v1"
 	tagv1 "Webook/api/proto/gen/api/proto/tag/v1"
 	"Webook/bff/web"
 	"Webook/pkg/logger"
+
 	"github.com/spf13/viper"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/naming/resolver"
@@ -47,8 +49,9 @@ func NewArticleHandler(artSvc articlev1.ArticleServiceClient,
 	rewardSvc rewardv1.RewardServiceClient,
 	l logger.Logger,
 	followSvc followv1.FollowServiceClient,
-	tagSvc tagv1.TagServiceClient) *web.ArticleHandler {
-	return web.NewArticleHandler(artSvc, intrSvc, rankingSvc, rewardSvc, l, followSvc, tagSvc)
+	tagSvc tagv1.TagServiceClient,
+	searchSvc searchv1.SearchServiceClient) *web.ArticleHandler {
+	return web.NewArticleHandler(artSvc, intrSvc, rankingSvc, rewardSvc, l, followSvc, tagSvc, searchSvc)
 }
 
 func InitTagClient(ecli *clientv3.Client) tagv1.TagServiceClient {

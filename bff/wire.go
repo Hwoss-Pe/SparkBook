@@ -32,6 +32,8 @@ func InitApp() *wego.App {
 		ioc.InitRankingClient,
 		ioc.InitCodeClient,
 		ioc.InitArticleClient,
+		ioc.InitTagClient,
+		ioc.InitSearchClient,
 		ioc.InitCommentClient,
 		ioc.InitGinServer,
 		wire.Struct(new(wego.App), "WebServer"),

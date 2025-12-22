@@ -110,3 +110,13 @@ func (d *DoubleWriteDAO) GetByIds(ctx context.Context, biz string, ids []int64) 
 	//TODO implement me
 	panic("implement me")
 }
+
+func (d *DoubleWriteDAO) GetCollectedBizIds(ctx context.Context, biz string, uid int64, offset int, limit int) ([]int64, int64, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (d *DoubleWriteDAO) GetLikedBizIds(ctx context.Context, biz string, uid int64, offset int, limit int) ([]int64, int64, error) {
+	//TODO implement me
+	panic("implement me")
+}

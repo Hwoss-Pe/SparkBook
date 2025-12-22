@@ -34,6 +34,8 @@ type InteractiveServiceClient interface {
 	GetByIds(ctx context.Context, in *GetByIdsRequest, opts ...grpc.CallOption) (*GetByIdsResponse, error)
 	// GetCollectedBizIds 获取用户收藏的biz_id列表
 	GetCollectedBizIds(ctx context.Context, in *GetCollectedBizIdsRequest, opts ...grpc.CallOption) (*GetCollectedBizIdsResponse, error)
+	// GetLikedBizIds 获取用户点赞的biz_id列表
+	GetLikedBizIds(ctx context.Context, in *GetLikedBizIdsRequest, opts ...grpc.CallOption) (*GetLikedBizIdsResponse, error)
 	GetNotifications(ctx context.Context, in *GetNotificationsRequest, opts ...grpc.CallOption) (*GetNotificationsResponse, error)
 	MarkRead(ctx context.Context, in *MarkReadRequest, opts ...grpc.CallOption) (*MarkReadResponse, error)
 	GetUnreadCounts(ctx context.Context, in *GetUnreadCountsRequest, opts ...grpc.CallOption) (*GetUnreadCountsResponse, error)
@@ -119,6 +121,15 @@ func (c *interactiveServiceClient) GetCollectedBizIds(ctx context.Context, in *G
 	return out, nil
 }
 
+func (c *interactiveServiceClient) GetLikedBizIds(ctx context.Context, in *GetLikedBizIdsRequest, opts ...grpc.CallOption) (*GetLikedBizIdsResponse, error) {
+	out := new(GetLikedBizIdsResponse)
+	err := c.cc.Invoke(ctx, "/intr.v1.InteractiveService/GetLikedBizIds", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *interactiveServiceClient) GetNotifications(ctx context.Context, in *GetNotificationsRequest, opts ...grpc.CallOption) (*GetNotificationsResponse, error) {
 	out := new(GetNotificationsResponse)
 	err := c.cc.Invoke(ctx, "/intr.v1.InteractiveService/GetNotifications", in, out, opts...)
@@ -162,6 +173,8 @@ type InteractiveServiceServer interface {
 	GetByIds(context.Context, *GetByIdsRequest) (*GetByIdsResponse, error)
 	// GetCollectedBizIds 获取用户收藏的biz_id列表
 	GetCollectedBizIds(context.Context, *GetCollectedBizIdsRequest) (*GetCollectedBizIdsResponse, error)
+	// GetLikedBizIds 获取用户点赞的biz_id列表
+	GetLikedBizIds(context.Context, *GetLikedBizIdsRequest) (*GetLikedBizIdsResponse, error)
 	GetNotifications(context.Context, *GetNotificationsRequest) (*GetNotificationsResponse, error)
 	MarkRead(context.Context, *MarkReadRequest) (*MarkReadResponse, error)
 	GetUnreadCounts(context.Context, *GetUnreadCountsRequest) (*GetUnreadCountsResponse, error)
@@ -195,6 +208,9 @@ func (UnimplementedInteractiveServiceServer) GetByIds(context.Context, *GetByIds
 }
 func (UnimplementedInteractiveServiceServer) GetCollectedBizIds(context.Context, *GetCollectedBizIdsRequest) (*GetCollectedBizIdsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCollectedBizIds not implemented")
+}
+func (UnimplementedInteractiveServiceServer) GetLikedBizIds(context.Context, *GetLikedBizIdsRequest) (*GetLikedBizIdsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLikedBizIds not implemented")
 }
 func (UnimplementedInteractiveServiceServer) GetNotifications(context.Context, *GetNotificationsRequest) (*GetNotificationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetNotifications not implemented")
@@ -362,6 +378,24 @@ func _InteractiveService_GetCollectedBizIds_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InteractiveService_GetLikedBizIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLikedBizIdsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InteractiveServiceServer).GetLikedBizIds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/intr.v1.InteractiveService/GetLikedBizIds",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InteractiveServiceServer).GetLikedBizIds(ctx, req.(*GetLikedBizIdsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _InteractiveService_GetNotifications_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetNotificationsRequest)
 	if err := dec(in); err != nil {
@@ -454,6 +488,10 @@ var InteractiveService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCollectedBizIds",
 			Handler:    _InteractiveService_GetCollectedBizIds_Handler,
+		},
+		{
+			MethodName: "GetLikedBizIds",
+			Handler:    _InteractiveService_GetLikedBizIds_Handler,
 		},
 		{
 			MethodName: "GetNotifications",

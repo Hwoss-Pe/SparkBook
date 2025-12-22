@@ -22,6 +22,7 @@ type InteractiveDAO interface {
 	BatchIncrReadCnt(ctx context.Context, bizs []string, ids []int64) error
 	GetByIds(ctx context.Context, biz string, ids []int64) ([]Interactive, error)
 	GetCollectedBizIds(ctx context.Context, biz string, uid int64, offset int, limit int) ([]int64, int64, error)
+	GetLikedBizIds(ctx context.Context, biz string, uid int64, offset int, limit int) ([]int64, int64, error)
 }
 
 type GORMInteractiveDAO struct {
@@ -220,6 +221,32 @@ func (G *GORMInteractiveDAO) GetCollectedBizIds(ctx context.Context, biz string,
 	err = G.db.WithContext(ctx).Model(&UserCollectionBiz{}).
 		Where("biz = ? AND uid = ?", biz, uid).
 		Order("ctime DESC").
+		Offset(offset).
+		Limit(limit).
+		Pluck("biz_id", &bizIds).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return bizIds, total, nil
+}
+
+func (G *GORMInteractiveDAO) GetLikedBizIds(ctx context.Context, biz string, uid int64, offset int, limit int) ([]int64, int64, error) {
+	var bizIds []int64
+	var total int64
+
+	// 获取总数
+	err := G.db.WithContext(ctx).Model(&UserLikeBiz{}).
+		Where("biz = ? AND uid = ? AND status = 1", biz, uid).
+		Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// 获取分页的biz_id列表
+	err = G.db.WithContext(ctx).Model(&UserLikeBiz{}).
+		Where("biz = ? AND uid = ? AND status = 1", biz, uid).
+		Order("utime DESC").
 		Offset(offset).
 		Limit(limit).
 		Pluck("biz_id", &bizIds).Error

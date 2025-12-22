@@ -16,6 +16,8 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/ecodeclub/ekit/slice"
@@ -48,7 +50,8 @@ func NewArticleHandler(svc articlev1.ArticleServiceClient,
 	reward rewardv1.RewardServiceClient,
 	l logger.Logger,
 	followSvc followv1.FollowServiceClient,
-	tagSvc tagv1.TagServiceClient) *ArticleHandler {
+	tagSvc tagv1.TagServiceClient,
+	searchSvc searchv1.SearchServiceClient) *ArticleHandler {
 	return &ArticleHandler{
 		svc:        svc,
 		l:          l,
@@ -58,6 +61,7 @@ func NewArticleHandler(svc articlev1.ArticleServiceClient,
 		rankingSvc: rankingSvc,
 		followSvc:  followSvc,
 		tagSvc:     tagSvc,
+		searchSvc:  searchSvc,
 		client:     &http.Client{},
 	}
 }
@@ -603,18 +607,139 @@ func (a *ArticleHandler) Unpublish(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, Result{Msg: "OK"})
 }
 
-// ListPub 获取推荐文章列表（首页使用，按时间排序）
+// ListPub 获取推荐文章列表（首页使用，按时间排序 + AI 推荐）
 func (a *ArticleHandler) ListPub(ctx *gin.Context, req ListPubReq) (ginx.Result, error) {
 	if req.Limit > 100 || req.Limit <= 0 {
 		req.Limit = 10
 	}
-	// 获取已发布文章列表（按时间排序）
-	artResp, err := a.svc.ListPub(ctx, &articlev1.ListPubRequest{
-		StartTime: timestamppb.Now(),
-		Offset:    req.Offset,
-		Limit:     req.Limit,
+
+	var (
+		eg         errgroup.Group
+		artResp    *articlev1.ListPubResponse
+		aiArticles []*articlev1.Article
+		err        error
+	)
+
+	// 1. 获取普通推荐（最新）
+	eg.Go(func() error {
+		var er error
+		artResp, er = a.svc.ListPub(ctx, &articlev1.ListPubRequest{
+			StartTime: timestamppb.Now(),
+			Offset:    req.Offset,
+			Limit:     req.Limit,
+		})
+		return er
 	})
-	if err != nil {
+
+	// 2. 获取 AI 推荐 (仅第一页且用户登录)
+	var uid int64
+	if raw, ok := ctx.Get("user"); ok {
+		if claims, ok2 := raw.(ginx.UserClaims); ok2 {
+			uid = claims.Id
+		}
+	}
+
+	// 仅在第一页进行 AI 推荐，且限制数量以减少性能开销
+	if req.Offset == 0 && uid > 0 {
+		eg.Go(func() error {
+			// A. 获取用户最近收藏和点赞的文章 ID (作为兴趣来源)
+			var interestBizIds []int64
+			// 1. 收藏
+			collResp, er := a.intrSvc.GetCollectedBizIds(ctx, &intrv1.GetCollectedBizIdsRequest{
+				Biz: a.biz, Uid: uid, Limit: 3, Offset: 0,
+			})
+			if er == nil && collResp != nil {
+				interestBizIds = append(interestBizIds, collResp.BizIds...)
+			}
+			// 2. 点赞
+			likeResp, er := a.intrSvc.GetLikedBizIds(ctx, &intrv1.GetLikedBizIdsRequest{
+				Biz: a.biz, Uid: uid, Limit: 3, Offset: 0,
+			})
+			if er == nil && likeResp != nil {
+				interestBizIds = append(interestBizIds, likeResp.BizIds...)
+			}
+
+			if len(interestBizIds) == 0 {
+				return nil
+			}
+			// 去重
+			uniqueInterestBizIds := make([]int64, 0, len(interestBizIds))
+			seenBizIds := make(map[int64]bool)
+			for _, id := range interestBizIds {
+				if !seenBizIds[id] {
+					uniqueInterestBizIds = append(uniqueInterestBizIds, id)
+					seenBizIds[id] = true
+				}
+			}
+			interestBizIds = uniqueInterestBizIds
+
+			// B. 获取这些文章的标题 (构建搜索关键词)
+			var keywords []string
+			var mu sync.Mutex
+			var egB errgroup.Group
+			for _, id := range interestBizIds {
+				id := id
+				egB.Go(func() error {
+					art, er := a.svc.GetPublishedById(ctx, &articlev1.GetPublishedByIdRequest{Id: id, Uid: uid})
+					if er == nil && art.Article != nil {
+						mu.Lock()
+						keywords = append(keywords, art.Article.Title)
+						mu.Unlock()
+					}
+					return nil
+				})
+			}
+			egB.Wait()
+
+			if len(keywords) == 0 {
+				return nil
+			}
+
+			// C. 调用搜索服务获取相似文章 (AI 召回)
+			query := strings.Join(keywords, " ")
+			searchResp, er := a.searchSvc.Search(ctx, &searchv1.SearchRequest{Uid: uid, Expression: query})
+			if er != nil || searchResp.Article == nil || len(searchResp.Article.Articles) == 0 {
+				return nil
+			}
+
+			// D. 获取 AI 推荐文章的完整详情 (取前 8 条)
+			// 使用并发获取以缓解 N+1 问题
+			targetIds := make([]int64, 0, 8)
+			for _, art := range searchResp.Article.Articles {
+				targetIds = append(targetIds, art.Id)
+				if len(targetIds) >= 8 {
+					break
+				}
+			}
+
+			if len(targetIds) > 0 {
+				var egD errgroup.Group
+				// 预分配以保持顺序
+				tempArticles := make([]*articlev1.Article, len(targetIds))
+				for i, id := range targetIds {
+					i := i
+					id := id
+					egD.Go(func() error {
+						art, er := a.svc.GetPublishedById(ctx, &articlev1.GetPublishedByIdRequest{Id: id, Uid: uid})
+						if er == nil && art.Article != nil {
+							tempArticles[i] = art.Article
+						}
+						return nil
+					})
+				}
+				egD.Wait()
+
+				for _, art := range tempArticles {
+					if art != nil {
+						aiArticles = append(aiArticles, art)
+					}
+				}
+			}
+			return nil
+		})
+	}
+
+	if err = eg.Wait(); err != nil {
 		a.l.Error("获取推荐文章列表失败", logger.Error(err))
 		return ginx.Result{
 			Code: 5,
@@ -622,7 +747,29 @@ func (a *ArticleHandler) ListPub(ctx *gin.Context, req ListPubReq) (ginx.Result,
 		}, err
 	}
 
-	articles := artResp.GetArticles()
+	// 3. 混合结果
+	normalArticles := artResp.GetArticles()
+	// 使用 Map 去重
+	seen := make(map[int64]bool)
+	finalArticles := make([]*articlev1.Article, 0, len(normalArticles)+len(aiArticles))
+
+	// 先放 AI 推荐的
+	for _, art := range aiArticles {
+		if !seen[art.Id] {
+			finalArticles = append(finalArticles, art)
+			seen[art.Id] = true
+		}
+	}
+
+	// 再放普通的
+	for _, art := range normalArticles {
+		if !seen[art.Id] {
+			finalArticles = append(finalArticles, art)
+			seen[art.Id] = true
+		}
+	}
+
+	articles := finalArticles
 	if len(articles) == 0 {
 		return ginx.Result{
 			Data: []ArticlePubVo{},
@@ -652,12 +799,7 @@ func (a *ArticleHandler) ListPub(ctx *gin.Context, req ListPubReq) (ginx.Result,
 
 	type userIntr struct{ liked, collected bool }
 	userMap := make(map[int64]userIntr, len(ids))
-	var uid int64
-	if raw, ok := ctx.Get("user"); ok {
-		if claims, ok2 := raw.(ginx.UserClaims); ok2 {
-			uid = claims.Id
-		}
-	}
+	// uid 在前面已经获取过了
 	if uid > 0 {
 		for _, id := range ids {
 			resp, er := a.intrSvc.Get(ctx, &intrv1.GetRequest{Biz: a.biz, BizId: id, Uid: uid})

@@ -27,6 +27,7 @@ type InteractiveRepository interface {
 	Collected(ctx context.Context, biz string, id int64, uid int64) (bool, error)
 	GetByIds(ctx context.Context, biz string, ids []int64) ([]domain.Interactive, error)
 	GetCollectedBizIds(ctx context.Context, biz string, uid int64, offset int, limit int) ([]int64, int64, error)
+	GetLikedBizIds(ctx context.Context, biz string, uid int64, offset int, limit int) ([]int64, int64, error)
 }
 
 type CachedReadCntRepository struct {
@@ -153,6 +154,10 @@ func (c *CachedReadCntRepository) GetByIds(ctx context.Context, biz string, ids 
 
 func (c *CachedReadCntRepository) GetCollectedBizIds(ctx context.Context, biz string, uid int64, offset int, limit int) ([]int64, int64, error) {
 	return c.dao.GetCollectedBizIds(ctx, biz, uid, offset, limit)
+}
+
+func (c *CachedReadCntRepository) GetLikedBizIds(ctx context.Context, biz string, uid int64, offset int, limit int) ([]int64, int64, error) {
+	return c.dao.GetLikedBizIds(ctx, biz, uid, offset, limit)
 }
 
 func (c *CachedReadCntRepository) toDomain(intr dao.Interactive) domain.Interactive {

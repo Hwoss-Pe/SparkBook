@@ -87,6 +87,17 @@ func (i *InteractiveServiceServer) GetCollectedBizIds(ctx context.Context, reque
 	}, nil
 }
 
+func (i *InteractiveServiceServer) GetLikedBizIds(ctx context.Context, request *intrv1.GetLikedBizIdsRequest) (*intrv1.GetLikedBizIdsResponse, error) {
+	bizIds, total, err := i.svc.GetLikedBizIds(ctx, request.Biz, request.Uid, int(request.Offset), int(request.Limit))
+	if err != nil {
+		return nil, err
+	}
+	return &intrv1.GetLikedBizIdsResponse{
+		BizIds: bizIds,
+		Total:  total,
+	}, nil
+}
+
 func (i *InteractiveServiceServer) GetNotifications(ctx context.Context, req *intrv1.GetNotificationsRequest) (*intrv1.GetNotificationsResponse, error) {
 	return i.notif.GetNotifications(ctx, req.GetUid(), req.GetType(), int(req.GetOffset()), int(req.GetLimit()))
 }
