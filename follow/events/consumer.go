@@ -27,15 +27,19 @@ func (c *FollowEventConsumer) Start() error {
 		return err
 	}
 	go func() {
-		err2 := cg.Consume(context.Background(), []string{TopicFollow}, saramax.NewHandler[FollowEvent](c.l, c.consumeFollow))
-		if err2 != nil {
-			c.l.Error("退出了消费循环异常", logger.Error(err2))
+		for {
+			err2 := cg.Consume(context.Background(), []string{TopicFollow}, saramax.NewHandler[FollowEvent](c.l, c.consumeFollow))
+			if err2 != nil {
+				c.l.Error("退出了消费循环异常", logger.Error(err2))
+			}
 		}
 	}()
 	go func() {
-		err2 := cg.Consume(context.Background(), []string{TopicCancelFollow}, saramax.NewHandler[FollowEvent](c.l, c.consumeCancel))
-		if err2 != nil {
-			c.l.Error("退出了消费循环异常", logger.Error(err2))
+		for {
+			err2 := cg.Consume(context.Background(), []string{TopicCancelFollow}, saramax.NewHandler[FollowEvent](c.l, c.consumeCancel))
+			if err2 != nil {
+				c.l.Error("退出了消费循环异常", logger.Error(err2))
+			}
 		}
 	}()
 	return nil

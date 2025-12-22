@@ -41,11 +41,13 @@ func (u *UserConsumer) Start() error {
 		return err
 	}
 	go func() {
-		err := cg.Consume(context.Background(),
-			[]string{topicSyncUser},
-			saramax.NewHandler[UserEvent](u.l, u.Consume))
-		if err != nil {
-			u.l.Error("退出了消费循环异常", logger.Error(err))
+		for {
+			err := cg.Consume(context.Background(),
+				[]string{topicSyncUser},
+				saramax.NewHandler[UserEvent](u.l, u.Consume))
+			if err != nil {
+				u.l.Error("退出了消费循环异常", logger.Error(err))
+			}
 		}
 	}()
 	return err

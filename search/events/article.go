@@ -42,9 +42,11 @@ func (a *ArticleConsumer) Start() error {
 		return err
 	}
 	go func() {
-		err := cg.Consume(context.Background(), []string{topicSyncArticle}, saramax.NewHandler[ArticleEvent](a.l, a.Consume))
-		if err != nil {
-			a.l.Error("退出了消费循环异常", logger.Error(err))
+		for {
+			err := cg.Consume(context.Background(), []string{topicSyncArticle}, saramax.NewHandler[ArticleEvent](a.l, a.Consume))
+			if err != nil {
+				a.l.Error("退出了消费循环异常", logger.Error(err))
+			}
 		}
 	}()
 

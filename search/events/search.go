@@ -35,9 +35,11 @@ func (a *SyncDataEventConsumer) Start() error {
 		return err
 	}
 	go func() {
-		err := cg.Consume(context.Background(), []string{DataSyncData}, saramax.NewHandler[SyncDataEvent](a.l, a.Consume))
-		if err != nil {
-			a.l.Error("退出了消费循环异常", logger.Error(err))
+		for {
+			err := cg.Consume(context.Background(), []string{DataSyncData}, saramax.NewHandler[SyncDataEvent](a.l, a.Consume))
+			if err != nil {
+				a.l.Error("退出了消费循环异常", logger.Error(err))
+			}
 		}
 	}()
 

@@ -24,7 +24,7 @@ func NewNotificationEventConsumer(client sarama.Client, l logger.Logger, notifDA
 }
 
 func (c *NotificationEventConsumer) Start() error {
-	cgLike, err := sarama.NewConsumerGroupFromClient("notification", c.client)
+	cgLike, err := sarama.NewConsumerGroupFromClient("notification_like", c.client)
 	if err != nil {
 		return err
 	}
@@ -33,11 +33,14 @@ func (c *NotificationEventConsumer) Start() error {
 			err2 := cgLike.Consume(xcontext.Background(), []string{TopicLike}, saramax.NewHandler[LikeEvent](c.l, c.consumeLike))
 			if err2 != nil {
 				c.l.Error("退出了消费循环异常", logger.Error(err2))
+				time.Sleep(time.Second * 5)
+			} else {
+				c.l.Info("消费循环正常退出，可能是发生了Rebalance，正在重试", logger.String("topic", TopicLike))
 			}
 		}
 	}()
 
-	cgCollect, err := sarama.NewConsumerGroupFromClient("notification", c.client)
+	cgCollect, err := sarama.NewConsumerGroupFromClient("notification_collect", c.client)
 	if err != nil {
 		return err
 	}
@@ -46,11 +49,14 @@ func (c *NotificationEventConsumer) Start() error {
 			err2 := cgCollect.Consume(xcontext.Background(), []string{TopicCollect}, saramax.NewHandler[CollectEvent](c.l, c.consumeCollect))
 			if err2 != nil {
 				c.l.Error("退出了消费循环异常", logger.Error(err2))
+				time.Sleep(time.Second * 5)
+			} else {
+				c.l.Info("消费循环正常退出，可能是发生了Rebalance，正在重试", logger.String("topic", TopicCollect))
 			}
 		}
 	}()
 
-	cgFollow, err := sarama.NewConsumerGroupFromClient("notification", c.client)
+	cgFollow, err := sarama.NewConsumerGroupFromClient("notification_follow", c.client)
 	if err != nil {
 		return err
 	}
@@ -59,11 +65,14 @@ func (c *NotificationEventConsumer) Start() error {
 			err2 := cgFollow.Consume(xcontext.Background(), []string{followevents.TopicFollow}, saramax.NewHandler[followevents.FollowEvent](c.l, c.consumeFollow))
 			if err2 != nil {
 				c.l.Error("退出了消费循环异常", logger.Error(err2))
+				time.Sleep(time.Second * 5)
+			} else {
+				c.l.Info("消费循环正常退出，可能是发生了Rebalance，正在重试", logger.String("topic", followevents.TopicFollow))
 			}
 		}
 	}()
 
-	cgComment, err := sarama.NewConsumerGroupFromClient("notification", c.client)
+	cgComment, err := sarama.NewConsumerGroupFromClient("notification_comment", c.client)
 	if err != nil {
 		return err
 	}
@@ -72,6 +81,9 @@ func (c *NotificationEventConsumer) Start() error {
 			err2 := cgComment.Consume(xcontext.Background(), []string{commentevents.TopicCommentCreate}, saramax.NewHandler[commentevents.CommentCreateEvent](c.l, c.consumeCommentCreate))
 			if err2 != nil {
 				c.l.Error("退出了消费循环异常", logger.Error(err2))
+				time.Sleep(time.Second * 5)
+			} else {
+				c.l.Info("消费循环正常退出，可能是发生了Rebalance，正在重试", logger.String("topic", commentevents.TopicCommentCreate))
 			}
 		}
 	}()

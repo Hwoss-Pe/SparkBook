@@ -4,9 +4,10 @@ import (
 	"Webook/interactive/repository"
 	"Webook/pkg/logger"
 	"Webook/pkg/saramax"
+	"time"
+
 	"github.com/IBM/sarama"
 	"golang.org/x/net/context"
-	"time"
 )
 
 const topicReadEvent = "article_read_event"
@@ -23,15 +24,20 @@ type InteractiveReadEventConsumer struct {
 }
 
 func (i *InteractiveReadEventConsumer) Start() error {
-	client, err := sarama.NewConsumerGroupFromClient("interactive", i.client)
+	client, err := sarama.NewConsumerGroupFromClient("interactive_read", i.client)
 	if err != nil {
 		return err
 	}
 	//	开始消费
 	go func() {
-		err2 := client.Consume(context.Background(), []string{topicReadEvent}, saramax.NewHandler[ReadEvent](i.l, i.Consume))
-		if err2 != nil {
-			i.l.Error("退出了消费循环异常", logger.Error(err))
+		for {
+			err2 := client.Consume(context.Background(), []string{topicReadEvent}, saramax.NewHandler[ReadEvent](i.l, i.Consume))
+			if err2 != nil {
+				i.l.Error("退出了消费循环异常", logger.Error(err))
+				time.Sleep(time.Second * 5)
+			} else {
+				i.l.Info("消费循环正常退出，可能是发生了Rebalance，正在重试", logger.String("topic", topicReadEvent))
+			}
 		}
 	}()
 	return err
@@ -44,11 +50,16 @@ func (i *InteractiveReadEventConsumer) StartBatch() error {
 		return err
 	}
 	go func() {
-		err := cg.Consume(context.Background(),
-			[]string{topicReadEvent},
-			saramax.NewBatchHandler[ReadEvent](i.l, i.BatchConsume))
-		if err != nil {
-			i.l.Error("退出了消费循环异常", logger.Error(err))
+		for {
+			err := cg.Consume(context.Background(),
+				[]string{topicReadEvent},
+				saramax.NewBatchHandler[ReadEvent](i.l, i.BatchConsume))
+			if err != nil {
+				i.l.Error("退出了消费循环异常", logger.Error(err))
+				time.Sleep(time.Second * 5)
+			} else {
+				i.l.Info("消费循环正常退出，可能是发生了Rebalance，正在重试", logger.String("topic", topicReadEvent))
+			}
 		}
 	}()
 	return err
