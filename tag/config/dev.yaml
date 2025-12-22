@@ -1,5 +1,5 @@
 db:
-  dsn: "root:root@tcp(localhost:13316)/webook_article"
+  dsn: "root:root@tcp(localhost:13316)/webook_tag"
 
 redis:
   addr: "localhost:6379"

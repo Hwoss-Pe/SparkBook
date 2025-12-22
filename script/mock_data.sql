@@ -63,15 +63,15 @@ USE webook_intr;
 TRUNCATE TABLE interactives;
 TRUNCATE TABLE user_like_bizs;
 TRUNCATE TABLE user_collection_bizs;
-TRUNCATE TABLE collections;
+# TRUNCATE TABLE collections;
 
 -- 创建收藏夹数据
-INSERT INTO collections (id, name, uid, ctime, utime) VALUES
-(1, '技术文章收藏', 101, 1704067200000, 1704067200000),
-(2, '面试准备', 101, 1704067200000, 1704067200000),
-(3, '架构设计', 2, 1704067200000, 1704067200000),
-(4, '前端技术', 2, 1704067200000, 1704067200000),
-(5, '后端开发', 3, 1704067200000, 1704067200000);
+# INSERT INTO collections (id, name, uid, ctime, utime) VALUES
+# (1, '技术文章收藏', 101, 1704067200000, 1704067200000),
+# (2, '面试准备', 101, 1704067200000, 1704067200000),
+# (3, '架构设计', 2, 1704067200000, 1704067200000),
+# (4, '前端技术', 2, 1704067200000, 1704067200000),
+# (5, '后端开发', 3, 1704067200000, 1704067200000);
 
 -- 创建文章互动数据
 INSERT INTO interactives (id, biz_id, biz, read_cnt, collect_cnt, like_cnt, ctime, utime) VALUES
