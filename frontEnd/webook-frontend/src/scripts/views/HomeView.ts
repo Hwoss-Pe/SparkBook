@@ -1,4 +1,5 @@
 import { ref, onMounted, onUnmounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { articleApi } from '@/api/article'
 import { resolveStaticUrl } from '@/api/http'
@@ -228,21 +229,30 @@ export default function useHomeView() {
   }
 
   const toggleArticleFavorite = async (article: HomeArticle) => {
+    const prevFavorited = !!article.isFavorited
+    const prevCnt = article.collectCount || 0
+    // 乐观更新：先改UI与计数
+    article.isFavorited = !prevFavorited
+    article.collectCount = Math.max(0, prevCnt + (article.isFavorited ? 1 : -1))
+    article.isFavAnimating = true
+    setTimeout(() => { article.isFavAnimating = false }, 300)
+
+    // 立即反馈
+    ElMessage.success(article.isFavorited ? '已收藏' : '已取消收藏')
+
     try {
       const defaultCid = 1
       if (article.isFavorited) {
-        await articleApi.cancelCollect(article.id, defaultCid)
-        article.isFavorited = false
-        article.collectCount = Math.max(0, (article.collectCount || 0) - 1)
-      } else {
         await articleApi.collect(article.id, defaultCid)
-        article.isFavorited = true
-        article.collectCount = (article.collectCount || 0) + 1
+      } else {
+        await articleApi.cancelCollect(article.id, defaultCid)
       }
-      article.isFavAnimating = true
-      setTimeout(() => { article.isFavAnimating = false }, 300)
     } catch (error) {
+      // 回滚
+      article.isFavorited = prevFavorited
+      article.collectCount = prevCnt
       console.error('首页收藏操作失败:', error)
+      ElMessage.error('收藏操作失败，已回滚')
     }
   }
 

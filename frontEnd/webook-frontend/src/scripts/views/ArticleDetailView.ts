@@ -189,44 +189,42 @@ export default function useArticleDetailView() {
   const toggleLike = async () => {
     const prevLiked = !!article.value.isLiked
     const prevCnt = article.value.likeCount
-    // 乐观更新：先改UI
     article.value.isLiked = !prevLiked
     article.value.likeCount = Math.max(0, prevCnt + (article.value.isLiked ? 1 : -1))
-
+    ElMessage.success(article.value.isLiked ? '已点赞' : '已取消点赞')
     try {
       if (article.value.isLiked) {
         await articleApi.like(article.value.id)
       } else {
         await articleApi.cancelLike(article.value.id)
       }
-      ElMessage.success(article.value.isLiked ? '已点赞' : '已取消点赞')
     } catch (error) {
-      // 回滚
       article.value.isLiked = prevLiked
       article.value.likeCount = prevCnt
       console.error('点赞操作失败:', error)
-      ElMessage.error('操作失败，请稍后重试')
+      ElMessage.error('操作失败，已回滚')
     }
   }
 
   // 收藏/取消收藏
   const toggleFavorite = async () => {
+    const prevFavorited = !!article.value.isFavorited
+    const prevCnt = article.value.favoriteCount
+    article.value.isFavorited = !prevFavorited
+    article.value.favoriteCount = Math.max(0, prevCnt + (article.value.isFavorited ? 1 : -1))
+    ElMessage.success(article.value.isFavorited ? '已收藏' : '已取消收藏')
     try {
       const defaultCid = 1
       if (article.value.isFavorited) {
-        await articleApi.cancelCollect(article.value.id, defaultCid)
-        article.value.isFavorited = false
-        article.value.favoriteCount = Math.max(0, article.value.favoriteCount - 1)
-      } else {
         await articleApi.collect(article.value.id, defaultCid)
-        article.value.isFavorited = true
-        article.value.favoriteCount += 1
+      } else {
+        await articleApi.cancelCollect(article.value.id, defaultCid)
       }
-
-      ElMessage.success(article.value.isFavorited ? '已收藏' : '已取消收藏')
     } catch (error) {
+      article.value.isFavorited = prevFavorited
+      article.value.favoriteCount = prevCnt
       console.error('收藏操作失败:', error)
-      ElMessage.error('操作失败，请稍后重试')
+      ElMessage.error('操作失败，已回滚')
     }
   }
 
