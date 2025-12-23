@@ -19,8 +19,8 @@ func main() {
 		startID     = flag.Int("start_id", 200, "starting article id")
 		startAuthor = flag.Int("start_author_id", 20, "starting author id")
 		count       = flag.Int("count", 200, "number of rows to seed")
-		coverImage  = flag.String("cover_image", "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=400", "cover image url")
-		dsnFlag     = flag.String("dsn", "root:root@tcp(localhost:13316)/webook_article", "mysql dsn, e.g. user:pass@tcp(host:port)/db")
+		//coverImage  = flag.String("cover_image", "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=400", "cover image url")
+		dsnFlag = flag.String("dsn", "root:root@tcp(localhost:13316)/webook_article", "mysql dsn, e.g. user:pass@tcp(host:port)/db")
 	)
 	flag.Parse()
 
@@ -62,13 +62,16 @@ func main() {
 
 	for i := 0; i < *count; i++ {
 		id := int64(*startID + i)
-		authorID := int64(*startAuthor + i)
+		// Random authorID between 101 and 150
+		authorID := int64(r.Intn(50) + 101)
 		topic := topics[i%len(topics)]
 		title := fmt.Sprintf("%s 实战 #%d", topic, id)
 		content := fmt.Sprintf("%s 深入讲解与案例集合。编号-%d。包含关键词：%s、Best Practices、Patterns。", topic, id, topic)
 		shift := time.Duration(r.Intn(720)) * time.Minute
 		ctime := now.Add(-shift).UnixMilli()
 		utime := ctime + int64(r.Intn(3600*1000))
+		// Use local cover images from 1 to 200
+		coverImg := fmt.Sprintf("/static/covers/test/cover_%d.jpg", (i%200)+1)
 
 		row := dao.PublishedArticle{
 			Id:         id,
@@ -78,7 +81,7 @@ func main() {
 			Status:     2,
 			Ctime:      ctime,
 			Utime:      utime,
-			CoverImage: *coverImage,
+			CoverImage: coverImg,
 		}
 
 		err = db.Clauses(clause.OnConflict{
@@ -88,7 +91,6 @@ func main() {
 				"content":     row.Content,
 				"author_id":   row.AuthorId,
 				"status":      row.Status,
-				"ctime":       row.Ctime,
 				"utime":       row.Utime,
 				"cover_image": row.CoverImage,
 			}),

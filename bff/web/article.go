@@ -92,7 +92,7 @@ func (a *ArticleHandler) RegisterRoute(s *gin.Engine) {
 	pub.POST("/collect", ginx.WrapClaimsAndReq[CollectReq](a.Collect))
 	pub.POST("/cancelCollect", ginx.WrapClaimsAndReq[CollectReq](a.CancelCollect))
 	// 打赏
-	pub.POST("/reward", ginx.WrapClaimsAndReq[RewardReq](a.Reward))
+	//pub.POST("/reward", ginx.WrapClaimsAndReq[RewardReq](a.Reward))
 	// 热榜（匿名可访问）
 	pub.GET("/ranking", ginx.WrapReq[RankingReq](a.Ranking))
 	pub.GET("/ranking/tag", ginx.WrapReq[TagRankingReq](a.RankingByTag))
