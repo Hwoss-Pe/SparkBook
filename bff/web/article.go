@@ -110,10 +110,17 @@ type SearchReq struct {
 func (a *ArticleHandler) Search(ctx *gin.Context, req SearchReq) (ginx.Result, error) {
 	sc := a.ensureSearchClient()
 	if sc == nil {
+		a.l.Error("search client unavailable",
+			logger.String("expression", req.Expression),
+			logger.Int64("uid", req.Uid))
 		return ginx.Result{Code: 5, Msg: "系统错误"}, nil
 	}
 	resp, err := sc.Search(ctx, &searchv1.SearchRequest{Expression: req.Expression, Uid: req.Uid})
 	if err != nil {
+		a.l.Error("search request failed",
+			logger.String("expression", req.Expression),
+			logger.Int64("uid", req.Uid),
+			logger.Error(err))
 		return ginx.Result{Code: 5, Msg: "系统错误"}, err
 	}
 	var users []map[string]any
@@ -395,9 +402,16 @@ func (a *ArticleHandler) Edit(ctx *gin.Context) {
 			Code: 5,
 			Msg:  "系统错误",
 		})
-		a.l.Error("保存数据失败", logger.Field{Key: "error", Value: err})
+		a.l.Error("保存数据失败",
+			logger.Int64("uid", usr.Id),
+			logger.Int64("article_id", req.Id),
+			logger.Error(err))
 		return
 	}
+	// 保存草稿可能比较频繁，用 Debug 避免刷屏
+	a.l.Debug("article saved",
+		logger.Int64("uid", usr.Id),
+		logger.Int64("article_id", id.GetId()))
 	ctx.JSON(http.StatusOK, Result{
 		Data: id,
 	})
@@ -434,7 +448,10 @@ func (a *ArticleHandler) Publish(ctx *gin.Context) {
 			Code: 5,
 			Msg:  "系统错误",
 		})
-		a.l.Error("发表失败", logger.Error(err))
+		a.l.Error("发表失败",
+			logger.Int64("uid", usr.Id),
+			logger.Int64("article_id", req.Id),
+			logger.Error(err))
 		return
 	}
 	if a.tagSvc != nil && len(req.Tags) > 0 {
@@ -466,9 +483,19 @@ func (a *ArticleHandler) Publish(ctx *gin.Context) {
 			ids = append(ids, cr.Tag.Id)
 		}
 		if len(ids) > 0 {
-			_, _ = a.tagSvc.AttachTags(ctx, &tagv1.AttachTagsRequest{Uid: usr.Id, Biz: a.biz, BizId: idResp.Id, Tids: ids})
+			_, attachErr := a.tagSvc.AttachTags(ctx, &tagv1.AttachTagsRequest{Uid: usr.Id, Biz: a.biz, BizId: idResp.Id, Tids: ids})
+			if attachErr != nil {
+				a.l.Warn("attach tags failed",
+					logger.Int64("uid", usr.Id),
+					logger.Int64("article_id", idResp.Id),
+					logger.Error(attachErr))
+			}
 		}
 	}
+	a.l.Info("article published",
+		logger.Int64("uid", usr.Id),
+		logger.Int64("article_id", idResp.Id),
+		logger.Int32("tags", int32(len(req.Tags))))
 	ctx.JSON(http.StatusOK, Result{
 		Data: idResp.Id,
 	})
@@ -577,9 +604,15 @@ func (a *ArticleHandler) Withdraw(ctx *gin.Context) {
 			Code: 5,
 			Msg:  "系统错误",
 		})
-		a.l.Error("撤回失败", logger.Error(err))
+		a.l.Error("撤回失败",
+			logger.Int64("uid", usr.Id),
+			logger.Int64("article_id", req.Id),
+			logger.Error(err))
 		return
 	}
+	a.l.Info("article withdrawn",
+		logger.Int64("uid", usr.Id),
+		logger.Int64("article_id", req.Id))
 	ctx.JSON(http.StatusOK, Result{Msg: "OK"})
 }
 
@@ -601,9 +634,15 @@ func (a *ArticleHandler) Unpublish(ctx *gin.Context) {
 	_, err := a.svc.Unpublish(ctx, &articlev1.UnpublishRequest{Id: req.Id, Uid: usr.Id})
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统错误"})
-		a.l.Error("撤回为草稿失败", logger.Error(err))
+		a.l.Error("撤回为草稿失败",
+			logger.Int64("uid", usr.Id),
+			logger.Int64("article_id", req.Id),
+			logger.Error(err))
 		return
 	}
+	a.l.Info("article unpublished",
+		logger.Int64("uid", usr.Id),
+		logger.Int64("article_id", req.Id))
 	ctx.JSON(http.StatusOK, Result{Msg: "OK"})
 }
 
@@ -1139,6 +1178,10 @@ func (a *ArticleHandler) ListFollowing(ctx *gin.Context, req FollowingListReq, u
 func (a *ArticleHandler) CancelLike(ctx *gin.Context, req LikeReq, uc ginx.UserClaims) (ginx.Result, error) {
 	_, err := a.intrSvc.CancelLike(ctx, &intrv1.CancelLikeRequest{Biz: a.biz, BizId: req.Id, Uid: uc.Id})
 	if err != nil {
+		a.l.Error("cancel like failed",
+			logger.Int64("uid", uc.Id),
+			logger.Int64("article_id", req.Id),
+			logger.Error(err))
 		return Result{Code: 5, Msg: "系统错误"}, err
 	}
 	return Result{Msg: "OK"}, nil
@@ -1156,6 +1199,11 @@ func (a *ArticleHandler) Like(ctx *gin.Context, req LikeReq, uc ginx.UserClaims)
 		})
 	}
 	if err != nil {
+		a.l.Error("like operation failed",
+			logger.Int64("uid", uc.Id),
+			logger.Int64("article_id", req.Id),
+			logger.Bool("like", req.Like),
+			logger.Error(err))
 		return Result{
 			Code: 5,
 			Msg:  "系统错误",
@@ -1170,6 +1218,11 @@ func (a *ArticleHandler) Collect(ctx *gin.Context, req CollectReq, uc ginx.UserC
 		Cid: req.Cid,
 	})
 	if err != nil {
+		a.l.Error("collect failed",
+			logger.Int64("uid", uc.Id),
+			logger.Int64("article_id", req.Id),
+			logger.Int64("cid", req.Cid),
+			logger.Error(err))
 		return Result{
 			Code: 5,
 			Msg:  "系统错误",
@@ -1183,6 +1236,11 @@ func (a *ArticleHandler) CancelCollect(ctx *gin.Context, req CollectReq, uc ginx
 		Biz: a.biz, BizId: req.Id, Uid: uc.Id, Cid: req.Cid,
 	})
 	if err != nil {
+		a.l.Error("cancel collect failed",
+			logger.Int64("uid", uc.Id),
+			logger.Int64("article_id", req.Id),
+			logger.Int64("cid", req.Cid),
+			logger.Error(err))
 		return Result{Code: 5, Msg: "系统错误"}, err
 	}
 	return Result{Msg: "OK"}, nil

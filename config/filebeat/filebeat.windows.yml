@@ -1,0 +1,43 @@
+# Windows host Filebeat -> Docker Logstash (webook)
+# IMPORTANT: Your docker-compose runs Logstash 7.13.0. You MUST use Filebeat 7.x (e.g. 7.13.x/7.17.x).
+# Filebeat 9.x is NOT compatible with Logstash 7.x beats input and will cause:
+#   InvalidFrameProtocolException: Invalid version of beats protocol
+
+filebeat.inputs:
+  # bff logs: zap development console format (non-JSON)
+  - type: log
+    enabled: true
+    paths:
+      - "D:/project/Webook/bff/logs/bff.log"
+    fields:
+      project: webook
+      service: bff
+      log_format: zap_console
+    fields_under_root: true
+
+  # user logs: zap JSON (lumberjack). One JSON object per line.
+  - type: log
+    enabled: true
+    paths:
+      - "D:/project/Webook/user/logs/user.log"
+    json.keys_under_root: true
+    json.overwrite_keys: true
+    json.add_error_key: true
+    fields:
+      project: webook
+      service: user
+      log_format: zap_json
+    fields_under_root: true
+
+# Output to Logstash beats input (docker-compose maps 5044:5044)
+output.logstash:
+  hosts: ["127.0.0.1:5044"]
+
+# Optional: reduce Filebeat self-logs noise
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: "D:/project/Webook/logs/filebeat"
+  name: filebeat
+  keepfiles: 3
+  permissions: 0644

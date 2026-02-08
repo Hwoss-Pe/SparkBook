@@ -3,11 +3,13 @@ package main
 import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 func main() {
 	initViperV2Watch()
 	app := InitApp()
+	defer func() { _ = zap.L().Sync() }()
 	err := app.WebServer.Start()
 	panic(err)
 }

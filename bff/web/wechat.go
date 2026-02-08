@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -47,6 +48,7 @@ func (h *OAuth2WechatHandler) OAuth2URL(ctx *gin.Context) {
 		State: state,
 	})
 	if err != nil {
+		zap.L().Error("wechat oauth2 authurl failed", zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,
 			Msg:  "系统错误，请稍后再试",
@@ -55,6 +57,7 @@ func (h *OAuth2WechatHandler) OAuth2URL(ctx *gin.Context) {
 	}
 	err = h.setStateCookie(ctx, state)
 	if err != nil {
+		zap.L().Error("wechat oauth2 set state cookie failed", zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,
 			Msg:  "系统错误，请稍后再试",
@@ -70,6 +73,7 @@ func (h *OAuth2WechatHandler) OAuth2URL(ctx *gin.Context) {
 func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 	err := h.verifyState(ctx)
 	if err != nil {
+		zap.L().Warn("wechat oauth2 state verification failed", zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,
 			Msg:  "系统异常，请重试",
@@ -81,6 +85,7 @@ func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 		Code: code,
 	})
 	if err != nil {
+		zap.L().Error("wechat oauth2 verify code failed", zap.Error(err))
 		// 实际上这个错误，也有可能是 code 不对
 		// 但是给前端的信息没有太大的必要区分究竟是代码不对还是系统本身有问题
 		ctx.JSON(http.StatusOK, Result{
@@ -97,6 +102,7 @@ func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 			},
 		})
 	if err != nil {
+		zap.L().Error("wechat find or create user failed", zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,
 			Msg:  "系统错误",
@@ -105,12 +111,14 @@ func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 	}
 	err = h.SetLoginToken(ctx, u.User.Id)
 	if err != nil {
+		zap.L().Error("wechat set login token failed", zap.Int64("uid", u.User.Id), zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,
 			Msg:  "系统错误",
 		})
 		return
 	}
+	zap.L().Info("wechat oauth2 login success", zap.Int64("uid", u.User.Id))
 	ctx.JSON(http.StatusOK, Result{
 		Msg: "登录成功",
 	})

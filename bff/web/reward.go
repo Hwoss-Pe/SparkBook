@@ -5,6 +5,7 @@ import (
 	rewardv1 "Webook/api/proto/gen/api/proto/reward/v1"
 	"Webook/pkg/ginx"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type RewardHandler struct {
@@ -23,6 +24,7 @@ func (r *RewardHandler) GetReward(ctx *gin.Context, req GetRewardReq, claims gin
 		Uid: claims.Id,
 	})
 	if err != nil {
+		zap.L().Error("get reward failed", zap.Int64("uid", claims.Id), zap.Int64("rid", req.Rid), zap.Error(err))
 		return ginx.Result{
 			Code: 5,
 			Msg:  "系统错误",

@@ -57,6 +57,9 @@ func (h *UploadHandler) save(ctx *gin.Context, kind string, subdir string) (stri
 	}
 	ext := strings.ToLower(filepath.Ext(file.Filename))
 	if !allowExt(ext) {
+		h.l.Warn("upload file type not allowed",
+			logger.String("kind", kind),
+			logger.String("ext", ext))
 		ctx.Status(http.StatusBadRequest)
 		return "", http.ErrNotSupported
 	}

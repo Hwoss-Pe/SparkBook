@@ -1,0 +1,42 @@
+# Filebeat 9.x example (Windows host -> Logstash)
+# ONLY use this if your Logstash/ELK is also 9.x.
+# Your current docker-compose uses Logstash 7.13.0, so this file is NOT compatible with it.
+
+filebeat.inputs:
+  - type: filestream
+    id: webook-bff
+    enabled: true
+    paths:
+      - "D:/project/Webook/logs/bff.log"
+    fields:
+      project: webook
+      service: bff
+      log_format: zap_console
+    fields_under_root: true
+
+  - type: filestream
+    id: webook-user
+    enabled: true
+    paths:
+      - "D:/project/Webook/logs/user.log"
+    parsers:
+      - ndjson:
+          target: ""
+          overwrite_keys: true
+          add_error_key: true
+    fields:
+      project: webook
+      service: user
+      log_format: zap_json
+    fields_under_root: true
+
+output.logstash:
+  hosts: ["127.0.0.1:5044"]
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: "D:/project/Webook/logs/filebeat"
+  name: filebeat
+  keepfiles: 3
+  permissions: 0644

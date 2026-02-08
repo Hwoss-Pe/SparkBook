@@ -72,16 +72,30 @@ type FollowStaticVo struct {
 func (h *FollowHandler) Follow(ctx *gin.Context, req FollowReq, uc ginx.UserClaims) (ginx.Result, error) {
 	_, err := h.svc.Follow(ctx, &followv1.FollowRequest{Followee: req.Followee, Follower: uc.Id})
 	if err != nil {
+		h.l.Error("follow failed",
+			logger.Int64("follower", uc.Id),
+			logger.Int64("followee", req.Followee),
+			logger.Error(err))
 		return ginx.Result{Code: 5, Msg: "系统错误"}, err
 	}
+	h.l.Info("followed",
+		logger.Int64("follower", uc.Id),
+		logger.Int64("followee", req.Followee))
 	return ginx.Result{Msg: "OK"}, nil
 }
 
 func (h *FollowHandler) CancelFollow(ctx *gin.Context, req FollowReq, uc ginx.UserClaims) (ginx.Result, error) {
 	_, err := h.svc.CancelFollow(ctx, &followv1.CancelFollowRequest{Followee: req.Followee, Follower: uc.Id})
 	if err != nil {
+		h.l.Error("cancel follow failed",
+			logger.Int64("follower", uc.Id),
+			logger.Int64("followee", req.Followee),
+			logger.Error(err))
 		return ginx.Result{Code: 5, Msg: "系统错误"}, err
 	}
+	h.l.Info("unfollowed",
+		logger.Int64("follower", uc.Id),
+		logger.Int64("followee", req.Followee))
 	return ginx.Result{Msg: "OK"}, nil
 }
 
@@ -91,6 +105,11 @@ func (h *FollowHandler) GetFollowee(ctx *gin.Context, req GetFolloweeReq) (ginx.
 	}
 	resp, err := h.svc.GetFollowee(ctx, &followv1.GetFolloweeRequest{Follower: req.Follower, Offset: req.Offset, Limit: req.Limit})
 	if err != nil {
+		h.l.Error("get followee failed",
+			logger.Int64("follower", req.Follower),
+			logger.Int64("offset", req.Offset),
+			logger.Int64("limit", req.Limit),
+			logger.Error(err))
 		return ginx.Result{Code: 5, Msg: "系统错误"}, err
 	}
 	rels := resp.GetFollowRelations()
@@ -136,6 +155,11 @@ func (h *FollowHandler) GetFollower(ctx *gin.Context, req GetFollowerReq) (ginx.
 	}
 	resp, err := h.svc.GetFollower(ctx, &followv1.GetFollowerRequest{Followee: req.Followee, Offset: req.Offset, Limit: req.Limit})
 	if err != nil {
+		h.l.Error("get follower failed",
+			logger.Int64("followee", req.Followee),
+			logger.Int64("offset", req.Offset),
+			logger.Int64("limit", req.Limit),
+			logger.Error(err))
 		return ginx.Result{Code: 5, Msg: "系统错误"}, err
 	}
 	rels := resp.GetFollowRelations()
@@ -178,6 +202,10 @@ func (h *FollowHandler) GetFollower(ctx *gin.Context, req GetFollowerReq) (ginx.
 func (h *FollowHandler) FollowInfo(ctx *gin.Context, req FollowInfoReq) (ginx.Result, error) {
 	resp, err := h.svc.FollowInfo(ctx, &followv1.FollowInfoRequest{Follower: req.Follower, Followee: req.Followee})
 	if err != nil {
+		h.l.Error("follow info failed",
+			logger.Int64("follower", req.Follower),
+			logger.Int64("followee", req.Followee),
+			logger.Error(err))
 		return ginx.Result{Code: 5, Msg: "系统错误"}, err
 	}
 	if resp == nil || resp.FollowRelation == nil {
@@ -190,6 +218,9 @@ func (h *FollowHandler) FollowInfo(ctx *gin.Context, req FollowInfoReq) (ginx.Re
 func (h *FollowHandler) GetFollowStatics(ctx *gin.Context, req GetFollowStaticReq) (ginx.Result, error) {
 	resp, err := h.svc.GetFollowStatics(ctx, &followv1.GetFollowStaticRequest{Followee: req.Followee})
 	if err != nil || resp == nil || resp.FollowStatic == nil {
+		h.l.Error("get follow statics failed",
+			logger.Int64("followee", req.Followee),
+			logger.Error(err))
 		return ginx.Result{Code: 5, Msg: "系统错误"}, err
 	}
 	fs := resp.FollowStatic

@@ -118,6 +118,7 @@ func (c *UserHandler) LoginJWT(ctx *gin.Context, req LoginReq) (ginx.Result, err
 func (c *UserHandler) Logout(ctx *gin.Context) {
 	err := c.ClearToken(ctx)
 	if err != nil {
+		zap.L().Error("logout: clear token failed", zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{
 			Msg: "系统错误",
 		})
@@ -205,6 +206,7 @@ func (c *UserHandler) Edit(ctx *gin.Context) {
 	}
 	var req Req
 	if err := ctx.Bind(&req); err != nil {
+		zap.L().Warn("edit: bind request failed", zap.Error(err))
 		return
 	}
 	if req.Nickname == "" {
@@ -218,6 +220,7 @@ func (c *UserHandler) Edit(ctx *gin.Context) {
 	}
 	birthday, err := time.Parse(time.DateOnly, req.Birthday)
 	if err != nil {
+		zap.L().Warn("edit: invalid birthday format", zap.String("birthday", req.Birthday), zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "日期格式不对"})
 		return
 	}
@@ -234,6 +237,7 @@ func (c *UserHandler) Edit(ctx *gin.Context) {
 			},
 		})
 	if err != nil {
+		zap.L().Error("edit: update user info failed", zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统错误"})
 		return
 	}
@@ -253,6 +257,7 @@ func (c *UserHandler) ProfileJWT(ctx *gin.Context) {
 	uc := ctx.MustGet("user").(jwt2.UserClaims)
 	resp, err := c.userSvc.Profile(ctx, &userv1.ProfileRequest{Id: uc.Id})
 	if err != nil {
+		zap.L().Error("profile: fetch profile failed", zap.Int64("uid", uc.Id), zap.Error(err))
 		// 按照道理来说，这边 id 对应的数据肯定存在，所以要是没找到，
 		// 那就说明是系统出了问题。
 		ctx.String(http.StatusOK, "系统错误")
@@ -278,6 +283,7 @@ func (c *UserHandler) Profile(ctx *gin.Context) {
 		Id: id,
 	})
 	if err != nil {
+		zap.L().Error("profile(session): fetch profile failed", zap.Int64("uid", id), zap.Error(err))
 		ctx.String(http.StatusOK, "系统错误")
 		return
 	}
@@ -293,6 +299,7 @@ func (c *UserHandler) SendSMSLoginCode(ctx *gin.Context) {
 	}
 	var req Req
 	if err := ctx.Bind(&req); err != nil {
+		zap.L().Warn("send_sms_code: bind request failed", zap.Error(err))
 		return
 	}
 	if req.Phone == "" {
@@ -308,6 +315,7 @@ func (c *UserHandler) SendSMSLoginCode(ctx *gin.Context) {
 	//case .ErrCodeSendTooMany:
 	//	ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "短信发送太频繁，请稍后再试"})
 	default:
+		zap.L().Error("send_sms_code: send failed", zap.String("phone", req.Phone), zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统错误"})
 		return
 	}
@@ -320,6 +328,7 @@ func (c *UserHandler) LoginSMS(ctx *gin.Context) {
 	}
 	var req Req
 	if err := ctx.Bind(&req); err != nil {
+		zap.L().Warn("login_sms: bind request failed", zap.Error(err))
 		return
 	}
 	resp, err := c.codeSvc.Verify(ctx, &codev1.VerifyRequest{
@@ -339,12 +348,14 @@ func (c *UserHandler) LoginSMS(ctx *gin.Context) {
 		Phone: req.Phone,
 	})
 	if err != nil {
+		zap.L().Error("login_sms: find or create failed", zap.String("phone", req.Phone), zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "系统错误"})
 		return
 	}
 	// 下发短 JWT 和刷新 Token
 	err = c.SetLoginToken(ctx, u.User.Id)
 	if err != nil {
+		zap.L().Error("login_sms: set login token failed", zap.Int64("uid", u.User.Id), zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{Msg: "系统错误"})
 		return
 	}

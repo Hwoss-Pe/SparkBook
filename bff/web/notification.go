@@ -40,6 +40,9 @@ type MarkReadReq struct {
 func (h *NotificationHandler) UnreadCounts(ctx *gin.Context, uc ginx.UserClaims) (ginx.Result, error) {
 	resp, err := h.cli.GetUnreadCounts(ctx, &intrv1.GetUnreadCountsRequest{Uid: uc.Id})
 	if err != nil || resp == nil {
+		h.l.Error("get unread counts failed",
+			logger.Int64("uid", uc.Id),
+			logger.Error(err))
 		return ginx.Result{Code: 5, Msg: "系统错误"}, err
 	}
 	return ginx.Result{Data: map[string]any{
@@ -58,6 +61,12 @@ func (h *NotificationHandler) List(ctx *gin.Context, req NotificationListReq, uc
 		Limit:  req.Limit,
 	})
 	if err != nil || resp == nil {
+		h.l.Error("get notifications failed",
+			logger.Int64("uid", uc.Id),
+			logger.String("type", req.Type),
+			logger.Int32("offset", req.Offset),
+			logger.Int32("limit", req.Limit),
+			logger.Error(err))
 		return ginx.Result{Code: 5, Msg: "系统错误"}, err
 	}
 	// 拉取发送者资料
@@ -129,7 +138,16 @@ func (h *NotificationHandler) List(ctx *gin.Context, req NotificationListReq, uc
 func (h *NotificationHandler) MarkRead(ctx *gin.Context, req MarkReadReq, uc ginx.UserClaims) (ginx.Result, error) {
 	_, err := h.cli.MarkRead(ctx, &intrv1.MarkReadRequest{Uid: uc.Id, Ids: req.Ids, Type: req.Type})
 	if err != nil {
+		h.l.Error("mark read failed",
+			logger.Int64("uid", uc.Id),
+			logger.String("type", req.Type),
+			logger.Int64("ids", (int64)(len(req.Ids))),
+			logger.Error(err))
 		return ginx.Result{Code: 5, Msg: "系统错误"}, err
 	}
+	h.l.Info("marked read",
+		logger.Int64("uid", uc.Id),
+		logger.String("type", req.Type),
+		logger.Int64("ids", (int64)(len(req.Ids))))
 	return ginx.Result{Msg: "OK"}, nil
 }

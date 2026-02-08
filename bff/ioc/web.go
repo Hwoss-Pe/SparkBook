@@ -46,6 +46,14 @@ func InitGinServer(l logger.Logger,
 	notification.RegisterRoute(engine)
 	web.NewUploadHandler(l).RegisterRoute(engine)
 	addr := viper.GetString("http.addr")
+	metricsAddr := viper.GetString("prometheus.addr")
+	if metricsAddr == "" {
+		metricsAddr = ":18081"
+	}
+	l.Info("bff server initialized",
+		logger.String("http_addr", addr),
+		logger.String("metrics_addr", metricsAddr),
+		logger.String("static_dir", "./media"))
 	ginx.InitCounter(prometheus.CounterOpts{
 		Namespace: "hwoss",
 		Subsystem: "webbok_bff",

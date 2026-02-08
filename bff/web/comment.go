@@ -68,6 +68,12 @@ func (h *CommentHandler) List(ctx *gin.Context, req CommentListReq) (ginx.Result
 		Limit: req.Limit,
 	})
 	if err != nil {
+		h.l.Error("get comment list failed",
+			logger.String("biz", req.Biz),
+			logger.Int64("biz_id", req.BizId),
+			logger.Int64("min_id", req.MinId),
+			logger.Int64("limit", req.Limit),
+			logger.Error(err))
 		return ginx.Result{Code: 5, Msg: "系统错误"}, err
 	}
 	cs := resp.GetComments()
@@ -167,16 +173,36 @@ func (h *CommentHandler) Create(ctx *gin.Context, req CreateReq, uc ginx.UserCla
 	}
 	_, err := h.client.CreateComment(ctx, &commentv1.CreateCommentRequest{Comment: comment})
 	if err != nil {
+		h.l.Error("create comment failed",
+			logger.Int64("uid", uc.Id),
+			logger.String("biz", req.Comment.Biz),
+			logger.Int64("biz_id", req.Comment.BizId),
+			logger.Bool("has_root", req.Comment.RootComment != nil),
+			logger.Bool("has_parent", req.Comment.ParentComment != nil),
+			logger.Error(err))
 		return ginx.Result{Code: 5, Msg: "系统错误"}, err
 	}
+	h.l.Info("comment created",
+		logger.Int64("uid", uc.Id),
+		logger.String("biz", req.Comment.Biz),
+		logger.Int64("biz_id", req.Comment.BizId),
+		logger.Bool("has_root", req.Comment.RootComment != nil),
+		logger.Bool("has_parent", req.Comment.ParentComment != nil))
 	return ginx.Result{Msg: "OK"}, nil
 }
 
 func (h *CommentHandler) Delete(ctx *gin.Context, req DeleteReq, uc ginx.UserClaims) (ginx.Result, error) {
 	_, err := h.client.DeleteComment(ctx, &commentv1.DeleteCommentRequest{Id: req.Id})
 	if err != nil {
+		h.l.Error("delete comment failed",
+			logger.Int64("uid", uc.Id),
+			logger.Int64("comment_id", req.Id),
+			logger.Error(err))
 		return ginx.Result{Code: 5, Msg: "系统错误"}, err
 	}
+	h.l.Info("comment deleted",
+		logger.Int64("uid", uc.Id),
+		logger.Int64("comment_id", req.Id))
 	return ginx.Result{Msg: "OK"}, nil
 }
 
@@ -187,6 +213,11 @@ func (h *CommentHandler) Replies(ctx *gin.Context, req RepliesReq) (ginx.Result,
 		Limit: req.Limit,
 	})
 	if err != nil {
+		h.l.Error("get more replies failed",
+			logger.Int64("rid", req.Rid),
+			logger.Int64("max_id", req.MaxId),
+			logger.Int64("limit", req.Limit),
+			logger.Error(err))
 		return ginx.Result{Code: 5, Msg: "系统错误"}, err
 	}
 	cs := resp.GetReplies()
