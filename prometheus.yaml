@@ -3,8 +3,14 @@ global:
     monitor: 'prometheus-monitor'
 
 scrape_configs:
-  - job_name: "webook"
+  - job_name: "interactive"
     scrape_interval: 5s
     scrape_timeout: 3s
     static_configs:
       - targets: [ "host.docker.internal:8081"]
+
+  - job_name: "bff"
+    scrape_interval: 5s
+    scrape_timeout: 3s
+    static_configs:
+      - targets: [ "host.docker.internal:18081"]

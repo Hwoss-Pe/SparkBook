@@ -1,5 +1,10 @@
 http:
   addr: ":8080"
+
+prometheus:
+  # bff 的 /metrics 暴露端口（独立于业务端口），供 Prometheus 抓取
+  addr: ":18081"
+  # instanceId: "bff-1"
 etcd:
   endpoints:
     - "localhost:12379"

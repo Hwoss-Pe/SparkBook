@@ -5,16 +5,25 @@ import (
 	jwt2 "Webook/bff/web/jwt"
 	"Webook/bff/web/middleware"
 	"Webook/pkg/ginx"
+	metricsmw "Webook/pkg/ginx/middleware/metrics"
 	"Webook/pkg/logger"
+	"fmt"
+	"net/http"
+	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 )
+
+var prometheusOnce sync.Once
 
 func InitGinServer(l logger.Logger,
 	jwtHdl jwt2.Handler,
@@ -24,8 +33,10 @@ func InitGinServer(l logger.Logger,
 	comment *web.CommentHandler,
 	follow *web.FollowHandler,
 	notification *web.NotificationHandler) *ginx.Server {
+	initPrometheusEndpoint(l)
 	engine := gin.Default()
-	engine.Use(corsHdl(), timeout(), middleware.NewJWTLoginMiddlewareBuilder(jwtHdl).Build())
+	b := newHTTPMetricsBuilder()
+	engine.Use(b.BuildActiveRequest(), b.BuildResponseTime(), b.BuildRequestCount(), corsHdl(), timeout(), middleware.NewJWTLoginMiddlewareBuilder(jwtHdl).Build())
 	engine.Static("/static", "./media")
 	user.RegisterRoute(engine)
 	article.RegisterRoute(engine)
@@ -36,7 +47,7 @@ func InitGinServer(l logger.Logger,
 	web.NewUploadHandler(l).RegisterRoute(engine)
 	addr := viper.GetString("http.addr")
 	ginx.InitCounter(prometheus.CounterOpts{
-		Namespace: "daming_geektime",
+		Namespace: "hwoss",
 		Subsystem: "webbok_bff",
 		Name:      "http",
 	})
@@ -45,6 +56,58 @@ func InitGinServer(l logger.Logger,
 		Engine: engine,
 		Addr:   addr,
 	}
+}
+
+func newHTTPMetricsBuilder() metricsmw.PrometheusBuilder {
+	instanceID := viper.GetString("prometheus.instanceId")
+	if instanceID == "" {
+		h, err := os.Hostname()
+		if err == nil && h != "" {
+			instanceID = h
+		} else {
+			instanceID = "unknown"
+		}
+	}
+	return metricsmw.PrometheusBuilder{
+		Namespace:  "hwoss",
+		Subsystem:  "webbok_bff",
+		Name:       "http",
+		InstanceID: instanceID,
+	}
+}
+
+func initPrometheusEndpoint(l logger.Logger) {
+	prometheusOnce.Do(func() {
+		// 进程/运行时指标（CPU/内存/GC 等）。若已注册则忽略。
+		registerCollectorOrIgnore(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
+		registerCollectorOrIgnore(collectors.NewGoCollector())
+
+		addr := viper.GetString("prometheus.addr")
+		if addr == "" {
+			addr = ":18081"
+		}
+		mux := http.NewServeMux()
+		mux.Handle("/metrics", promhttp.Handler())
+		go func() {
+			err := http.ListenAndServe(addr, mux)
+			if err != nil {
+				l.Error("启动 Prometheus metrics 端点失败",
+					logger.Error(fmt.Errorf("addr=%s, err=%w", addr, err)))
+			}
+		}()
+	})
+}
+
+func registerCollectorOrIgnore(c prometheus.Collector) {
+	err := prometheus.Register(c)
+	if err == nil {
+		return
+	}
+	_, ok := err.(prometheus.AlreadyRegisteredError)
+	if ok {
+		return
+	}
+	panic(err)
 }
 func timeout() gin.HandlerFunc {
 	return func(ctx *gin.Context) {

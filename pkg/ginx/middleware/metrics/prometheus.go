@@ -25,7 +25,7 @@ func (p *PrometheusBuilder) BuildResponseTime() gin.HandlerFunc {
 	vector := prometheus.NewSummaryVec(prometheus.SummaryOpts{
 		Namespace:   p.Namespace,
 		Subsystem:   p.Subsystem,
-		Name:        p.Name + "_resp_time",
+		Name:        p.Name + "_resp_time_ms",
 		ConstLabels: map[string]string{"instance_id": p.InstanceID},
 		Objectives: map[float64]float64{
 			0.5:   0.01,
@@ -40,12 +40,42 @@ func (p *PrometheusBuilder) BuildResponseTime() gin.HandlerFunc {
 		start := time.Now()
 		defer func() {
 			duration := time.Since(start).Milliseconds()
+			pattern := context.FullPath()
+			if pattern == "" {
+				pattern = "__unknown__"
+			}
 			vector.WithLabelValues(
-				method, context.FullPath(),
+				method, pattern,
 				strconv.Itoa(context.Writer.Status())).
 				Observe(float64(duration))
 		}()
 		context.Next()
+	}
+}
+
+// BuildRequestCount 统计请求总量，用于计算 QPS，并按状态码聚合。
+// PromQL 示例：sum(rate(<namespace>_<subsystem>_<name>_requests_total[1m])) by (method, pattern)
+func (p *PrometheusBuilder) BuildRequestCount() gin.HandlerFunc {
+	labels := []string{"method", "pattern", "status"}
+	vector := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace:   p.Namespace,
+		Subsystem:   p.Subsystem,
+		Name:        p.Name + "_requests_total",
+		Help:        "HTTP requests total",
+		ConstLabels: map[string]string{"instance_id": p.InstanceID},
+	}, labels)
+	prometheus.MustRegister(vector)
+	return func(context *gin.Context) {
+		context.Next()
+		pattern := context.FullPath()
+		if pattern == "" {
+			pattern = "__unknown__"
+		}
+		vector.WithLabelValues(
+			context.Request.Method,
+			pattern,
+			strconv.Itoa(context.Writer.Status()),
+		).Inc()
 	}
 }
 
@@ -61,7 +91,7 @@ func (p *PrometheusBuilder) BuildActiveRequest() gin.HandlerFunc {
 	prometheus.MustRegister(gauge)
 	return func(context *gin.Context) {
 		gauge.Inc()
-		defer gauge.Desc()
+		defer gauge.Dec()
 		context.Next()
 	}
 }
